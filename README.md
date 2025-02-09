@@ -1,4 +1,4 @@
-# 📌 Project Structure & Setup Guide
+# 📌 Garasiku Project Structure & Setup Guide
 
 ## 📂 Project Folder Structure
 ```
