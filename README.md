@@ -59,9 +59,9 @@ npm install
 
 #### Start the Frontend
 ```sh
-npm start
+npm run dev
 ```
-The frontend should now run at `http://localhost:3000`
+The frontend should now run at `http://localhost:5173`
 
 ## 📌 API Endpoints (Backend)
 | Method  | Endpoint           | Description        |
