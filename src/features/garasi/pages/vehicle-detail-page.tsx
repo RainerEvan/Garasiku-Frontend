@@ -8,9 +8,11 @@ import { Separator } from "@/components/shadcn/separator"
 import AdministrationActivityItem from "../components/administration-activity-item"
 import { Status } from "@/lib/constants"
 import { ImageCarousel } from "../components/image-carousel"
+import { EditDetailVehicleDialog } from "../components/edit-detail-vehicle-dialog"
 
 export default function VehicldeDetailPage() {
     const vehicle = {
+        id: "1",
         jenis: "Mobil",
         tahun: "2022",
         merk: "Honda",
@@ -113,12 +115,7 @@ export default function VehicldeDetailPage() {
         "/assets/car.jpg?text=Front",
         "/assets/car.jpg?text=Front",
         "/assets/car.jpg?text=Front",
-        "/assets/car.jpg?text=Front"
     ]
-
-    const handleEditDetailKendaraan = () => {
-        console.log("Detail Kendaraan icon clicked")
-    }
 
     const handleEditDetailSTNK = () => {
         console.log("Detail Kendaraan icon clicked")
@@ -157,21 +154,19 @@ export default function VehicldeDetailPage() {
                 </div>
 
                 {/* Vehicle Details */}
-                <div className="grid grid-cols-1 gap-5 rounded-lg border bg-background p-5 md:grid-cols-7">
+                <div className="grid grid-cols-1 rounded-lg border bg-background md:grid-cols-7">
 
                     {/* Image Carousel */}
-                    <div className="col-span-1 md:col-span-4">
+                    <div className="col-span-1 md:col-span-4 md:p-5 md:pr-0">
                         <ImageCarousel images={images} name={vehicleName} />
                     </div>
 
-                    <div className="col-span-1 md:col-span-3 w-full flex flex-col justify-between gap-3">
+                    <div className="col-span-1 md:col-span-3 w-full flex flex-col justify-between gap-3 p-5">
                         {/* Details */}
                         <div className="flex flex-col gap-3">
                             <div className="flex gap-5 items-center justify-between">
                                 <h1 className="font-semibold">Detail Kendaraan</h1>
-                                <Button variant="outline" size="sm" onClick={handleEditDetailKendaraan}>
-                                    <Edit />Ubah
-                                </Button>
+                                <EditDetailVehicleDialog vehicle={vehicle} />
                             </div>
 
                             <Separator />
@@ -187,7 +182,7 @@ export default function VehicldeDetailPage() {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
                             <Button onClick={handleDeleteVehicle} variant="destructive">Hapus Kendaraan</Button>
                             <Button onClick={handleSellVehicle} variant="default">Jual Kendaraan</Button>
                         </div>
