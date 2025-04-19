@@ -2,7 +2,7 @@ import { ChevronDown } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubItem, SidebarSeparator, SidebarTrigger } from "../shadcn/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../shadcn/collapsible";
 import { Button } from "../shadcn/button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 const items = [
     {
@@ -43,6 +43,7 @@ const items = [
 
 export function AppNavbar() {
     const navigate = useNavigate();
+    const { pathname } = useLocation();
 
     function handleLogout() {
         // Perform logout logic here
@@ -92,7 +93,7 @@ export function AppNavbar() {
                                         <SidebarMenuSub>
                                             {item.child.map((subItem) => (
                                                 <SidebarMenuSubItem key={subItem.title}>
-                                                    <SidebarMenuButton asChild>
+                                                    <SidebarMenuButton asChild isActive={pathname === `/${subItem.url}`}>
                                                         <Link to={`/${subItem.url}`}>
                                                             {subItem.title}
                                                         </Link>
@@ -105,7 +106,7 @@ export function AppNavbar() {
                             </SidebarMenuItem>
                         ) : (
                             <SidebarMenuItem key={item.title}>
-                                <SidebarMenuButton asChild>
+                                <SidebarMenuButton asChild isActive={pathname === `/${item.url}`}>
                                     <Link to={`/${item.url}`}>
                                         <span>{item.title}</span>
                                     </Link>

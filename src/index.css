@@ -97,6 +97,12 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-status-pending: var(--tertiary);
+  --color-status-inprogress: var(--secondary);
+  --color-status-completed: var(--quarternary);
+  --color-status-cancelled: var(--destructive);
+  --color-status-active: var(--success);
+  --color-status-inactive: var(--muted-foreground);
 }
 
 @layer base {

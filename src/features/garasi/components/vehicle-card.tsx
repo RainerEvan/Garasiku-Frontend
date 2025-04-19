@@ -12,40 +12,38 @@ type VehicleCardProps = {
     address: string
   }
   soldDate?: string
+  image?: string
 }
 
-export function VehicleCard({ 
+export function VehicleCard({
   id,
   variant,
   name,
   licensePlate,
   type,
   location,
-  soldDate 
+  soldDate,
+  image
 }: VehicleCardProps) {
   return (
-    <Link to={`/daftar-kendaraan/${id}`} className="mb-4 bg-background border rounded-lg shadow-xs overflow-hidden">
+    <Link to={`/daftar-kendaraan/${id}`} className="bg-background border rounded-lg shadow-xs overflow-hidden">
       {/* Image Placeholder */}
-      <div className="bg-[#d9d9d9] h-48 flex items-center justify-center">
-        <div className="text-[#b3b3b3]">
-          <img
-            src="/"
-            alt="Vehicle image"
-            width={400}
-            height={192}
-            className="opacity-20"
-          />
+      <div className="relative aspect-video w-full overflow-hidden text-[#b3b3b3] bg-[#d9d9d9] flex items-center justify-center">
+        <img
+          src={image || "/placeholder.svg"}
+          alt={`${name} - Image`}
+          className="object-cover w-full h-full"
+        />
+        <div className="absolute top-2 right-2 flex items-center bg-background/90 px-5 py-1 rounded-xl shadow-md">
+          <span className="text-medium text-sm">{type}</span>
         </div>
       </div>
 
       {/* Vehicle Info */}
-      <div className="p-5">
-        <div className="flex justify-between items-start mb-1">
-          <div>
-            <h3 className="font-medium">{name}</h3>
-            <p className="text-xs text-light">{licensePlate}</p>
-          </div>
-          <span className="text-sm">{type}</span>
+      <div className="w-full p-5 flex flex-col">
+        <div className="flex flex-col">
+          <h3 className="font-medium">{name}</h3>
+          <p className="text-xs text-light">{licensePlate}</p>
         </div>
 
         {/* Location or Sold Status */}

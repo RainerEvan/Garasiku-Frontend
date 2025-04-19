@@ -1,26 +1,28 @@
-import { ChevronRight, type LucideIcon } from "lucide-react"
+import { typeIcons } from "@/lib/constants";
+import { ChevronRight } from "lucide-react"
 import { Link } from "react-router-dom";
 
 interface DataBarCardProps {
   variant: "default" | "link"
+  type: keyof typeof typeIcons
   label: string
   description: string
-  icon?: LucideIcon;
   urlLink?: string
 }
 
 export function DataBarCard({ 
   variant = "default",
+  type,
   label = "Label",
   description = "Description",
-  icon: Icon, 
   urlLink
 }: DataBarCardProps) {
+  const Icon = type ? typeIcons[type] : null
 
   return (
     <>
       {variant === "default" && (
-        <div className="bg-background border rounded-lg px-4 py-3 shadow-xs flex items-center">
+        <div className="w-full bg-background border rounded-lg px-4 py-3 shadow-xs flex items-center">
           <div className="flex items-center space-x-3">
             <div className="bg-[#f5f5f5] p-2 rounded-full">
               {Icon && <Icon className="w-5 h-5" />}
@@ -34,7 +36,7 @@ export function DataBarCard({
       )}
 
       {variant === "link" && urlLink && (
-        <Link to={`${urlLink}`} className="bg-background border rounded-lg px-4 py-3 shadow-xs flex items-center justify-between">
+        <Link to={`${urlLink}`} className="w-full bg-background border rounded-lg px-4 py-3 shadow-xs flex items-center justify-between hover:bg-accent hover:text-accent-foreground">
           <div className="flex items-center space-x-3">
             <div className="bg-[#f5f5f5] p-2 rounded-full">
               {Icon && <Icon className="w-5 h-5" />}

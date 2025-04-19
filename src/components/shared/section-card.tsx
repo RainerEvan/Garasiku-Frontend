@@ -1,29 +1,27 @@
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
-import { type LucideIcon, ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp } from "lucide-react"
 import { Separator } from "../shadcn/separator"
 import { cn } from "@/lib/utils"
 import { Button } from "../shadcn/button"
 
-interface DetailSectionCardProps {
+interface SectionCardProps {
   title: string
-  icon?: LucideIcon
-  onIconClick?: () => void
+  headerAction?: React.ReactNode
   children?: React.ReactNode
   collapsible?: boolean
   defaultCollapsed?: boolean
   collapsedHeight?: number
 }
 
-export function DetailSectionCard({
-  title = "Detail",
-  icon: Icon,
-  onIconClick,
+export function SectionCard({
+  title = "Section",
+  headerAction,
   children,
   collapsible = false,
   defaultCollapsed = true,
   collapsedHeight = 100,
-}: DetailSectionCardProps) {
+}: SectionCardProps) {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed && collapsible)
   const [contentHeight, setContentHeight] = useState<number | undefined>(undefined)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -47,13 +45,13 @@ export function DetailSectionCard({
   }
 
   // Only show toggle button if collapsible
-  const showToggle = collapsible
+  const showToggle = collapsible && contentHeight && contentHeight > collapsedHeight
 
   return (
-    <div className="bg-background border rounded-lg p-5 space-y-3 shadow-xs">
+    <div className="bg-background border rounded-lg p-5 shadow-xs flex flex-col gap-3">
       <div className="flex justify-between items-center">
         <h2 className="font-semibold">{title}</h2>
-        {Icon && <Icon onClick={onIconClick} className="w-4 h-4" />}
+        {headerAction && <div>{headerAction}</div>}
       </div>
 
       <Separator />
@@ -63,7 +61,7 @@ export function DetailSectionCard({
           <div
             ref={contentRef}
             className={cn(
-              "relative grid grid-cols-2 gap-3 mb-2 transition-all duration-300 ease-in-out overflow-hidden",
+              "relative mb-2 transition-all duration-300 ease-in-out overflow-hidden",
               isCollapsed && showToggle && "mb-2",
             )}
             style={{
