@@ -3,79 +3,144 @@ import { Plus, PlusCircle, Search } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs"
 import { Input } from "@/components/shadcn/input"
 import { Button } from "@/components/shadcn/button"
+import { supabase } from "@/lib/supabaseClient"
+import { useNavigate } from "react-router-dom"
+import { useEffect, useState } from "react"
+
+
+type Vehicle = {
+  id: string;
+  jenis: string;
+  tahun: string;
+  merek: string;
+  warna: string;
+  tipe: string;
+  plat_no: string;
+  location_name: string;
+  location_address: string;
+  status: "active" | "sold";
+  image_url: string;
+  sold_date?: string;
+}
 
 export default function DaftarKendaraan() {
   // Sample data
-  const activeVehicles = [
-    {
-      id: '1',
-      jenis: "Mobil",
-      tahun: "2022",
-      merk: "Honda",
-      warna: "Hitam",
-      tipe: "Civic Turbo",
-      platNo: "D 1234 ABC",
-      location: {
-        name: "Rumah Bandung",
-        address: "Jl. Sukajadi No. 57, Bandung",
-      },
-      image: "/assets/car.jpg"
-    },
-    {
-      id: '2',
-      jenis: "Mobil",
-      tahun: "2023",
-      merk: "Toyota",
-      warna: "Putih",
-      tipe: "Innova",
-      platNo: "D 7890 DFE",
-      location: {
-        name: "Rumah Jakarta",
-        address: "Jl. Sriwijaya No. 5, Jakarta",
-      },
-      image: "/assets/car.jpg"
-    },
-    {
-      id: '3',
-      jenis: "Mobil",
-      tahun: "2022",
-      merk: "Honda",
-      warna: "Hitam",
-      tipe: "Civic Turbo",
-      platNo: "D 1234 ABC",
-      location: {
-        name: "Rumah Bandung",
-        address: "Jl. Sukajadi No. 57, Bandung",
-      },
-      image: "/assets/car.jpg"
-    },
-  ]
+  // const activeVehicles = [
+  //   {
+  //     id: '1',
+  //     jenis: "Mobil",
+  //     tahun: "2022",
+  //     merk: "Honda",
+  //     warna: "Hitam",
+  //     tipe: "Civic Turbo",
+  //     platNo: "D 1234 ABC",
+  //     location: {
+  //       name: "Rumah Bandung",
+  //       address: "Jl. Sukajadi No. 57, Bandung",
+  //     },
+  //     image: "/assets/car.jpg"
+  //   },
+  //   {
+  //     id: '2',
+  //     jenis: "Mobil",
+  //     tahun: "2023",
+  //     merk: "Toyota",
+  //     warna: "Putih",
+  //     tipe: "Innova",
+  //     platNo: "D 7890 DFE",
+  //     location: {
+  //       name: "Rumah Jakarta",
+  //       address: "Jl. Sriwijaya No. 5, Jakarta",
+  //     },
+  //     image: "/assets/car.jpg"
+  //   },
+  //   {
+  //     id: '3',
+  //     jenis: "Mobil",
+  //     tahun: "2022",
+  //     merk: "Honda",
+  //     warna: "Hitam",
+  //     tipe: "Civic Turbo",
+  //     platNo: "D 1234 ABC",
+  //     location: {
+  //       name: "Rumah Bandung",
+  //       address: "Jl. Sukajadi No. 57, Bandung",
+  //     },
+  //     image: "/assets/car.jpg"
+  //   },
+  // ]
 
-  const soldVehicles = [
-    {
-      id: '4',
-      jenis: "Mobil",
-      tahun: "2022",
-      merk: "Honda",
-      warna: "Hitam",
-      tipe: "Civic Turbo",
-      platNo: "D 1234 ABC",
-      soldDate: "10 Mar 2025",
-      image: "/assets/car.jpg"
-    },
-    {
-      id: '5',
-      jenis: "Mobil",
-      tahun: "2022",
-      merk: "Honda",
-      warna: "Hitam",
-      tipe: "Civic Turbo",
-      platNo: "D 1234 ABC",
-      soldDate: "15 Feb 2025",
-      image: "/assets/car.jpg"
-    },
-  ]
+  // const soldVehicles = [
+  //   {
+  //     id: '4',
+  //     jenis: "Mobil",
+  //     tahun: "2022",
+  //     merk: "Honda",
+  //     warna: "Hitam",
+  //     tipe: "Civic Turbo",
+  //     platNo: "D 1234 ABC",
+  //     soldDate: "10 Mar 2025",
+  //     image: "/assets/car.jpg"
+  //   },
+  //   {
+  //     id: '5',
+  //     jenis: "Mobil",
+  //     tahun: "2022",
+  //     merk: "Honda",
+  //     warna: "Hitam",
+  //     tipe: "Civic Turbo",
+  //     platNo: "D 1234 ABC",
+  //     soldDate: "15 Feb 2025",
+  //     image: "/assets/car.jpg"
+  //   },
+  // ]
 
+  
+  const navigate = useNavigate();
+  const [activeVehicles, setActiveVehicles] = useState<Vehicle[]>([]);
+  const [soldVehicles, setSoldVehicles] = useState<Vehicle[]>([]);
+
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      // Cek login dan role user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profile?.role !== "owner" && profile?.role !== "divisi") {
+        navigate("/unauthorized"); // atau tampilkan pesan tidak boleh akses
+        return;
+      }
+
+      // Fetch kendaraan
+      const { data, error } = await supabase.rpc("get_kendaraan_latest_location");
+      // const { data, error } = await supabase
+      // .from("kendaraan")
+      // .select("*");
+      console.log(data);
+
+      if (error) {
+        console.error("Gagal fetch kendaraan:", error.message);
+        return;
+      }
+
+      const active = data.filter((v: Vehicle) => v.status === "active");
+      const sold = data.filter((v: Vehicle) => v.status === "sold");
+      setActiveVehicles(active);
+      setSoldVehicles(sold);
+    }
+
+    fetchVehicles();
+  }, [navigate]);
+  
   return (
     <div className="min-h-screen flex flex-col">
       {/* Main content */}
@@ -103,16 +168,19 @@ export default function DaftarKendaraan() {
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-              {activeVehicles.map((vehicle) => (
+            {activeVehicles.map((vehicle) => (
                 <VehicleCard
                   key={vehicle.id}
                   id={vehicle.id}
                   variant="active"
-                  name={`${vehicle.merk} ${vehicle.tipe} ${vehicle.warna} ${vehicle.tahun}`}
-                  licensePlate={vehicle.platNo}
+                  name={`${vehicle.merek} ${vehicle.tipe} ${vehicle.warna} ${vehicle.tahun}`}
+                  licensePlate={vehicle.plat_no}
                   type={vehicle.jenis}
-                  location={vehicle.location}
-                  image={vehicle.image}
+                  location={{
+                    name: vehicle.location_name,
+                    address: vehicle.location_address,
+                  }}
+                  image={vehicle.image_url}
                 />
               ))}
             </div>
@@ -128,16 +196,16 @@ export default function DaftarKendaraan() {
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-              {soldVehicles.map((vehicle) => (
+             {soldVehicles.map((vehicle) => (
                 <VehicleCard
                   key={vehicle.id}
                   id={vehicle.id}
                   variant="sold"
-                  name={`${vehicle.merk} ${vehicle.tipe} ${vehicle.warna} ${vehicle.tahun}`}
-                  licensePlate={vehicle.platNo}
+                  name={`${vehicle.merek} ${vehicle.tipe} ${vehicle.warna} ${vehicle.tahun}`}
+                  licensePlate={vehicle.plat_no}
                   type={vehicle.jenis}
-                  soldDate={vehicle.soldDate}
-                  image={vehicle.image}
+                  soldDate={vehicle.sold_date}
+                  image={vehicle.image_url}
                 />
               ))}
             </div>

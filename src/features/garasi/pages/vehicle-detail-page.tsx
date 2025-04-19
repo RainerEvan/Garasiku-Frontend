@@ -8,47 +8,50 @@ import { Separator } from "@/components/shadcn/separator"
 import AdministrationActivityItem from "../components/administration-activity-item"
 import { Status } from "@/lib/constants"
 import { ImageCarousel } from "../components/image-carousel"
+import { supabase } from "@/lib/supabaseClient"
+import { useEffect, useState } from "react"
+import { useParams } from "react-router-dom"
 
 export default function VehicldeDetailPage() {
-    const vehicle = {
-        jenis: "Mobil",
-        tahun: "2022",
-        merk: "Honda",
-        warna: "Hitam",
-        tipe: "Civic Turbo",
-        platNo: "D 1234 ABC",
-        dueDateSTNK: "15 Jan 2026",
-        dueDateInsurance: "1 Feb 2026",
-        lastDateService: "15 Jul 2025",
-    };
+    // const vehicle = {
+    //     jenis: "Mobil",
+    //     tahun: "2022",
+    //     merk: "Honda",
+    //     warna: "Hitam",
+    //     tipe: "Civic Turbo",
+    //     platNo: "D 1234 ABC",
+    //     dueDateSTNK: "15 Jan 2026",
+    //     dueDateInsurance: "1 Feb 2026",
+    //     lastDateService: "15 Jul 2025",
+    // };
 
-    const stnk = {
-        noPolisi: "D 1234 ABC",
-        noSTNK: "123456789",
-        merk: "Honda",
-        warna: "Hitam",
-        tipe: "Civic Turbo",
-        bahanBakar: "Bensin",
-        jenis: "Mobil",
-        warnaTNKB: "Putih",
-        model: "Sedan",
-        tahunRegistrasi: "2023",
-        tahunPembuatan: "2022",
-        noBPKB: "00123456789",
-        isiSilinder: "1498 CC",
-        noUrutPendaftaran: "001/002-1238/1234/0123",
-        noRangka: "MRHFC1610NT0023",
-        kodeLokasi: "0123",
-        noMesin: "L15B7-1234567",
-        berlakuSampai: "15 Jan 2028",
-    };
+    // const stnk = {
+    //     noPolisi: "D 1234 ABC",
+    //     noSTNK: "123456789",
+    //     merk: "Honda",
+    //     warna: "Hitam",
+    //     tipe: "Civic Turbo",
+    //     bahanBakar: "Bensin",
+    //     jenis: "Mobil",
+    //     warnaTNKB: "Putih",
+    //     model: "Sedan",
+    //     tahunRegistrasi: "2023",
+    //     tahunPembuatan: "2022",
+    //     noBPKB: "00123456789",
+    //     isiSilinder: "1498 CC",
+    //     noUrutPendaftaran: "001/002-1238/1234/0123",
+    //     noRangka: "MRHFC1610NT0023",
+    //     kodeLokasi: "0123",
+    //     noMesin: "L15B7-1234567",
+    //     berlakuSampai: "15 Jan 2028",
+    // };
 
-    const vehicleName = `${vehicle.merk} ${vehicle.tipe} ${vehicle.warna} ${vehicle.tahun}`
+    // const vehicleName = `${vehicle.merk} ${vehicle.tipe} ${vehicle.warna} ${vehicle.tahun}`
 
-    const location = {
-        label: "Rumah Bandung",
-        description: "Jl. Sukajadi No. 57, Bandung"
-    }
+    // const location = {
+    //     label: "Rumah Bandung",
+    //     description: "Jl. Sukajadi No. 57, Bandung"
+    // }
 
     const listServis = [
         {
@@ -109,12 +112,12 @@ export default function VehicldeDetailPage() {
         }
     ]
 
-    const images = [
-        "/assets/car.jpg?text=Front",
-        "/assets/car.jpg?text=Front",
-        "/assets/car.jpg?text=Front",
-        "/assets/car.jpg?text=Front"
-    ]
+    // const images = [
+    //     "/assets/car.jpg?text=Front",
+    //     "/assets/car.jpg?text=Front",
+    //     "/assets/car.jpg?text=Front",
+    //     "/assets/car.jpg?text=Front"
+    // ]
 
     const handleEditDetailKendaraan = () => {
         console.log("Detail Kendaraan icon clicked")
@@ -147,6 +150,113 @@ export default function VehicldeDetailPage() {
     const handleVehicleAttachment = () => {
         console.log("Vehicle Attachment button clicked")
     }
+
+    const [vehicleData, setVehicleData] = useState<any>(null)
+    const [loading, setLoading] = useState(true)
+    const { id } = useParams() // asumsikan kamu pakai route /kendaraan/[id]
+    const [stnkData, setStnkData] = useState<any>(null);
+
+    const [images, setImages] = useState<string[]>([])
+
+useEffect(() => {
+    const fetchVehicleData = async () => {
+        setLoading(true);
+
+        // Fetch kendaraan
+        const { data: vehicleData, error: vehicleError } = await supabase
+            .rpc("get_kendaraan_latest_location")
+            .eq("id", id);
+
+        if (vehicleError) {
+            console.error("Gagal fetch kendaraan:", vehicleError);
+        } else {
+            setVehicleData(vehicleData[0]);
+        }
+
+        // Fetch STNK
+        const { data: stnkData, error: stnkError } = await supabase
+            .from('stnk_kendaraan')
+            .select('*')
+            .eq('kendaraan_id', id)
+            .order('berlaku_sampai', { ascending: false })
+            .limit(1);
+
+        if (stnkError) {
+            console.error("Gagal fetch STNK:", stnkError);
+        } else {
+            setStnkData(stnkData[0]);
+        }
+
+        
+        const { data: imageList, error: imageListError } = await supabase.storage
+            .from('kendaraan') //nama bucket
+            .list(`${id}`);
+        console.log(imageList);
+    
+
+        if (imageListError) {
+            console.error("Gagal fetch image list:", imageListError);
+        } else {
+            const urls = await Promise.all(
+                imageList
+                    .filter(file => file.name.endsWith(".jpg") || file.name.endsWith(".png"))
+                    .map(file =>
+                        supabase.storage
+                            .from('kendaraan')
+                            .getPublicUrl(`${id}/${file.name}`).data.publicUrl
+                    )
+            );
+            setImages(urls);
+        }
+
+        setLoading(false);
+    };
+
+    if (id) fetchVehicleData();
+}, [id]);
+
+    if (loading) return <div>Loading...</div>
+    if (!vehicleData || !stnkData) return <div>Data kendaraan atau STNK tidak ditemukan</div>;
+
+
+    const location = {
+        label: vehicleData.location_name,
+        description: vehicleData.location_address
+    }
+
+    const vehicle = {
+        jenis: vehicleData.jenis,
+        tahun: vehicleData.tahun,
+        merk: vehicleData.merek,
+        warna: vehicleData.warna,
+        tipe: vehicleData.tipe,
+        platNo: vehicleData.plat_no,
+        dueDateSTNK: stnkData.berlaku_sampai, // Gunakan tanggal berlaku_sampai dari STNK
+        dueDateInsurance: vehicleData.asuransi_berlaku_sampai, // optional
+        lastDateService: "15 Jul 2025", // optional
+    };
+
+    const vehicleName = `${vehicle.merk} ${vehicle.tipe} ${vehicle.warna} ${vehicle.tahun}`
+
+
+    const stnk = {
+        noSTNK: stnkData.no_stnk,
+        bahanBakar: stnkData.bahan_bakar,
+        warnaTNKB: stnkData.warna_tnkb,
+        tahunRegistrasi: stnkData.tahun_registrasi,
+        tahunPembuatan: stnkData.tahun_pembuatan,
+        noBPKB: stnkData.no_bpkb,
+        isiSilinder: stnkData.isi_silinder,
+        noUrutPendaftaran: stnkData.no_urut_pendaftaran,
+        noRangka: stnkData.no_rangka,
+        kodeLokasi: stnkData.kode_lokasi,
+        noMesin: stnkData.no_mesin,
+        berlakuSampai: stnkData.berlaku_sampai,
+        model :stnkData.model
+    };
+
+
+   
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -221,7 +331,7 @@ export default function VehicldeDetailPage() {
                             variant="default"
                             type="adminAsuransi"
                             label="Jatuh Tempo Asuransi"
-                            description={vehicle.dueDateSTNK}
+                            description={vehicle.dueDateInsurance}
                         />
 
                         {/* Servis Bar */}
@@ -248,14 +358,15 @@ export default function VehicldeDetailPage() {
                         defaultCollapsed={true}
                         collapsedHeight={100}
                     >
+     
                         <div className="grid grid-cols-2 gap-3 py-1">
-                            <SectionItem label="No Polisi" value={stnk.noPolisi} />
+                            <SectionItem label="No Polisi" value={vehicleData.plat_no} />
                             <SectionItem label="No STNK" value={stnk.noSTNK} />
-                            <SectionItem label="Merk" value={stnk.merk} />
-                            <SectionItem label="Warna" value={stnk.warna} />
-                            <SectionItem label="Tipe" value={stnk.tipe} />
+                            <SectionItem label="Merk" value={vehicleData.merek} />
+                            <SectionItem label="Warna" value={vehicleData.warna} />
+                            <SectionItem label="Tipe" value={vehicleData.tipe} />
                             <SectionItem label="Bahan Bakar" value={stnk.bahanBakar} />
-                            <SectionItem label="Jenis" value={stnk.jenis} />
+                            <SectionItem label="Jenis" value={vehicleData.jenis} />
                             <SectionItem label="Warna TNKB" value={stnk.warnaTNKB} />
                             <SectionItem label="Model" value={stnk.model} />
                             <SectionItem label="Tahun Registrasi" value={stnk.tahunRegistrasi} />
