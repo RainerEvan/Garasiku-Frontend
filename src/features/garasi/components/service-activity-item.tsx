@@ -1,12 +1,12 @@
 import SectionItem from "@/components/shared/section-item"
 import StatusLabel from "@/components/shared/status-label"
-import { typeIcons } from "@/lib/constants"
+import { TypeIcons } from "@/lib/constants"
 import { Link } from "react-router-dom"
 
 interface ServiceActivityItemProps {
-    id: string
-    type: keyof typeof typeIcons
-    typeLabel: string
+    id?: string
+    type: keyof typeof TypeIcons
+    typeLabel?: string
     scheduleDate?: string
     startDate?: string
     endDate?: string
@@ -24,7 +24,7 @@ export default function ServiceActivityItem({
     status,
     statusLabel
 }: ServiceActivityItemProps) {
-    const Icon = type ? typeIcons[type] : null
+    const Icon = type ? TypeIcons[type] : null
 
     return (
         <Link to={`/servis/${id}`} className="flex flex-col gap-4 hover:bg-accent">

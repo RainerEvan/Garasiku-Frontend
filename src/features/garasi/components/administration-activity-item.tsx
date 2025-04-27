@@ -1,12 +1,12 @@
 import SectionItem from "@/components/shared/section-item"
 import StatusLabel from "@/components/shared/status-label"
-import { typeIcons } from "@/lib/constants"
+import { TypeIcons } from "@/lib/constants"
 import { Link } from "react-router-dom"
 
 interface AdministrationActivityItemProps {
-    id: string
-    type: keyof typeof typeIcons
-    typeLabel: string
+    id?: string
+    type: keyof typeof TypeIcons
+    typeLabel?: string
     dueDate?: string
     endDate?: string
     status: "pending" | "inprogress" | "completed" | "cancelled" | "active" | "inactive"
@@ -22,10 +22,10 @@ export default function AdministrationActivityItem({
     status,
     statusLabel
 }: AdministrationActivityItemProps) {
-    const Icon = type ? typeIcons[type] : null
+    const Icon = type ? TypeIcons[type] : null
 
     return (
-        <Link to={`/servis/${id}`} className="flex flex-col gap-4 hover:bg-accent">
+        <Link to={`/administrasi/${id}`} className="flex flex-col gap-4 hover:bg-accent">
             <div className="flex items-start justify-between">
                 <div className="flex gap-2 items-center justify-center border rounded-lg px-4 py-2 ">
                     {Icon && <Icon className="w-4 h-4" />}

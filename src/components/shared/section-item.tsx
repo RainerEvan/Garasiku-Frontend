@@ -1,6 +1,6 @@
 interface SectionItemProps {
   label: string
-  value: string | number
+  value?: string | number
 }
 
 export default function SectionItem({ label, value }: SectionItemProps) {

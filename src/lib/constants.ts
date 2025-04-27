@@ -1,6 +1,6 @@
 import { IdCard, MapPin, ShieldCheck, Wrench } from "lucide-react";
 
-export const typeIcons = {
+export const TypeIcons = {
   adminStnk: IdCard,
   adminAsuransi: ShieldCheck,
   servisRegular: Wrench,
@@ -9,3 +9,12 @@ export const typeIcons = {
 };
 
 export type Status = "pending" | "inprogress" | "completed" | "cancelled" | "active" | "inactive";
+
+export const StatusLabel: Record<Status, string> = {
+  pending: "Pending",
+  inprogress: "In Progress",
+  completed: "Completed",
+  cancelled: "Cancelled",
+  active: "Active",
+  inactive: "Inactive",
+};

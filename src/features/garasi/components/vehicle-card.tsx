@@ -1,16 +1,14 @@
+import { LocationVehicle } from "@/models/location-vehicle"
 import { MapPin, Tag } from "lucide-react"
 import { Link } from "react-router-dom"
 
 type VehicleCardProps = {
-  id: string
+  id?: string
   variant: "active" | "sold"
-  name: string
-  licensePlate: string
-  type: string
-  location?: {
-    name: string
-    address: string
-  }
+  name?: string
+  licensePlate?: string
+  type?: string
+  location?: LocationVehicle
   soldDate?: string
   image?: string
 }
@@ -26,7 +24,7 @@ export function VehicleCard({
   image
 }: VehicleCardProps) {
   return (
-    <Link to={`/daftar-kendaraan/${id}`} className="bg-background border rounded-lg shadow-xs overflow-hidden">
+    <Link to={`/kendaraan/${id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
       {/* Image Placeholder */}
       <div className="relative aspect-video w-full overflow-hidden text-[#b3b3b3] bg-[#d9d9d9] flex items-center justify-center">
         <img

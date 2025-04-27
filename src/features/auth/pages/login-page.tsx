@@ -17,8 +17,8 @@ import { useNavigate } from "react-router-dom"
 
 // Define the form schema with validation
 const formSchema = z.object({
-  username: z.string().min(1, { message: "Username is required" }),
-  password: z.string().min(1, { message: "Password is required" }),
+  username: z.string().min(1, { message: "Username harus terisi" }),
+  password: z.string().min(1, { message: "Password harus terisi" }),
 })
 
 export default function LoginPage() {
@@ -36,7 +36,6 @@ export default function LoginPage() {
   // Handle form submission
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Login attempt with:", values)
-    // Handle login logic here
 
     navigate("/");
   }

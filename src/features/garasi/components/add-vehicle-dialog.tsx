@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Edit } from "lucide-react"
+import { Plus, PlusCircle } from "lucide-react"
 
 import { Button } from "@/components/shadcn/button"
 import {
@@ -21,14 +21,12 @@ import { Vehicle } from "@/models/vehicle"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
 import { Param } from "@/models/param"
 
-interface EditDetailVehicleDialogProps {
-  vehicle: Vehicle
-  onSave?: (updatedVehicle: Vehicle) => void
+interface AddVehicleDialogProps {
+  onSave?: (newVehicle: Vehicle) => void
 }
 
 // Define the form schema with validation
 const formSchema = z.object({
-  id: z.string().min(1, { message: "Id harus terisi" }),
   name: z.string().min(1, { message: "Nama harus terisi" }),
   type: z.string().min(1, { message: "Jenis harus terisi" }),
   brand: z.string().min(1, { message: "Merk harus terisi" }),
@@ -38,20 +36,19 @@ const formSchema = z.object({
   licensePlate: z.string().min(1, { message: "Plat No harus terisi" }),
 })
 
-export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDialogProps) {
+export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      id: vehicle.id,
-      name: vehicle.name,
-      type: vehicle.type,
-      brand: vehicle.brand,
-      model: vehicle.model,
-      year: vehicle.year,
-      color: vehicle.color,
-      licensePlate: vehicle.licensePlate,
+      name: "",
+      type: "",
+      brand: "",
+      model: "",
+      year: "",
+      color: "",
+      licensePlate: "",
     },
   })
 
@@ -103,17 +100,20 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
     },
   ]
 
-  const { watch, setValue } = form;
+  const { watch, setValue, reset } = form;
 
+  // Watch for changes in brand, model, color, and year
   const brand = watch("brand");
   const model = watch("model");
   const color = watch("color");
   const year = watch("year");
 
-  // Update the nama field dynamically
+  // Update the name field dynamically
   useEffect(() => {
-    const updatedName = `${vehicleBrandParam.find((item) => item.key == brand)?.name} ${model} ${color} ${year}`;
-    setValue("name", updatedName);
+    if (brand || model || color || year) {
+      const updatedName = `${vehicleBrandParam.find((item) => item.key == brand)?.name} ${model} ${color} ${year}`;
+      setValue("name", updatedName);
+    }
   }, [brand, model, color, year, setValue]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
@@ -122,20 +122,32 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
       onSave(values);
     }
     setOpen(false);
+    reset();
+  }
+
+  function handleDialogChange(isOpen: boolean) {
+    setOpen(isOpen);
+    if (!isOpen) {
+      reset();
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Edit />
-          Ubah
-        </Button>
+        <div>
+          <Button className="hidden sm:flex">
+            <PlusCircle /> Tambah Kendaraan
+          </Button>
+          <Button variant="default" size="icon2" className="fixed z-50 bottom-4 right-4 sm:hidden">
+            <Plus className="size-8" />
+          </Button>
+        </div>
       </DialogTrigger>
       <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Ubah Detail Kendaraan</DialogTitle>
-          <DialogDescription>Atur informasi detail kendaraan dan klik button simpan.</DialogDescription>
+          <DialogTitle>Tambah Kendaraan</DialogTitle>
+          <DialogDescription>Tambah kendaraan baru dan klik button simpan.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

@@ -13,10 +13,9 @@ import { EditImageVehicleDialog } from "./edit-image-vehicle-dialog";
 
 interface ImageCarouselProps {
     images: string[];
-    name: string;
 }
 
-export function ImageCarousel({ images, name }: ImageCarouselProps) {
+export function ImageCarousel({ images }: ImageCarouselProps) {
     const [api, setApi] = useState<CarouselApi>()
     const [current, setCurrent] = useState(0)
     const [count, setCount] = useState(0)
@@ -61,7 +60,7 @@ export function ImageCarousel({ images, name }: ImageCarouselProps) {
                             <div className="aspect-video w-full overflow-hidden">
                                 <img
                                     src={image || "/placeholder.svg"}
-                                    alt={`${name} - Image ${index + 1}`}
+                                    alt={`Image ${index + 1}`}
                                     className="object-cover w-full h-full"
                                 />
                             </div>
