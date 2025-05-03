@@ -1,8 +1,9 @@
+import { Status, StatusLabel } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { cva } from "class-variance-authority"
 
 const statusVariants = cva(
-    "rounded-full w-3 h-3",
+    "rounded-full w-2.5 h-2.5",
     {
         variants: {
             status: {
@@ -10,8 +11,8 @@ const statusVariants = cva(
                     "bg-primary",
                 pending:
                     "bg-status-pending",
-                inprogress:
-                    "bg-status-inprogress",
+                ongoing:
+                    "bg-status-ongoing",
                 completed:
                     "bg-status-completed",
                 cancelled:
@@ -28,19 +29,17 @@ const statusVariants = cva(
     }
 )
 
-interface StatusLabelProps {
-    status: "pending" | "inprogress" | "completed" | "cancelled" | "active" | "inactive"
-    label: string
+interface StatusBarProps {
+    status: Status
 }
 
-export default function StatusLabel({
+export default function StatusBar({
     status,
-    label = "Status"
-}: StatusLabelProps) {
+}: StatusBarProps) {
     return (
-        <div className="flex gap-1 items-center justify-center">
+        <div className="flex gap-1.5 items-center justify-center">
             <div className={cn(statusVariants({ status }))} />
-            <span className="text-xs font-medium">{label}</span>
+            <span className="text-xs font-medium">{StatusLabel[status]}</span>
         </div>
     )
 }

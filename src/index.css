@@ -98,7 +98,7 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-status-pending: var(--tertiary);
-  --color-status-inprogress: var(--secondary);
+  --color-status-ongoing: var(--secondary);
   --color-status-completed: var(--quarternary);
   --color-status-cancelled: var(--destructive);
   --color-status-active: var(--success);

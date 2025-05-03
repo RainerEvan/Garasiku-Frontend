@@ -5,8 +5,6 @@ import { DataBarCard } from "@/components/shared/data-bar-card"
 import { Button } from "@/components/shadcn/button"
 import ServiceActivityItem from "../components/service-activity-item"
 import { Separator } from "@/components/shadcn/separator"
-import AdministrationActivityItem from "../components/administration-activity-item"
-import { Status, StatusLabel } from "@/lib/constants"
 import { ImageCarousel } from "../components/image-carousel"
 import { EditDetailVehicleDialog } from "../components/edit-detail-vehicle-dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/shadcn/alert-dialog"
@@ -22,6 +20,7 @@ import { Administration } from "@/models/administration"
 import { Stnk } from "@/models/stnk"
 import { Param } from "@/models/param"
 import { AddAttachmentVehicleDialog } from "../components/add-attachment-vehicle-dialog"
+import AdministrationActivityItem from "../components/administration-activity-item"
 
 export default function KendaraanDetailPage() {
     const vehicle: Vehicle = {
@@ -72,8 +71,7 @@ export default function KendaraanDetailPage() {
         {
             id: "1",
             vehicleId: "1",
-            type: "servisRegular",
-            typeLabel: "Servis Regular",
+            type: "servis-regular",
             scheduleDate: "15 Jan 2028",
             startDate: undefined,
             endDate: undefined,
@@ -82,18 +80,16 @@ export default function KendaraanDetailPage() {
         {
             id: "2",
             vehicleId: "1",
-            type: "servisRegular",
-            typeLabel: "Servis Regular",
+            type: "servis-regular",
             scheduleDate: "15 Jan 2028",
             startDate: "15 Jan 2028",
             endDate: undefined,
-            status: "inprogress",
+            status: "ongoing",
         },
         {
             id: "3",
             vehicleId: "1",
-            type: "servisRegular",
-            typeLabel: "Servis Regular",
+            type: "servis-regular",
             scheduleDate: "15 Jan 2028",
             startDate: "15 Jan 2028",
             endDate: "15 Jan 2028",
@@ -105,8 +101,7 @@ export default function KendaraanDetailPage() {
         {
             id: "1",
             vehicleId: "1",
-            type: "adminStnk",
-            typeLabel: "Perpanjang STNK",
+            type: "admin-stnk",
             dueDate: "15 Jan 2028",
             endDate: undefined,
             status: "pending",
@@ -114,8 +109,7 @@ export default function KendaraanDetailPage() {
         {
             id: "2",
             vehicleId: "1",
-            type: "adminAsuransi",
-            typeLabel: "Perpanjang Asuransi",
+            type: "admin-asuransi",
             dueDate: "15 Jan 2028",
             endDate: "15 Jan 2028",
             status: "completed",
@@ -258,7 +252,7 @@ export default function KendaraanDetailPage() {
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                                        <AlertDialogCancel>Tidak</AlertDialogCancel>
                                         <AlertDialogAction onClick={handleDeleteVehicle}>Hapus</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -275,7 +269,7 @@ export default function KendaraanDetailPage() {
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                        <AlertDialogCancel>Batal</AlertDialogCancel>
+                                        <AlertDialogCancel>Tidak</AlertDialogCancel>
                                         <AlertDialogAction onClick={handleSellVehicle}>Jual</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
@@ -288,14 +282,14 @@ export default function KendaraanDetailPage() {
                 <div className="flex flex-col gap-5">
                     <div className="flex flex-col gap-5 md:flex-row">
                         {/* Lokasi Bar */}
-                        <HistoryLocationVehicleDialog location={location} />
+                        <HistoryLocationVehicleDialog vehicleId={vehicle.id} latestLocation={location} />
                     </div>
 
                     <div className="flex flex-col gap-5 md:flex-row">
                         {/* STNK Bar */}
                         <DataBarCard
                             variant="default"
-                            type="adminStnk"
+                            type="admin-stnk"
                             label="Jatuh Tempo STNK"
                             description={vehicle.stnkDueDate}
                         />
@@ -303,7 +297,7 @@ export default function KendaraanDetailPage() {
                         {/* Asuransi Bar */}
                         <DataBarCard
                             variant="default"
-                            type="adminAsuransi"
+                            type="admin-asuransi"
                             label="Jatuh Tempo Asuransi"
                             description={vehicle.insuranceDueDate}
                         />
@@ -311,7 +305,7 @@ export default function KendaraanDetailPage() {
                         {/* Servis Bar */}
                         <DataBarCard
                             variant="default"
-                            type="servisRegular"
+                            type="servis-regular"
                             label="Servis Terakhir"
                             description={vehicle.lastServiceDate}
                         />
@@ -367,17 +361,10 @@ export default function KendaraanDetailPage() {
                             {listServis.length > 0 && (
                                 <div className="flex flex-col py-2">
                                     {
-                                        listServis.map((item, index) => (
-                                            <div key={item.id}>
+                                        listServis.map((servis, index) => (
+                                            <div key={servis.id}>
                                                 <ServiceActivityItem
-                                                    id={item.id}
-                                                    type={item.type as "servisRegular" | "servisHeavy"}
-                                                    typeLabel={item.typeLabel}
-                                                    scheduleDate={item.scheduleDate}
-                                                    startDate={item.startDate}
-                                                    endDate={item.endDate}
-                                                    status={item.status as Status}
-                                                    statusLabel={StatusLabel[item.status as Status]}
+                                                    service={servis}
                                                 />
                                                 {index < listServis.length - 1 && (
                                                     <Separator className="my-4" />
@@ -401,16 +388,10 @@ export default function KendaraanDetailPage() {
                             {listAdministrasi.length > 0 && (
                                 <div className="flex flex-col py-2">
                                     {
-                                        listAdministrasi.map((item, index) => (
-                                            <div key={item.id}>
+                                        listAdministrasi.map((administrasi, index) => (
+                                            <div key={administrasi.id}>
                                                 <AdministrationActivityItem
-                                                    id={item.id}
-                                                    type={item.type as "adminStnk" | "adminAsuransi"}
-                                                    typeLabel={item.typeLabel}
-                                                    dueDate={item.dueDate}
-                                                    endDate={item.endDate}
-                                                    status={item.status as Status}
-                                                    statusLabel={StatusLabel[item.status as Status]}
+                                                    administrasi={administrasi}
                                                 />
                                                 {index < listAdministrasi.length - 1 && (
                                                     <Separator className="my-4" />
@@ -460,15 +441,10 @@ export default function KendaraanDetailPage() {
                         {listAttachment.length > 0 && (
                             <div className="flex flex-col">
                                 {
-                                    listAttachment.map((item, index) => (
-                                        <div key={item.id}>
+                                    listAttachment.map((attachment, index) => (
+                                        <div key={attachment.id}>
                                             <AttachmentItem
-                                                id={item.id}
-                                                vehicleId="{item.vehicleId}"
-                                                fileName={item.fileName}
-                                                fileType={item.fileType}
-                                                fileSize={item.fileSize}
-                                                fileLink={item.fileLink}
+                                                attachment={attachment}
                                             />
                                             {index < listAttachment.length - 1 && (
                                                 <Separator className="my-4" />

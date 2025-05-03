@@ -30,8 +30,8 @@ export function LocationCard({
         </div>
         <div className="w-full flex flex-col gap-4">
           <div className="w-full">
-            <div className="text-sm font-medium">{name}</div>
-            <div className="text-xs text-medium">{address}</div>
+            <p className="text-sm font-medium">{name}</p>
+            <p className="text-xs text-medium">{address}</p>
           </div>
           <div className="w-full grid grid-cols-2 gap-5 text-xs text-gray-400">
             <SectionItem label="Diubah Pada" value={createdAt} />

@@ -16,59 +16,52 @@ import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
-import { LocationVehicle } from "@/models/location-vehicle"
+import { LocationService } from "@/models/location-service"
 import { Param } from "@/models/param"
 
-interface MoveLocationVehicleDialogProps {
-  vehicleId?: string
-  onSave?: (newLocationVehicle: LocationVehicle) => void
+interface MoveLocationServiceDialogProps {
+  serviceId?: string
+  onSave?: (newLocationService: LocationService) => void
 }
 
 // Define the form schema with validation
 const formSchema = z.object({
-  vehicleId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
+  serviceId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
   name: z.string().min(1, { message: "Nama Lokasi harus terisi" }),
   address: z.string().min(1, { message: "Alamat Lokasi harus terisi" })
 })
 
-export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVehicleDialogProps) {
+export function MoveLocationServiceDialog({ serviceId, onSave }: MoveLocationServiceDialogProps) {
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      vehicleId: vehicleId,
+      serviceId: serviceId,
       name: "",
       address: ""
     },
   })
 
-  const locationVehicleParam: Param[] = [
+  const locationServiceParam: Param[] = [
     {
       id: "1",
-      group: "004",
+      group: "005",
       key: "alamat-1",
-      name: "Rumah Bandung",
+      name: "Bengkel Honda",
       description: "Jl. Sukajadi No. 57, Bandung"
     },
     {
       id: "2",
-      group: "004",
+      group: "005",
       key: "alamat-2",
-      name: "Apartment Jakarta",
-      description: "Menteng Park Apartment, Jakarta"
-    },
-    {
-      id: "3",
-      group: "004",
-      key: "alamat-3",
       name: "Bengkel ASCO",
       description: "Jl. Kolonel Sugiono No. 20, Jakarta"
     },
     {
-      id: "4",
-      group: "004",
-      key: "alamat-4",
+      id: "3",
+      group: "005",
+      key: "alamat-3",
       name: "Lain-lain",
       description: ""
     }
@@ -82,7 +75,7 @@ export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVeh
 
   // Update the nama field dynamically
   useEffect(() => {
-    const location = locationVehicleParam.find((location => location.name == name));
+    const location = locationServiceParam.find((location => location.name == name));
     if (isLocationAddressDisabled) {
       setValue("address", location?.description || "");
     } else {
@@ -91,7 +84,7 @@ export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVeh
   }, [name, setValue]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Move location kendaraan data: ", values)
+    console.log("Move location service data: ", values)
     if (onSave) {
       onSave(values);
     }
@@ -115,13 +108,13 @@ export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVeh
       </DialogTrigger>
       <DialogContent className="max-h-[95vh] md:max-w-xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Pindah Lokasi Kendaraan</DialogTitle>
-          <DialogDescription>Pilih lokasi baru kendaraan dan klik button simpan.</DialogDescription>
+          <DialogTitle>Pindah Lokasi Servis</DialogTitle>
+          <DialogDescription>Pilih lokasi baru servis dan klik button simpan.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Detail Kendaraan */}
+            {/* Detail Servis */}
             <div className="flex flex-col gap-5">
               <FormField
                 control={form.control}
@@ -132,11 +125,11 @@ export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVeh
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Pilih nama lokasi kendaraan" />
+                          <SelectValue placeholder="Pilih nama lokasi servis" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {locationVehicleParam.map((option) => (
+                        {locationServiceParam.map((option) => (
                           <SelectItem key={option.key} value={option.name}>
                             {option.name}
                           </SelectItem>
@@ -155,7 +148,7 @@ export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVeh
                     <FormLabel className="font-medium">Alamat Lokasi</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Masukkan alamat lokasi kendaraan"
+                        placeholder="Masukkan alamat lokasi servis"
                         {...field}
                         className="w-full"
                         disabled={isLocationAddressDisabled}

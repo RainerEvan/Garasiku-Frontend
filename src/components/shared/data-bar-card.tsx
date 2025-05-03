@@ -1,9 +1,9 @@
-import { TypeIcons } from "@/lib/constants";
+import { TaskTypeIcons } from "@/lib/constants";
 import { ChevronRight } from "lucide-react"
 
 interface DataBarCardProps {
   variant: "default" | "button"
-  type: keyof typeof TypeIcons
+  type: keyof typeof TaskTypeIcons
   label?: string
   description?: string | null
 }
@@ -14,7 +14,7 @@ export function DataBarCard({
   label = "Label",
   description = "-"
 }: DataBarCardProps) {
-  const Icon = type ? TypeIcons[type] : null
+  const Icon = type ? TaskTypeIcons[type] : null
 
   return (
     <>
@@ -25,8 +25,8 @@ export function DataBarCard({
               {Icon && <Icon className="w-5 h-5" />}
             </div>
             <div>
-                <div className="text-sm font-medium">{label}</div>
-                <div className="text-xs text-medium">{description}</div>
+                <p className="text-sm font-medium">{label}</p>
+                <p className="text-xs text-medium">{description}</p>
             </div>
           </div>
         </div>
@@ -39,8 +39,8 @@ export function DataBarCard({
               {Icon && <Icon className="w-5 h-5" />}
             </div>
             <div>
-                <div className="text-sm font-medium">{label}</div>
-                <div className="text-xs text-medium">{description}</div>
+                <p className="text-sm font-medium">{label}</p>
+                <p className="text-xs text-medium">{description}</p>
             </div>
           </div>
           <ChevronRight className="w-4 h-4" />

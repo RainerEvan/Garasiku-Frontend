@@ -113,13 +113,8 @@ export default function CariKendaraanPage() {
         ) : (vehicle) ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
             <VehicleCard
-              id={vehicle.id}
-              variant="active"
-              name={vehicle.name}
-              licensePlate={vehicle.licensePlate}
-              type={vehicle.type}
-              location={vehicle.location}
-              image={vehicle.image}
+              key={vehicle.id}
+              vehicle={vehicle}
             />
           </div>
         ) : (

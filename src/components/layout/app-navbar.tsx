@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubItem, SidebarSeparator, SidebarTrigger, useSidebar } from "../shadcn/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../shadcn/collapsible";
 import { Button } from "../shadcn/button";
@@ -44,7 +44,7 @@ const items = [
 export function AppNavbar() {
     const navigate = useNavigate();
     const { pathname } = useLocation();
-    const { setOpenMobile } = useSidebar();
+    const { setOpenMobile, toggleSidebar } = useSidebar();
 
     function handleLogout() {
         // Perform logout logic here
@@ -73,7 +73,10 @@ export function AppNavbar() {
                                 </div>
                             </div>
                         </SidebarMenuItem>
-                        <SidebarTrigger />
+                        <Button onClick={toggleSidebar} size="icon" variant="ghost" asChild className="lg:hidden">
+                            <X className="w-5 h-5" />
+                        </Button>
+                        <SidebarTrigger className="hidden lg:flex" />
                     </div>
                 </SidebarMenu>
             </SidebarHeader>

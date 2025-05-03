@@ -27,7 +27,8 @@ export default function DaftarKendaraanPage() {
         name: "Rumah Bandung",
         address: "Jl. Sukajadi No. 57, Bandung",
       },
-      image: "/assets/car.jpg"
+      image: "/assets/car.jpg",
+      isSold: false
     },
     {
       id: "2",
@@ -44,7 +45,8 @@ export default function DaftarKendaraanPage() {
         name: "Rumah Jakarta",
         address: "Jl. Sriwijaya No. 5, Jakarta",
       },
-      image: "/assets/car.jpg"
+      image: "/assets/car.jpg",
+      isSold: false
     },
     {
       id: "3",
@@ -61,7 +63,8 @@ export default function DaftarKendaraanPage() {
         name: "Rumah Bandung",
         address: "Jl. Sukajadi No. 57, Bandung",
       },
-      image: "/assets/car.jpg"
+      image: "/assets/car.jpg",
+      isSold: false
     },
   ]
 
@@ -82,7 +85,8 @@ export default function DaftarKendaraanPage() {
         address: "Jl. Sukajadi No. 57, Bandung",
       },
       soldDate: "10 Mar 2025",
-      image: "/assets/car.jpg"
+      image: "/assets/car.jpg",
+      isSold: true
     },
     {
       id: "2",
@@ -100,7 +104,8 @@ export default function DaftarKendaraanPage() {
         address: "Jl. Sriwijaya No. 5, Jakarta",
       },
       soldDate: "10 Mar 2025",
-      image: "/assets/car.jpg"
+      image: "/assets/car.jpg",
+      isSold: true
     },
   ]
 
@@ -142,13 +147,7 @@ export default function DaftarKendaraanPage() {
               {filteredActiveVehicles.map((vehicle) => (
                 <VehicleCard
                   key={vehicle.id}
-                  id={vehicle.id}
-                  variant="active"
-                  name={vehicle.name}
-                  licensePlate={vehicle.licensePlate}
-                  type={vehicle.type}
-                  location={vehicle.location}
-                  image={vehicle.image}
+                  vehicle={vehicle}
                 />
               ))}
             </div>
@@ -169,13 +168,7 @@ export default function DaftarKendaraanPage() {
               {filteredSoldVehicles.map((vehicle) => (
                 <VehicleCard
                   key={vehicle.id}
-                  id={vehicle.id}
-                  variant="sold"
-                  name={vehicle.name}
-                  licensePlate={vehicle.licensePlate}
-                  type={vehicle.type}
-                  soldDate={vehicle.soldDate}
-                  image={vehicle.image}
+                  vehicle={vehicle}
                 />
               ))}
             </div>

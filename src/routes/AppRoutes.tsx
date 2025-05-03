@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { Suspense, lazy } from "react";
 import { AuthenticatedLayout } from "@/components/layout/authenticated-layout";
 import { Loader2 } from "lucide-react";
+import ServisPage from "@/features/servis/pages/servis-page";
+import ServisDetailPage from "@/features/servis/pages/servis-detail-page";
 
 const LoginPage = lazy(() => import("@/features/auth/pages/login-page"));
 const DashboardPage = lazy(() => import("@/features/dashboard/pages/dashboard-page"));
@@ -34,6 +36,8 @@ export default function AppRoutes() {
               <Route path="/daftar-kendaraan" element={<DaftarKendaraanPage />} />
               <Route path="/cari-kendaraan" element={<CariKendaraanPage />} />
               <Route path="/kendaraan/:id" element={<KendaraanDetailPage />} />
+              <Route path="/servis" element={<ServisPage />} />
+              <Route path="/servis/:id" element={<ServisDetailPage />} />
             </Route>
           ) : (
             <Route path="*" element={<Navigate to="/login" replace />} />

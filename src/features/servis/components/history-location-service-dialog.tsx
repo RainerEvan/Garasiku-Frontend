@@ -13,48 +13,32 @@ import {
 import { ScrollArea } from "@/components/shadcn/scroll-area"
 import { DataBarCard } from "@/components/shared/data-bar-card"
 import { LocationCard } from "@/components/shared/location-card"
-import { MoveLocationVehicleDialog } from "./move-location-vehicle-dialog"
-import { LocationVehicle } from "@/models/location-vehicle"
+import { MoveLocationServiceDialog } from "./move-location-service-dialog"
+import { LocationService } from "@/models/location-service"
 
-interface HistoryLocationVehicleDialogProps {
-    vehicleId?: string
-    latestLocation: LocationVehicle
+interface HistoryLocationServiceDialogProps {
+    serviceId?: string
+    latestLocation: LocationService
 }
 
-export function HistoryLocationVehicleDialog({ vehicleId, latestLocation }: HistoryLocationVehicleDialogProps) {
+export function HistoryLocationServiceDialog({ serviceId, latestLocation }: HistoryLocationServiceDialogProps) {
     const [open, setOpen] = useState(false)
 
-    const carLocations: LocationVehicle[] = [
+    const carLocations: LocationService[] = [
         {
             id: "1",
-            vehicleId: "1",
-            name: "Rumah Bandung",
+            serviceId: "1",
+            name: "Bengkel Honda",
             address: "Jl. Sukajadi No. 57, Bandung",
             createdAt: "01 Jan 2025 10:00",
             createdBy: "rainerevan"
         },
         {
             id: "2",
-            vehicleId: "1",
-            name: "Apartment Jakarta",
-            address: "Menteng Park Apartment, Jakarta",
-            createdAt: "31 Des 2024 10:00",
-            createdBy: "rainerevan"
-        },
-        {
-            id: "3",
-            vehicleId: "1",
+            serviceId: "1",
             name: "Bengkel ASCO",
             address: "Jl. Kolonel Sugiono No. 20, Jakarta",
             createdAt: "30 Des 2024 10:00",
-            createdBy: "rainerevan"
-        },
-        {
-            id: "4",
-            vehicleId: "1",
-            name: "Lain-lain",
-            address: "Jl. Sabang No. 8, Bandung",
-            createdAt: "11 Nov 2024 10:00",
             createdBy: "rainerevan"
         }
     ]
@@ -75,7 +59,7 @@ export function HistoryLocationVehicleDialog({ vehicleId, latestLocation }: Hist
                 <DialogHeader>
                     <DialogTitle>Riwayat Lokasi</DialogTitle>
                     <DialogDescription>
-                        Klik button pindah lokasi untuk memindahkan lokasi kendaraan.
+                        Klik button pindah lokasi untuk memindahkan lokasi servis.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -84,7 +68,7 @@ export function HistoryLocationVehicleDialog({ vehicleId, latestLocation }: Hist
                         {carLocations.length === 0 ? (
                             <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
                                 <MapPin className="h-5 w-5 text-muted-foreground mb-2" />
-                                <p className="text-sm text-muted-foreground">Belum ada lokasi kendaraan</p>
+                                <p className="text-sm text-muted-foreground">Belum ada lokasi servis</p>
                             </div>
                         ) : (
                             <div className="relative">
@@ -123,7 +107,7 @@ export function HistoryLocationVehicleDialog({ vehicleId, latestLocation }: Hist
                     </ScrollArea>
 
                     <DialogFooter>
-                        <MoveLocationVehicleDialog vehicleId={vehicleId}/>
+                        <MoveLocationServiceDialog serviceId={serviceId}/>
                     </DialogFooter>
                 </div>
             </DialogContent>

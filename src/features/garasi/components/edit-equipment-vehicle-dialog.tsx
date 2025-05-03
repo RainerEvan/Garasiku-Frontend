@@ -25,7 +25,6 @@ interface EditEquipmentVehicleDialogProps {
   onSave?: (updatedEquipment: string[]) => void
 }
 
-// Define the form schema with validation
 const formSchema = z.object({
   items: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "Minimal checklist salah satu kelengkapan.",

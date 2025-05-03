@@ -1,20 +1,34 @@
-import { IdCard, MapPin, ShieldCheck, Wrench } from "lucide-react";
+import { Anvil, IdCard, MapPin, ShieldCheck, Wrench, type LucideIcon } from "lucide-react";
 
-export const TypeIcons = {
-  adminStnk: IdCard,
-  adminAsuransi: ShieldCheck,
-  servisRegular: Wrench,
-  servisHeavy: Wrench,
-  lokasi: MapPin
+export const TaskTypeLabel: Record<string, string> = {
+  "servis-regular": "Servis Regular",
+  "servis-heavy": "Servis Berat",
+  "admin-stnk": "Perpanjang STNK",
+  "admin-asuransi": "Perpanjang Asuransi"
 };
 
-export type Status = "pending" | "inprogress" | "completed" | "cancelled" | "active" | "inactive";
+export const TaskTypeIcons: Record<string, LucideIcon> = {
+  "admin-stnk": IdCard,
+  "admin-asuransi": ShieldCheck,
+  "servis-regular": Wrench,
+  "servis-heavy": Anvil,
+  "lokasi": MapPin
+};
+
+export const PENDING = "pending";
+export const ONGOING = "ongoing"; 
+export const COMPLETED = "completed";
+export const CANCELLED = "cancelled";
+export const ACTIVE = "active";
+export const INACTIVE = "inactive";
+
+export type Status = typeof PENDING | typeof ONGOING | typeof COMPLETED | typeof CANCELLED | typeof ACTIVE | typeof INACTIVE;
 
 export const StatusLabel: Record<Status, string> = {
-  pending: "Pending",
-  inprogress: "In Progress",
-  completed: "Completed",
-  cancelled: "Cancelled",
-  active: "Active",
-  inactive: "Inactive",
+  [PENDING]: "Pending",
+  [ONGOING]: "Proses",
+  [COMPLETED]: "Selesai",
+  [CANCELLED]: "Batal",
+  [ACTIVE]: "Aktif",
+  [INACTIVE]: "Nonaktif"
 };
