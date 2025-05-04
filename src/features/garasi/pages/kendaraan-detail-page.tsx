@@ -13,7 +13,6 @@ import { Vehicle } from "@/models/vehicle"
 import { Service } from "@/models/service"
 import { EditEquipmentVehicleDialog } from "../components/edit-equipment-vehicle-dialog"
 import { Checkbox } from "@/components/shadcn/checkbox"
-import { HistoryLocationVehicleDialog } from "../components/history-location-vehicle-dialog"
 import AttachmentItem from "@/components/shared/attachment-item"
 import { AttachmentVehicle } from "@/models/attachment-vehicle"
 import { Administration } from "@/models/administration"
@@ -21,6 +20,7 @@ import { Stnk } from "@/models/stnk"
 import { Param } from "@/models/param"
 import { AddAttachmentVehicleDialog } from "../components/add-attachment-vehicle-dialog"
 import AdministrationActivityItem from "../components/administration-activity-item"
+import { Link } from "react-router-dom"
 
 export default function KendaraanDetailPage() {
     const vehicle: Vehicle = {
@@ -35,6 +35,8 @@ export default function KendaraanDetailPage() {
         stnkDueDate: "22 Feb 2026",
         insuranceDueDate: "1 Feb 2026",
         lastServiceDate: "15 Jul 2025",
+        soldDate: "15 Jul 2025",
+        isSold: true,
     };
 
     const stnk: Stnk = {
@@ -43,8 +45,8 @@ export default function KendaraanDetailPage() {
         licensePlate: "D 1234 ABC",
         stnkNumber: "123456789",
         brand: "Honda",
-        color: "Hitam", 
-        model: "Civic Turbo", 
+        color: "Hitam",
+        model: "Civic Turbo",
         fuelType: "Bensin",
         type: "Mobil",
         tnkbColor: "Putih",
@@ -60,7 +62,7 @@ export default function KendaraanDetailPage() {
         validUntil: "15 Jan 2028",
     };
 
-    const location = {
+    const latestLocation = {
         id: "1",
         vehicleId: "1",
         name: "Rumah Bandung",
@@ -257,33 +259,73 @@ export default function KendaraanDetailPage() {
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="default">Jual Kendaraan</Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Jual Kendaraan?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            Apakah Anda yakin ingin menjual kendaraan {vehicle.name}?
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Tidak</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleSellVehicle}>Jual</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
+
+                            {!vehicle.isSold && (
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="default">Jual Kendaraan</Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Jual Kendaraan?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Apakah Anda yakin ingin menjual kendaraan {vehicle.name}?
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Tidak</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleSellVehicle}>Jual</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            )}
+
+                            {vehicle.isSold && (
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="default">Aktifkan Kendaraan</Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Aktifkan Kendaraan?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Apakah Anda yakin ingin mengaktifkan kendaraan {vehicle.name} kembali?
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Tidak</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleSellVehicle}>Aktifkan</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                            )}
                         </div>
                     </div>
                 </div>
 
                 {/* Info Bar */}
                 <div className="flex flex-col gap-5">
-                    <div className="flex flex-col gap-5 md:flex-row">
-                        {/* Lokasi Bar */}
-                        <HistoryLocationVehicleDialog vehicleId={vehicle.id} latestLocation={location} />
-                    </div>
+                    {/* Lokasi Bar */}
+                    {latestLocation && (
+                        <Link to={`/kendaraan/${vehicle.id}/riwayat-lokasi`}>
+                            <DataBarCard
+                                variant="button"
+                                type="lokasi"
+                                label={latestLocation.name}
+                                description={latestLocation.address}
+                            />
+                        </Link >
+                    )}
+
+                    {/* Terjual Bar */}
+                    {(vehicle.isSold && vehicle.soldDate) && (
+                        <DataBarCard
+                            variant="default"
+                            type="terjual"
+                            label={"Terjual"}
+                            description={vehicle.soldDate}
+                        />
+                    )}
 
                     <div className="flex flex-col gap-5 md:flex-row">
                         {/* STNK Bar */}
@@ -434,9 +476,6 @@ export default function KendaraanDetailPage() {
                         headerAction={
                             <AddAttachmentVehicleDialog vehicleId={vehicle.id} />
                         }
-                        collapsible
-                        defaultCollapsed={true}
-                        collapsedHeight={60}
                     >
                         {listAttachment.length > 0 && (
                             <div className="flex flex-col">

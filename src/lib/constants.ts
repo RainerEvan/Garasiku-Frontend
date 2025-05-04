@@ -1,18 +1,20 @@
-import { Anvil, IdCard, MapPin, ShieldCheck, Wrench, type LucideIcon } from "lucide-react";
+import { Anvil, CarFront, IdCard, MapPin, ShieldCheck, Tag, Wrench, type LucideIcon } from "lucide-react";
 
 export const TaskTypeLabel: Record<string, string> = {
   "servis-regular": "Servis Regular",
   "servis-heavy": "Servis Berat",
-  "admin-stnk": "Perpanjang STNK",
-  "admin-asuransi": "Perpanjang Asuransi"
+  "administrasi-stnk": "Perpanjang STNK",
+  "administrasi-asuransi": "Perpanjang Asuransi"
 };
 
 export const TaskTypeIcons: Record<string, LucideIcon> = {
-  "admin-stnk": IdCard,
-  "admin-asuransi": ShieldCheck,
+  "administrasi-stnk": IdCard,
+  "administrasi-asuransi": ShieldCheck,
   "servis-regular": Wrench,
   "servis-heavy": Anvil,
-  "lokasi": MapPin
+  "lokasi": MapPin,
+  "terjual": Tag,
+  "kendaraan": CarFront,
 };
 
 export const PENDING = "pending";
@@ -28,7 +30,7 @@ export const StatusLabel: Record<Status, string> = {
   [PENDING]: "Pending",
   [ONGOING]: "Proses",
   [COMPLETED]: "Selesai",
-  [CANCELLED]: "Batal",
+  [CANCELLED]: "Dibatalkan",
   [ACTIVE]: "Aktif",
   [INACTIVE]: "Nonaktif"
 };

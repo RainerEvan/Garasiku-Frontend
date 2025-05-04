@@ -1,34 +1,15 @@
-import { useState } from "react"
-import { MapPin } from "lucide-react"
+import { LocationService } from "@/models/location-service";
+import { MoveLocationServiceDialog } from "../components/move-location-service-dialog";
+import { MapPin } from "lucide-react";
+import { LocationCard } from "@/components/shared/location-card";
 
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/shadcn/dialog"
-import { ScrollArea } from "@/components/shadcn/scroll-area"
-import { DataBarCard } from "@/components/shared/data-bar-card"
-import { LocationCard } from "@/components/shared/location-card"
-import { MoveLocationServiceDialog } from "./move-location-service-dialog"
-import { LocationService } from "@/models/location-service"
 
-interface HistoryLocationServiceDialogProps {
-    serviceId?: string
-    latestLocation: LocationService
-}
-
-export function HistoryLocationServiceDialog({ serviceId, latestLocation }: HistoryLocationServiceDialogProps) {
-    const [open, setOpen] = useState(false)
-
+export default function RiwayatLokasiServisPage() {
     const carLocations: LocationService[] = [
         {
             id: "1",
             serviceId: "1",
-            name: "Bengkel Honda",
+            name: "Rumah Bandung",
             address: "Jl. Sukajadi No. 57, Bandung",
             createdAt: "01 Jan 2025 10:00",
             createdBy: "rainerevan"
@@ -36,35 +17,49 @@ export function HistoryLocationServiceDialog({ serviceId, latestLocation }: Hist
         {
             id: "2",
             serviceId: "1",
+            name: "Apartment Jakarta",
+            address: "Menteng Park Apartment, Jakarta",
+            createdAt: "31 Des 2024 10:00",
+            createdBy: "rainerevan"
+        },
+        {
+            id: "3",
+            serviceId: "1",
             name: "Bengkel ASCO",
             address: "Jl. Kolonel Sugiono No. 20, Jakarta",
             createdAt: "30 Des 2024 10:00",
             createdBy: "rainerevan"
+        },
+        {
+            id: "4",
+            serviceId: "1",
+            name: "Lain-lain",
+            address: "Jl. Sabang No. 8, Bandung",
+            createdAt: "11 Nov 2024 10:00",
+            createdBy: "rainerevan"
         }
     ]
 
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <div className="w-full">
-                    <DataBarCard
-                        variant="button"
-                        type="lokasi"
-                        label={latestLocation.name}
-                        description={latestLocation.address}
-                    />
-                </div>
-            </DialogTrigger>
-            <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Riwayat Lokasi</DialogTitle>
-                    <DialogDescription>
-                        Klik button pindah lokasi untuk memindahkan lokasi servis.
-                    </DialogDescription>
-                </DialogHeader>
+    const serviceId = "1";
 
-                <div className="space-y-6">
-                    <ScrollArea className="h-[50vh]">
+    const serviceStatus:string = "pending";
+
+    return (
+        <div className="min-h-screen flex flex-col">
+            {/* Main content */}
+            <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
+                <div className="bg-background border rounded-lg p-5 shadow-xs flex flex-col gap-8">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+                        <div className="flex flex-col">
+                            <h1 className="text-lg font-semibold">Riwayat Lokasi Servis</h1>
+                            <p className="text-muted-foreground text-sm">Klik button pindah lokasi untuk memindahkan lokasi servis.</p>
+                        </div>
+                        {serviceStatus == "ongoing" && (
+                            <MoveLocationServiceDialog serviceId={serviceId} />
+                        )}
+                    </div>
+
+                    <div>
                         {carLocations.length === 0 ? (
                             <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
                                 <MapPin className="h-5 w-5 text-muted-foreground mb-2" />
@@ -89,7 +84,7 @@ export function HistoryLocationServiceDialog({ serviceId, latestLocation }: Hist
                                         {/* Card */}
                                         <div className="flex-1 flex flex-col gap-2 pb-5">
                                             {index == 0 && (
-                                                <p className="text-sm font-medium text-secondary">Lokasi Saat Ini</p>
+                                                <p className="text-sm font-medium text-secondary">Lokasi Terakhir</p>
                                             )}
                                             <LocationCard
                                                 name={location.name}
@@ -104,13 +99,9 @@ export function HistoryLocationServiceDialog({ serviceId, latestLocation }: Hist
 
                             </div>
                         )}
-                    </ScrollArea>
-
-                    <DialogFooter>
-                        <MoveLocationServiceDialog serviceId={serviceId}/>
-                    </DialogFooter>
+                    </div>
                 </div>
-            </DialogContent>
-        </Dialog>
+            </main>
+        </div>
     )
 }

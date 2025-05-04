@@ -110,14 +110,12 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
       group: "006",
       key: "servis-regular",
       name: "Servis Regular",
-      description: "Servis Regular"
     },
     {
       id: "2",
       group: "006",
       key: "servis-heavy",
       name: "Servis Berat",
-      description: "Servis Berat"
     },
   ]
 

@@ -1,5 +1,5 @@
+import { TaskTypeIcons } from "@/lib/constants";
 import { Vehicle } from "@/models/vehicle"
-import { MapPin, Tag } from "lucide-react"
 import { Link } from "react-router-dom"
 
 type VehicleCardProps = {
@@ -9,8 +9,9 @@ type VehicleCardProps = {
 export function VehicleCard({
   vehicle
 }: VehicleCardProps) {
-  const variant = vehicle.isSold ? "sold":"active";
-  
+  const variant = vehicle.isSold ? "sold" : "active";
+  const Icon = vehicle.isSold ? TaskTypeIcons["terjual"] : TaskTypeIcons["lokasi"]
+
   return (
     <Link to={`/kendaraan/${vehicle.id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
       {/* Image Placeholder */}
@@ -34,25 +35,21 @@ export function VehicleCard({
 
         {/* Location or Sold Status */}
         <div className="mt-3 border rounded-lg p-3 flex items-start gap-2">
-          {variant === "active" && location && (
-            <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-medium shrink-0" />
-              <div>
-                <p className="text-sm font-medium">{vehicle.location?.name}</p>
-                <p className="text-xs text-medium">{vehicle.location?.address}</p>
-              </div>
-            </div>
-          )}
-
-          {variant === "sold" && vehicle.soldDate && (
-            <div className="flex items-center gap-3">
-              <Tag className="h-5 w-5 text-medium shrink-0" />
-              <div>
-                <p className="text-sm font-medium">Terjual</p>
-                <p className="text-xs text-medium">{vehicle.soldDate}</p>
-              </div>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {Icon && <Icon className="h-5 w-5 text-medium shrink-0" />}
+            {variant === "active" && location && (
+                <div>
+                  <p className="text-sm font-medium">{vehicle.location?.name}</p>
+                  <p className="text-xs text-medium">{vehicle.location?.address}</p>
+                </div>
+            )}
+            {variant === "sold" && vehicle.soldDate && (
+                <div>
+                  <p className="text-sm font-medium">Terjual</p>
+                  <p className="text-xs text-medium">{vehicle.soldDate}</p>
+                </div>
+            )}
+          </div>
         </div>
       </div>
     </Link>

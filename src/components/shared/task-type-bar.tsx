@@ -10,7 +10,7 @@ export default function TaskType({
     const Icon = TaskTypeIcons[taskType]
     
     return (
-        <div className="flex gap-2 items-center justify-center border rounded-lg px-4 py-2 ">
+        <div className="flex gap-2 items-center justify-center border rounded-lg px-3 py-2 ">
             {Icon && <Icon className="w-4 h-4" />}
             <span className="text-xs font-medium">{TaskTypeLabel[taskType]}</span>
         </div>

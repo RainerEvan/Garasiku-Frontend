@@ -1,4 +1,3 @@
-import { ChevronRight } from "lucide-react"
 import { SectionCard } from "@/components/shared/section-card"
 import SectionItem from "@/components/shared/section-item"
 import { Button } from "@/components/shadcn/button"
@@ -11,15 +10,14 @@ import { ServiceRecord } from "@/models/service-record"
 import TaskTypeBar from "@/components/shared/task-type-bar"
 import StatusBar from "@/components/shared/status-bar"
 import { Status } from "@/lib/constants"
-import { HistoryLocationServiceDialog } from "../components/history-location-service-dialog"
 import { EditServiceRecordDialog } from "../components/edit-service-record-dialog"
 import { AddAttachmentServiceDialog } from "../components/add-attachment-service-dialog"
-import { useNavigate } from "react-router-dom"
+import { Link } from "react-router-dom"
 import { StartServiceDialog } from "../components/start-service-dialog"
+import { DataBarCard } from "@/components/shared/data-bar-card"
+import { CompleteServiceDialog } from "../components/complete-service-dialog"
 
 export default function ServisDetailPage() {
-    const navigate = useNavigate();
-
     const service: Service = {
         id: "1",
         ticketNum: "SRV25-00001",
@@ -38,21 +36,21 @@ export default function ServisDetailPage() {
         scheduleDate: "15 Jan 2028",
         startDate: "15 Jan 2028",
         endDate: "15 Jan 2028",
-        status: "completed",
+        status: "ongoing",
     };
 
     const serviceRecord: ServiceRecord = {
         id: "1",
         serviceId: "1",
-        mileage: undefined,
-        totalCost: undefined,
-        mechanicName: undefined,
-        task: undefined,
-        sparepart: undefined,
-        notes: undefined,
+        mileage: 30000,
+        totalCost: 1500000,
+        mechanicName: "Agus Purnama",
+        task: "-Tune Up\n-Ganti Oli & Filter\n-Ganti Kampas Rem",
+        sparepart: "-Oli\n-Filter\n-Kampas Rem",
+        notes: "Ban depan udah mulai gundul",
     };
 
-    const location = {
+    const latestLocation = {
         id: "1",
         serviceId: "1",
         name: "Bengkel Honda",
@@ -82,11 +80,6 @@ export default function ServisDetailPage() {
         },
     ]
 
-    const handleDataKendaraan = () => {
-        console.log("Data Kendaraan button clicked")
-        navigate(`/kendaraan/${service.vehicleId}`);
-    }
-
     const handleCancelService = () => {
         console.log("Cancel Service button clicked")
     }
@@ -95,9 +88,9 @@ export default function ServisDetailPage() {
         <div className="min-h-screen flex flex-col">
             {/* Main content */}
             <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
-                {/* Service Details */}
-                <div className="flex flex-col gap-5 rounded-lg border bg-background p-5">
-                    <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-5">
+                    {/* Service Details */}
+                    <div className="flex flex-col gap-3 rounded-lg border bg-background p-5">
                         <div>
                             <h1 className="text-3xl font-bold">{service.ticketNum}</h1>
                         </div>
@@ -105,83 +98,110 @@ export default function ServisDetailPage() {
                         <Separator />
 
                         <div className="flex flex-col gap-5">
-                            <div className="flex items-start justify-between">
-                                <TaskTypeBar taskType={service.type} />
-                                <StatusBar status={service.status as Status} />
+                            <div className="flex flex-col gap-5">
+                                <div className="flex items-start justify-between">
+                                    <TaskTypeBar taskType={service.type} />
+                                    <StatusBar status={service.status as Status} />
+                                </div>
+                                <div className="flex items-end justify-between">
+                                    <SectionItem label="Jadwal Servis" value={service.scheduleDate} />
+                                    <SectionItem label="Servis Mulai" value={service.startDate} />
+                                    <SectionItem label="Servis Selesai" value={service.endDate} />
+                                </div>
                             </div>
-                            <div className="flex items-end justify-between">
-                                <SectionItem label="Jadwal Servis" value={service.scheduleDate} />
-                                <SectionItem label="Servis Mulai" value={service.startDate} />
-                                <SectionItem label="Servis Selesai" value={service.endDate} />
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive">Batalkan Servis</Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Batalkan Servis?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Apakah Anda yakin ingin membatalkan servis {service.ticketNum}?
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Tidak</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleCancelService}>Batalkan</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                        <StartServiceDialog serviceRecord={serviceRecord} />
+                            {service.status == "pending" && (
+                                <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="destructive">Batalkan Servis</Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Batalkan Servis?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Apakah Anda yakin ingin membatalkan servis {service.ticketNum}?
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Tidak</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleCancelService}>Batalkan</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                    <StartServiceDialog serviceRecord={serviceRecord} />
+                                </div>
+                            )}
+
+                            {service.status == "ongoing" && (
+                                <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="destructive">Batalkan Servis</Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Batalkan Servis?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Apakah Anda yakin ingin membatalkan servis {service.ticketNum}?
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Tidak</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleCancelService}>Batalkan</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                    <CompleteServiceDialog serviceRecord={serviceRecord} />
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
                 {/* Info Bar */}
                 <div className="flex flex-col gap-5">
+                    {/* Vehicle Bar */}
+                    <Link to={`/kendaraan/${service.vehicleId}`}>
+                        <DataBarCard
+                            variant="button"
+                            type="kendaraan"
+                            label={service.vehicle?.name}
+                            description={service.vehicle?.licensePlate}
+                        />
+                    </Link >
+
                     {/* Lokasi Bar */}
-                    <HistoryLocationServiceDialog serviceId={service.id} latestLocation={location} />
+                    {latestLocation && (
+                        <Link to={`/servis/${service.id}/riwayat-lokasi`}>
+                            <DataBarCard
+                                variant="button"
+                                type="lokasi"
+                                label={latestLocation.name}
+                                description={latestLocation.address}
+                            />
+                        </Link >
+                    )}
                 </div>
 
                 {/* Sections */}
                 <div className="flex flex-col gap-5 overflow-auto">
-                    {/* Data Kendaraan */}
-                    <SectionCard
-                        title="Data Kendaraan"
-                        headerAction={
-                            <Button variant="ghost" size="sm" onClick={handleDataKendaraan}>
-                                <ChevronRight />
-                            </Button>
-                        }
-                    >
-                        {service.vehicle && (
-                            <div className="flex justify-between gap-5 capitalize">
-                                <div className="flex flex-col">
-                                    <p className="font-medium">{service.vehicle.name}</p>
-                                    <p className="text-xs text-light">{service.vehicle.licensePlate}</p>
-                                </div>
-                                <div className="flex flex-col">
-                                    <p className="text-sm text-medium">{service.vehicle.type}</p>
-                                </div>
-                            </div>
-                        )}
-                    </SectionCard>
-
                     {/* Rincian Servis */}
                     <SectionCard
                         title="Rincian Servis"
                         headerAction={
-                            <EditServiceRecordDialog serviceRecord={serviceRecord} />
+                            <>
+                                {service.status == "ongoing" && (
+                                    <EditServiceRecordDialog serviceRecord={serviceRecord} />
+                                )}
+                            </>
                         }
                     >
                         {serviceRecord && (
                             <div className="grid grid-cols-1 gap-3 py-1">
                                 <div className="grid grid-cols-2 gap-3">
-                                    <SectionItem label="Kilometer" value={serviceRecord.mileage} />
-                                    <SectionItem label="Biaya" value={serviceRecord.totalCost} />
+                                    <SectionItem label="Kilometer" value={`${serviceRecord.mileage} KM`} />
+                                    <SectionItem label="Biaya" value={`Rp ${serviceRecord.totalCost}`} />
                                 </div>
                                 <SectionItem label="Nama Mekanik" value={serviceRecord.mechanicName} />
                                 <SectionItem label="Jasa" value={serviceRecord.task} />
@@ -197,9 +217,6 @@ export default function ServisDetailPage() {
                         headerAction={
                             <AddAttachmentServiceDialog serviceId={service.id} />
                         }
-                        collapsible
-                        defaultCollapsed={true}
-                        collapsedHeight={60}
                     >
                         {listAttachment.length > 0 && (
                             <div className="flex flex-col">

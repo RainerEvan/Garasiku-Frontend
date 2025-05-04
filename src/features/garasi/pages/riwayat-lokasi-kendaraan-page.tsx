@@ -1,29 +1,10 @@
-import { useState } from "react"
-import { MapPin } from "lucide-react"
+import { LocationVehicle } from "@/models/location-vehicle";
+import { MoveLocationVehicleDialog } from "../components/move-location-vehicle-dialog";
+import { MapPin } from "lucide-react";
+import { LocationCard } from "@/components/shared/location-card";
 
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/shadcn/dialog"
-import { ScrollArea } from "@/components/shadcn/scroll-area"
-import { DataBarCard } from "@/components/shared/data-bar-card"
-import { LocationCard } from "@/components/shared/location-card"
-import { MoveLocationVehicleDialog } from "./move-location-vehicle-dialog"
-import { LocationVehicle } from "@/models/location-vehicle"
 
-interface HistoryLocationVehicleDialogProps {
-    vehicleId?: string
-    latestLocation: LocationVehicle
-}
-
-export function HistoryLocationVehicleDialog({ vehicleId, latestLocation }: HistoryLocationVehicleDialogProps) {
-    const [open, setOpen] = useState(false)
-
+export default function RiwayatLokasiKendaraanPage() {
     const carLocations: LocationVehicle[] = [
         {
             id: "1",
@@ -59,28 +40,26 @@ export function HistoryLocationVehicleDialog({ vehicleId, latestLocation }: Hist
         }
     ]
 
-    return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <div className="w-full">
-                    <DataBarCard
-                        variant="button"
-                        type="lokasi"
-                        label={latestLocation.name}
-                        description={latestLocation.address}
-                    />
-                </div>
-            </DialogTrigger>
-            <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Riwayat Lokasi</DialogTitle>
-                    <DialogDescription>
-                        Klik button pindah lokasi untuk memindahkan lokasi kendaraan.
-                    </DialogDescription>
-                </DialogHeader>
+    const vehicleId = "1";
 
-                <div className="space-y-6">
-                    <ScrollArea className="h-[50vh]">
+    const vehicleIsSold: boolean = false;
+
+    return (
+        <div className="min-h-screen flex flex-col">
+            {/* Main content */}
+            <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
+                <div className="bg-background border rounded-lg p-5 shadow-xs flex flex-col gap-8">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+                        <div className="flex flex-col">
+                            <h1 className="text-lg font-semibold">Riwayat Lokasi Kendaraan</h1>
+                            <p className="text-muted-foreground text-sm">Klik button pindah lokasi untuk memindahkan lokasi kendaraan.</p>
+                        </div>
+                        {!vehicleIsSold && (
+                            <MoveLocationVehicleDialog vehicleId={vehicleId} />
+                        )}
+                    </div>
+
+                    <div>
                         {carLocations.length === 0 ? (
                             <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
                                 <MapPin className="h-5 w-5 text-muted-foreground mb-2" />
@@ -105,7 +84,7 @@ export function HistoryLocationVehicleDialog({ vehicleId, latestLocation }: Hist
                                         {/* Card */}
                                         <div className="flex-1 flex flex-col gap-2 pb-5">
                                             {index == 0 && (
-                                                <p className="text-sm font-medium text-secondary">Lokasi Saat Ini</p>
+                                                <p className="text-sm font-medium text-secondary">Lokasi Terakhir</p>
                                             )}
                                             <LocationCard
                                                 name={location.name}
@@ -120,13 +99,9 @@ export function HistoryLocationVehicleDialog({ vehicleId, latestLocation }: Hist
 
                             </div>
                         )}
-                    </ScrollArea>
-
-                    <DialogFooter>
-                        <MoveLocationVehicleDialog vehicleId={vehicleId}/>
-                    </DialogFooter>
+                    </div>
                 </div>
-            </DialogContent>
-        </Dialog>
+            </main>
+        </div>
     )
 }

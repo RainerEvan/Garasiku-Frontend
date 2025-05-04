@@ -18,15 +18,15 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ServiceRecord } from "@/models/service-record"
 import { Textarea } from "@/components/shadcn/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
-import { Param } from "@/models/param"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover"
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/shadcn/calendar"
 import { cn } from "@/lib/utils"
-import { format } from "date-fns"
+import { addMonths, format } from "date-fns"
+import { Switch } from "@/components/shadcn/switch"
+import { Separator } from "@/components/shadcn/separator"
 
-interface StartServiceDialogProps {
+interface CompleteServiceDialogProps {
   serviceRecord: ServiceRecord
   onSave?: (updatedServiceRecord: ServiceRecord) => void
 }
@@ -34,19 +34,30 @@ interface StartServiceDialogProps {
 // Define the form schema with validation
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
-  serviceId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
-  startDate: z.date({ required_error: "Tanggal Mulai harus terisi" }),
-  locationName: z.string().min(1, { message: "Nama Lokasi harus terisi" }),
-  locationAddress: z.string().min(1, { message: "Alamat Lokasi harus terisi" }),
+  serviceId: z.string().min(1, { message: "Service Id harus terisi" }),
+  endDate: z.date({ required_error: "Tanggal Selesai harus terisi" }),
   mileage: z.number().min(0, { message: "Kilometer harus terisi" }),
   totalCost: z.number().min(0, { message: "Biaya harus terisi" }),
   mechanicName: z.string().min(1, { message: "Nama Mekanik harus terisi" }),
   task: z.string().min(1, { message: "Jasa harus terisi" }),
   sparepart: z.string().min(1, { message: "Sparepart harus terisi" }),
-  notes: z.string().min(1, { message: "Notes harus terisi" }),
-})
+  notes: z.string().min(1, { message: "Catatan harus terisi" }),
+  isSetNextReminder: z.boolean(),
+  nextScheduleDate: z.date(),
+}).refine(
+  (data) => {
+    if (data.isSetNextReminder) {
+      return data.nextScheduleDate instanceof Date;
+    }
+    return true;
+  },
+  {
+    path: ["nextScheduleDate"],
+    message: "Jadwal Berikutnya harus terisi",
+  }
+)
 
-export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialogProps) {
+export function CompleteServiceDialog({ serviceRecord, onSave }: CompleteServiceDialogProps) {
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -54,61 +65,34 @@ export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialog
     defaultValues: {
       id: serviceRecord.id,
       serviceId: serviceRecord.serviceId,
-      locationName: "",
-      locationAddress: "",
       mileage: serviceRecord.mileage,
       totalCost: serviceRecord.totalCost,
       mechanicName: serviceRecord.mechanicName,
       task: serviceRecord.task,
       sparepart: serviceRecord.sparepart,
-      notes: serviceRecord.notes
+      notes: serviceRecord.notes,
+      isSetNextReminder: true,
     },
   })
 
-  const locationServiceParam: Param[] = [
-    {
-      id: "1",
-      group: "005",
-      key: "alamat-1",
-      name: "Bengkel Honda",
-      description: "Jl. Sukajadi No. 57, Bandung"
-    },
-    {
-      id: "2",
-      group: "005",
-      key: "alamat-2",
-      name: "Bengkel ASCO",
-      description: "Jl. Kolonel Sugiono No. 20, Jakarta"
-    },
-    {
-      id: "3",
-      group: "005",
-      key: "alamat-3",
-      name: "Lain-lain",
-      description: ""
-    }
-  ]
-
   const { watch, setValue, reset } = form;
 
-  const name = watch("locationName");
+  const endDate = watch("endDate");
 
-  const isLocationAddressDisabled = name !== "Lain-lain";
+  const isSetNextReminder = watch("isSetNextReminder");
 
-  // Update the nama field dynamically
   useEffect(() => {
-    const location = locationServiceParam.find((location => location.name == name));
-    if (isLocationAddressDisabled) {
-      setValue("locationAddress", location?.description || "");
-    } else {
-      setValue("locationAddress", "");
+    if (isSetNextReminder && endDate) {
+      const nextScheduleDate = addMonths(endDate, 6);
+      setValue("nextScheduleDate", nextScheduleDate);
     }
-  }, [name, setValue]);
+  }, [endDate, setValue]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const formattedValues = {
       ...values,
-      startDate: values.startDate ? format(values.startDate, "yyyy-MM-dd") : undefined,
+      endDate: values.endDate ? format(values.endDate, "yyyy-MM-dd") : undefined,
+      nextScheduleDate: values.nextScheduleDate ? format(values.nextScheduleDate, "yyyy-MM-dd") : undefined,
     };
 
     console.log("Add service record data: ", formattedValues)
@@ -128,11 +112,11 @@ export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialog
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>
-        <Button variant="default">Mulai Servis</Button>
+        <Button variant="default">Selesaikan Servis</Button>
       </DialogTrigger>
       <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Mulai Servis</DialogTitle>
+          <DialogTitle>Selesaikan Servis</DialogTitle>
           <DialogDescription>Tambah informasi rincian servis dan klik button simpan.</DialogDescription>
         </DialogHeader>
 
@@ -143,10 +127,10 @@ export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialog
               <div className="grid grid-cols-1 gap-5">
                 <FormField
                   control={form.control}
-                  name="startDate"
+                  name="endDate"
                   render={({ field }) => (
                     <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Tanggal Mulai</FormLabel>
+                      <FormLabel className="font-medium">Tanggal Selesai</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -160,7 +144,7 @@ export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialog
                               {field.value ? (
                                 format(field.value, "dd MMM yyyy")
                               ) : (
-                                <span>Pilih tanggal mulai servis</span>
+                                <span>Pilih tanggal selesai servis</span>
                               )}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
@@ -171,7 +155,7 @@ export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialog
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            disabled={(date:Date) =>
+                            disabled={(date: Date) =>
                               date < new Date("1900-01-01")
                             }
                           />
@@ -184,50 +168,6 @@ export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialog
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <FormField
-                  control={form.control}
-                  name="locationName"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Nama Lokasi Servis</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Pilih nama lokasi servis" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {locationServiceParam.map((option) => (
-                            <SelectItem key={option.key} value={option.name}>
-                              {option.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="locationAddress"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Alamat Lokasi Servis</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Masukkan alamat lokasi servis"
-                          {...field}
-                          className="w-full"
-                          disabled={isLocationAddressDisabled}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <FormField
                   control={form.control}
                   name="mileage"
@@ -337,6 +277,67 @@ export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialog
                     </FormItem>
                   )}
                 />
+
+                <Separator />
+
+                <FormField
+                  control={form.control}
+                  name="isSetNextReminder"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between">
+                      <FormLabel className="font-medium">Buat Reminder Servis Berikutnya</FormLabel>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                {isSetNextReminder && (
+                  <FormField
+                    control={form.control}
+                    name="nextScheduleDate"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="font-medium">Jadwal Servis Berikutnya</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "dd MMM yyyy")
+                                ) : (
+                                  <span>Pilih tanggal servis berikutnya</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              disabled={(date: Date) =>
+                                date < new Date("1900-01-01")
+                              }
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
             </div>
 

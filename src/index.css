@@ -112,6 +112,9 @@
   body {
     @apply font-inter bg-background text-foreground;
   }
+  pre {
+    @apply font-inter text-foreground;
+  }
 }
 
 #root {

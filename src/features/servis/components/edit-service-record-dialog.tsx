@@ -29,8 +29,8 @@ interface EditServiceRecordDialogProps {
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
   serviceId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
-  mileage: z.string().min(1, { message: "Kilometer harus terisi" }),
-  totalCost: z.string().min(1, { message: "Biaya harus terisi" }),
+  mileage: z.number().min(0, { message: "Kilometer harus terisi" }),
+  totalCost: z.number().min(0, { message: "Biaya harus terisi" }),
   mechanicName: z.string().min(1, { message: "Nama Mekanik harus terisi" }),
   task: z.string().min(1, { message: "Jasa harus terisi" }),
   sparepart: z.string().min(1, { message: "Sparepart harus terisi" }),
