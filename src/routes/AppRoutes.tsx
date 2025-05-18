@@ -2,12 +2,15 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { Suspense, lazy } from "react";
 import { AuthenticatedLayout } from "@/components/layout/authenticated-layout";
 import { Loader2 } from "lucide-react";
+import ScrollToTop from "./ScrollToTop";
 
 const LoginPage = lazy(() => import("@/features/auth/pages/login-page"));
 const DashboardPage = lazy(() => import("@/features/dashboard/pages/dashboard-page"));
 const DaftarKendaraanPage = lazy(() => import("@/features/garasi/pages/daftar-kendaraan-page"));
 const CariKendaraanPage = lazy(() => import("@/features/garasi/pages/cari-kendaraan-page"));
 const KendaraanDetailPage = lazy(() => import("@/features/garasi/pages/kendaraan-detail-page"));
+const AktivitasServisKendaraanPage = lazy(() => import("@/features/garasi/pages/aktivitas-servis-kendaraan-page"));
+const AktivitasAdministrasiKendaraanPage = lazy(() => import("@/features/garasi/pages/aktivitas-administrasi-kendaraan-page"));
 const RiwayatLokasiKendaraanPage = lazy(() => import("@/features/garasi/pages/riwayat-lokasi-kendaraan-page"));
 const ServisPage = lazy(() => import("@/features/servis/pages/servis-page"));
 const ServisDetailPage = lazy(() => import("@/features/servis/pages/servis-detail-page"));
@@ -24,6 +27,7 @@ export default function AppRoutes() {
 
   return (
     <Router>
+      <ScrollToTop />
       <Suspense fallback={
         <div className="flex items-center justify-center h-screen">
           <div className="flex items-center gap-3">
@@ -44,6 +48,8 @@ export default function AppRoutes() {
               <Route path="/daftar-kendaraan" element={<DaftarKendaraanPage />} />
               <Route path="/cari-kendaraan" element={<CariKendaraanPage />} />
               <Route path="/kendaraan/:id" element={<KendaraanDetailPage />} />
+              <Route path="/kendaraan/:id/aktivitas-servis" element={<AktivitasServisKendaraanPage />} />
+              <Route path="/kendaraan/:id/aktivitas-administrasi" element={<AktivitasAdministrasiKendaraanPage />} />
               <Route path="/kendaraan/:id/riwayat-lokasi" element={<RiwayatLokasiKendaraanPage />} />
               <Route path="/servis" element={<ServisPage />} />
               <Route path="/servis/:id" element={<ServisDetailPage />} />

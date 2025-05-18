@@ -36,7 +36,7 @@ export default function KendaraanDetailPage() {
         insuranceDueDate: "1 Feb 2026",
         lastServiceDate: "15 Jul 2025",
         soldDate: "15 Jul 2025",
-        isSold: true,
+        isSold: false,
     };
 
     const stnk: Stnk = {
@@ -194,14 +194,6 @@ export default function KendaraanDetailPage() {
 
     const handleSellVehicle = () => {
         console.log("Sell Kendaraan button clicked")
-    }
-
-    const handleServiceActivity = () => {
-        console.log("Service Activity button clicked")
-    }
-
-    const handleAdministrationActivity = () => {
-        console.log("Administration Activity button clicked")
     }
 
     return (
@@ -395,9 +387,11 @@ export default function KendaraanDetailPage() {
                         <SectionCard
                             title="Aktivitas Servis"
                             headerAction={
-                                <Button variant="ghost" size="sm" onClick={handleServiceActivity}>
-                                    <ChevronRight />
-                                </Button>
+                                <Link to={`/kendaraan/${vehicle.id}/aktivitas-servis`}>
+                                    <Button variant="ghost" size="sm">
+                                        <ChevronRight />
+                                    </Button>
+                                </Link >
                             }
                         >
                             {listServis.length > 0 && (
@@ -422,9 +416,11 @@ export default function KendaraanDetailPage() {
                         <SectionCard
                             title="Aktivitas Administrasi"
                             headerAction={
-                                <Button variant="ghost" size="sm" onClick={handleAdministrationActivity}>
-                                    <ChevronRight />
-                                </Button>
+                                <Link to={`/kendaraan/${vehicle.id}/aktivitas-administrasi`}>
+                                    <Button variant="ghost" size="sm">
+                                        <ChevronRight />
+                                    </Button>
+                                </Link >
                             }
                         >
                             {listAdministrasi.length > 0 && (

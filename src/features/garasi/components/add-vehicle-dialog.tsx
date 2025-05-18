@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Plus, PlusCircle } from "lucide-react"
+import { CalendarIcon, Plus, PlusCircle } from "lucide-react"
 
 import { Button } from "@/components/shadcn/button"
 import {
@@ -17,12 +17,15 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Vehicle } from "@/models/vehicle"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
 import { Param } from "@/models/param"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover"
+import { Calendar } from "@/components/shadcn/calendar"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
 
 interface AddVehicleDialogProps {
-  onSave?: (newVehicle: Vehicle) => void
+  onSave?: (newVehicle: string) => void
 }
 
 // Define the form schema with validation
@@ -34,6 +37,8 @@ const formSchema = z.object({
   year: z.string().min(1, { message: "Tahun harus terisi" }),
   color: z.string().min(1, { message: "Warna harus terisi" }),
   licensePlate: z.string().min(1, { message: "Plat No harus terisi" }),
+  stnkDueDate: z.date(),
+  insuranceDueDate: z.date(),
 })
 
 export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
@@ -112,7 +117,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Edit detail kendaraan data: ", values)
     if (onSave) {
-      onSave(values);
+      onSave(values.name);
     }
     setOpen(false);
     reset();
@@ -293,6 +298,90 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
                     )}
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <FormField
+                  control={form.control}
+                  name="stnkDueDate"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="font-medium">Jatuh Tempo STNK</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "dd MMM yyyy")
+                              ) : (
+                                <span>Pilih jatuh tempo STNK</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date: Date) =>
+                              date < new Date("1900-01-01")
+                            }
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="insuranceDueDate"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="font-medium">Jatuh Tempo Asuransi</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "dd MMM yyyy")
+                              ) : (
+                                <span>Pilih jatuh tempo Asuransi</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date: Date) =>
+                              date < new Date("1900-01-01")
+                            }
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 

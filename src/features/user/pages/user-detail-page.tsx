@@ -86,7 +86,7 @@ export default function UserDetailPage() {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="grid grid-cols-2">
+                                <div className="grid grid-cols-2 gap-3">
                                     <SectionItem label="Email" value={user.email} />
                                     <SectionItem label="No Telepon" value={user.phoneNo} />
                                 </div>

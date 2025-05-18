@@ -139,6 +139,7 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
                           placeholder="Masukkan email user"
                           {...field}
                           className="w-full"
+                          type="email"
                         />
                       </FormControl>
                       <FormMessage />

@@ -3,6 +3,7 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupConte
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../shadcn/collapsible";
 import { Button } from "../shadcn/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../shadcn/alert-dialog";
 
 const items = [
     {
@@ -138,7 +139,23 @@ export function AppNavbar() {
             <SidebarSeparator className="my-2 group-data-[state=collapsed]:hidden" />
 
             <SidebarFooter className="group-data-[state=collapsed]:hidden">
-                <Button onClick={handleLogout}>Keluar</Button>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="default">Keluar</Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Keluar Aplikasi?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Apakah Anda yakin ingin keluar dari aplikasi?
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Tidak</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleLogout}>Ya</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </SidebarFooter>
         </Sidebar>
     )

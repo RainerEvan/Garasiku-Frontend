@@ -42,7 +42,7 @@ export default function RiwayatLokasiServisPage() {
 
     const serviceId = "1";
 
-    const serviceStatus:string = "pending";
+    const serviceStatus:string = "ongoing";
 
     return (
         <div className="min-h-screen flex flex-col">

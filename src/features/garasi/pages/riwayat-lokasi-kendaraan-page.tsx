@@ -52,7 +52,9 @@ export default function RiwayatLokasiKendaraanPage() {
                     <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
                         <div className="flex flex-col">
                             <h1 className="text-lg font-semibold">Riwayat Lokasi Kendaraan</h1>
-                            <p className="text-muted-foreground text-sm">Klik button pindah lokasi untuk memindahkan lokasi kendaraan.</p>
+                            {!vehicleIsSold && (
+                                <p className="text-muted-foreground text-sm">Klik button pindah lokasi untuk memindahkan lokasi kendaraan.</p>
+                            )}
                         </div>
                         {!vehicleIsSold && (
                             <MoveLocationVehicleDialog vehicleId={vehicleId} />
