@@ -38,10 +38,10 @@ const formSchema = z.object({
   endDate: z.date({ required_error: "Tanggal Selesai harus terisi" }),
   mileage: z.number().min(0, { message: "Kilometer harus terisi" }),
   totalCost: z.number().min(0, { message: "Biaya harus terisi" }),
-  mechanicName: z.string().min(1, { message: "Nama Mekanik harus terisi" }),
+  mechanicName: z.string().optional(),
   task: z.string().min(1, { message: "Jasa harus terisi" }),
-  sparepart: z.string().min(1, { message: "Sparepart harus terisi" }),
-  notes: z.string().min(1, { message: "Catatan harus terisi" }),
+  sparepart: z.string().optional(),
+  notes: z.string().optional(),
   isSetNextReminder: z.boolean(),
   nextScheduleDate: z.date(),
 }).refine(

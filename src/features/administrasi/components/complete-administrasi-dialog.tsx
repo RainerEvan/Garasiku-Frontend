@@ -38,7 +38,7 @@ const formSchema = z.object({
   administrationId: z.string().min(1, { message: "Administration Id harus terisi" }),
   endDate: z.date({ required_error: "Tanggal Selesai harus terisi" }),
   totalCost: z.number().min(0, { message: "Biaya harus terisi" }),
-  notes: z.string().min(1, { message: "Catatan harus terisi" }),
+  notes: z.string().optional(),
   isSetNextReminder: z.boolean(),
   nextDueDate: z.date(),
 }).refine(

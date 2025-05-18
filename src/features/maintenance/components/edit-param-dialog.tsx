@@ -16,45 +16,41 @@ import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Param } from "@/models/param"
-import { Plus, PlusCircle } from "lucide-react"
 import { Input } from "@/components/shadcn/input"
-import { ParamGroup } from "@/models/param-group"
+import { DropdownMenuItem } from "@/components/shadcn/dropdown-menu"
 
-interface AddParamDialogProps {
-  paramGroup: ParamGroup
-  onSave?: (newParam: Param) => void
+interface EditParamDialogProps {
+  param: Param,
+  onSave?: (updatedParam: Param) => void
 }
 
 // Define the form schema with validation
 const formSchema = z.object({
+  id: z.string().min(1, { message: "Id harus terisi" }),
   group: z.string().min(1, { message: "Group harus terisi" }),
   name: z.string().min(1, { message: "Nama harus terisi" }),
   description: z.string().optional()
 })
 
-export function AddParamDialog({ paramGroup, onSave }: AddParamDialogProps) {
+export function EditParamDialog({ param, onSave }: EditParamDialogProps) {
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      group: `${paramGroup.group} - ${paramGroup.name}`,
-      name: "",
-      description: ""
+      id: param.id,
+      group: param.group,
+      name: param.name,
+      description: param.description || "",
     },
   })
 
   const { reset } = form;
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const formattedValues = {
-      ...values,
-      group: paramGroup.group,
-    };
-
-    console.log("Add param data: ", formattedValues)
+    console.log("Edit param data: ", values)
     if (onSave) {
-      onSave(formattedValues);
+      onSave(values);
     }
     setOpen(false);
   }
@@ -69,43 +65,20 @@ export function AddParamDialog({ paramGroup, onSave }: AddParamDialogProps) {
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>
-        <div>
-          <Button className="hidden sm:flex">
-            <PlusCircle /> Tambah Param
-          </Button>
-          <Button variant="default" size="icon2" className="fixed z-50 bottom-4 right-4 sm:hidden">
-            <Plus className="size-8" />
-          </Button>
-        </div>
+        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+          Ubah
+        </DropdownMenuItem>
       </DialogTrigger>
       <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Tambah Param</DialogTitle>
-          <DialogDescription>Tambah param baru dan klik button simpan.</DialogDescription>
+          <DialogTitle>Ubah Param</DialogTitle>
+          <DialogDescription>Ubah param dan klik button simpan.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Detail Param */}
             <div className="flex flex-col gap-5">
-              <FormField
-                control={form.control}
-                name="group"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="font-medium">Group</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Masukkan group param"
-                        {...field}
-                        className="w-full"
-                        disabled
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <FormField
                 control={form.control}
                 name="name"

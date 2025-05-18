@@ -1,8 +1,8 @@
 export interface ParamGroup {
-    id: string
+    id?: string
     group: string
     name: string
     description?: string
     isMaintain: boolean
-    isFixed: boolean
+    isTotalFixed: boolean
 }

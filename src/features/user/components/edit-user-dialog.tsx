@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { Edit } from "lucide-react"
 
 import { Button } from "@/components/shadcn/button"
 import {
@@ -12,84 +11,88 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/shadcn/dialog"
-import { Input } from "@/components/shadcn/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/shadcn/form"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ServiceRecord } from "@/models/service-record"
-import { Textarea } from "@/components/shadcn/textarea"
+import { User } from "@/models/user"
+import { Input } from "@/components/shadcn/input"
+import { Switch } from "@/components/shadcn/switch"
 
-interface EditServiceRecordDialogProps {
-  serviceRecord: ServiceRecord
-  onSave?: (updatedServiceRecord: ServiceRecord) => void
+interface EditUserDialogProps {
+  user: User,
+  onSave?: (updatedUser: User) => void
 }
 
 // Define the form schema with validation
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
-  serviceId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
-  mileage: z.number().min(0, { message: "Kilometer harus terisi" }),
-  totalCost: z.number().optional(),
-  mechanicName: z.string().optional(),
-  task: z.string().min(1, { message: "Jasa harus terisi" }),
-  sparepart: z.string().optional(),
-  notes: z.string().optional(),
+  username: z.string().min(1, { message: "Username harus terisi" }),
+  fullname: z.string().min(1, { message: "Nama Lengkap harus terisi" }),
+  email: z.string().optional(),
+  phoneNo: z.string().optional(),
+  role: z.string().min(1, { message: "Role harus terisi" }),
+  isActive: z.boolean()
 })
 
-export function EditServiceRecordDialog({ serviceRecord, onSave }: EditServiceRecordDialogProps) {
+export function EditUserDialog({ user, onSave }: EditUserDialogProps) {
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      id: serviceRecord.id,
-      serviceId: serviceRecord.serviceId,
-      mileage: serviceRecord.mileage,
-      totalCost: serviceRecord.totalCost,
-      mechanicName: serviceRecord.mechanicName,
-      task: serviceRecord.task,
-      sparepart: serviceRecord.sparepart,
-      notes: serviceRecord.notes
+      id: user.id,
+      username: user.username,
+      fullname: user.fullname,
+      email: user.email,
+      phoneNo: user.phoneNo,
+      role: user.role,
+      isActive: user.isActive
     },
   })
 
+  const { reset } = form;
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Edit detail service record data: ", values)
+    console.log("Edit user data: ", values)
     if (onSave) {
       onSave(values);
     }
     setOpen(false);
   }
 
+  function handleDialogChange(isOpen: boolean) {
+    setOpen(isOpen);
+    if (!isOpen) {
+      reset();
+    }
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Edit />
-          Ubah
-        </Button>
+        <Button variant="default">Ubah Detail</Button>
       </DialogTrigger>
       <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Ubah Rincian Servis</DialogTitle>
-          <DialogDescription>Atur informasi rincian servis dan klik button simpan.</DialogDescription>
+          <DialogTitle>Ubah Detail User</DialogTitle>
+          <DialogDescription>Ubah detail user dan klik button simpan.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Detail Servis */}
+            {/* Detail User */}
             <div className="flex flex-col gap-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <FormField
                   control={form.control}
-                  name="mileage"
+                  name="username"
                   render={({ field }) => (
                     <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Kilometer</FormLabel>
+                      <FormLabel className="font-medium">Username</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Masukkan kilometer kendaraan"
+                          placeholder="Masukkan username user"
                           {...field}
                           className="w-full"
                         />
@@ -101,13 +104,49 @@ export function EditServiceRecordDialog({ serviceRecord, onSave }: EditServiceRe
 
                 <FormField
                   control={form.control}
-                  name="totalCost"
+                  name="fullname"
                   render={({ field }) => (
                     <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Biaya</FormLabel>
+                      <FormLabel className="font-medium">Nama Lengkap</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Masukkan biaya servis"
+                          placeholder="Masukkan nama lengkap user"
+                          {...field}
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="font-medium">Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Masukkan email user"
+                          {...field}
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phoneNo"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="font-medium">No Telepon</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Masukkan no telepon user"
                           {...field}
                           className="w-full"
                         />
@@ -117,17 +156,16 @@ export function EditServiceRecordDialog({ serviceRecord, onSave }: EditServiceRe
                   )}
                 />
               </div>
-
               <div className="grid grid-cols-1 gap-5">
                 <FormField
                   control={form.control}
-                  name="mechanicName"
+                  name="role"
                   render={({ field }) => (
                     <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Nama Mekanik</FormLabel>
+                      <FormLabel className="font-medium">Role</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Masukkan nama mekanik servis"
+                          placeholder="Masukkan role user"
                           {...field}
                           className="w-full"
                         />
@@ -139,54 +177,16 @@ export function EditServiceRecordDialog({ serviceRecord, onSave }: EditServiceRe
 
                 <FormField
                   control={form.control}
-                  name="task"
+                  name="isActive"
                   render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Jasa</FormLabel>
+                    <FormItem className="flex items-center justify-between">
+                      <FormLabel className="font-medium">Status Aktif</FormLabel>
                       <FormControl>
-                        <Textarea
-                          placeholder="Masukkan jasa servis"
-                          {...field}
-                          className="w-full"
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="sparepart"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Sparepart</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Masukkan sparepart servis"
-                          {...field}
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Catatan</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Masukkan catatan servis"
-                          {...field}
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />

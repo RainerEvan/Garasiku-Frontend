@@ -47,28 +47,24 @@ export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVeh
     {
       id: "1",
       group: "004",
-      key: "alamat-1",
       name: "Rumah Bandung",
       description: "Jl. Sukajadi No. 57, Bandung"
     },
     {
       id: "2",
       group: "004",
-      key: "alamat-2",
       name: "Apartment Jakarta",
       description: "Menteng Park Apartment, Jakarta"
     },
     {
       id: "3",
       group: "004",
-      key: "alamat-3",
       name: "Bengkel ASCO",
       description: "Jl. Kolonel Sugiono No. 20, Jakarta"
     },
     {
       id: "4",
       group: "004",
-      key: "alamat-4",
       name: "Lain-lain",
       description: ""
     }
@@ -137,7 +133,7 @@ export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVeh
                       </FormControl>
                       <SelectContent>
                         {locationVehicleParam.map((option) => (
-                          <SelectItem key={option.key} value={option.name}>
+                          <SelectItem key={option.id} value={option.name}>
                             {option.name}
                           </SelectItem>
                         ))}

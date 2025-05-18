@@ -17,15 +17,15 @@ export default function AttachmentItem({
     }
 
     return (
-        <div className="flex flex-row">
-            <div className="flex items-center justify-center p-2">
+        <div className="flex flex-row p-2 gap-4">
+            <div className="flex items-center justify-center">
                 <File className="w-5 h-5" />
             </div>
-            <div className="w-full p-2">
+            <div className="w-full">
                 <div className="text-sm font-medium">{attachment.fileName}</div>
                 <div className="text-xs text-medium">{attachment.fileSize}</div>
             </div>
-            <div className="flex items-center justify-center p-2">
+            <div className="flex items-center justify-center">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">

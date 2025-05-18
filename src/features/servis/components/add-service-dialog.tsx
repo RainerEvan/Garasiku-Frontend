@@ -108,16 +108,14 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
     {
       id: "1",
       group: "006",
-      key: "servis-regular",
-      name: "Servis Regular",
-      description: "Servis Regular"
+      name: "servis-regular",
+      description: "Servis Regular",
     },
     {
       id: "2",
       group: "006",
-      key: "servis-heavy",
-      name: "Servis Berat",
-      description: "Servis Berat"
+      name: "servis-heavy",
+      description: "Servis Berat",
     },
   ]
 
@@ -246,8 +244,8 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
                         </FormControl>
                         <SelectContent>
                           {typeServiceParam.map((option) => (
-                            <SelectItem key={option.key} value={option.name}>
-                              {option.name}
+                            <SelectItem key={option.id} value={option.name}>
+                              {option.description}
                             </SelectItem>
                           ))}
                         </SelectContent>

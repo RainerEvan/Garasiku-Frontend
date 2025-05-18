@@ -39,11 +39,11 @@ const formSchema = z.object({
   locationName: z.string().min(1, { message: "Nama Lokasi harus terisi" }),
   locationAddress: z.string().min(1, { message: "Alamat Lokasi harus terisi" }),
   mileage: z.number().min(0, { message: "Kilometer harus terisi" }),
-  totalCost: z.number().min(0, { message: "Biaya harus terisi" }),
-  mechanicName: z.string().min(1, { message: "Nama Mekanik harus terisi" }),
+  totalCost: z.number().optional(),
+  mechanicName: z.string().optional(),
   task: z.string().min(1, { message: "Jasa harus terisi" }),
-  sparepart: z.string().min(1, { message: "Sparepart harus terisi" }),
-  notes: z.string().min(1, { message: "Notes harus terisi" }),
+  sparepart: z.string().optional(),
+  notes: z.string().optional(),
 })
 
 export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialogProps) {
@@ -69,21 +69,18 @@ export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialog
     {
       id: "1",
       group: "005",
-      key: "alamat-1",
       name: "Bengkel Honda",
       description: "Jl. Sukajadi No. 57, Bandung"
     },
     {
       id: "2",
       group: "005",
-      key: "alamat-2",
       name: "Bengkel ASCO",
       description: "Jl. Kolonel Sugiono No. 20, Jakarta"
     },
     {
       id: "3",
       group: "005",
-      key: "alamat-3",
       name: "Lain-lain",
       description: ""
     }
@@ -198,7 +195,7 @@ export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialog
                         </FormControl>
                         <SelectContent>
                           {locationServiceParam.map((option) => (
-                            <SelectItem key={option.key} value={option.name}>
+                            <SelectItem key={option.id} value={option.name}>
                               {option.name}
                             </SelectItem>
                           ))}

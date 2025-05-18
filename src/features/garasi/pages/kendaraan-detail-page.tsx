@@ -26,9 +26,9 @@ export default function KendaraanDetailPage() {
     const vehicle: Vehicle = {
         id: "1",
         name: "Honda Civic Turbo Hitam 2022",
-        type: "mobil",
+        type: "Mobil",
         year: "2022",
-        brand: "honda",
+        brand: "Honda",
         color: "Hitam",
         model: "Civic Turbo",
         licensePlate: "D 1234 ABC",
@@ -103,7 +103,7 @@ export default function KendaraanDetailPage() {
         {
             id: "1",
             vehicleId: "1",
-            type: "admin-stnk",
+            type: "administrasi-stnk",
             dueDate: "15 Jan 2028",
             endDate: undefined,
             status: "pending",
@@ -111,7 +111,7 @@ export default function KendaraanDetailPage() {
         {
             id: "2",
             vehicleId: "1",
-            type: "admin-asuransi",
+            type: "administrasi-asuransi",
             dueDate: "15 Jan 2028",
             endDate: "15 Jan 2028",
             status: "completed",
@@ -153,38 +153,38 @@ export default function KendaraanDetailPage() {
         {
             id: "1",
             group: "003",
-            key: "bpkb",
-            name: "BPKB",
+            name: "bpkb",
+            description: "BPKB",
         },
         {
             id: "2",
             group: "003",
-            key: "ban-cadangan",
-            name: "Ban Cadangan",
+            name: "ban-cadangan",
+            description: "Ban Cadangan",
         },
         {
             id: "3",
             group: "003",
-            key: "dongkrak",
-            name: "Dongkrak",
+            name: "dongkrak",
+            description: "Dongkrak",
         },
         {
             id: "4",
             group: "003",
-            key: "toolkit",
-            name: "Toolkit",
+            name: "toolkit",
+            description: "Toolkit",
         },
         {
             id: "5",
             group: "003",
-            key: "kotak-p3k",
-            name: "Kotak P3K",
+            name: "kotak-p3k",
+            description: "Kotak P3K",
         },
         {
             id: "6",
             group: "003",
-            key: "dash-cam",
-            name: "Dash Cam",
+            name: "dash-cam",
+            description: "Dash Cam",
         }
     ]
 
@@ -331,7 +331,7 @@ export default function KendaraanDetailPage() {
                         {/* STNK Bar */}
                         <DataBarCard
                             variant="default"
-                            type="admin-stnk"
+                            type="administrasi-stnk"
                             label="Jatuh Tempo STNK"
                             description={vehicle.stnkDueDate}
                         />
@@ -339,7 +339,7 @@ export default function KendaraanDetailPage() {
                         {/* Asuransi Bar */}
                         <DataBarCard
                             variant="default"
-                            type="admin-asuransi"
+                            type="administrasi-asuransi"
                             label="Jatuh Tempo Asuransi"
                             description={vehicle.insuranceDueDate}
                         />
@@ -460,9 +460,9 @@ export default function KendaraanDetailPage() {
                             <div className={`grid gap-5 p-2 ${equipmentParam.length > 5 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
                                 {equipmentParam.map((item) => (
                                     <div key={item.id} className="flex flex-row items-center space-x-3 space-y-0">
-                                        <Checkbox checked={item.id ? vehicleEquipments.includes(item.key) : false} disabled />
+                                        <Checkbox checked={vehicleEquipments.includes(item.name)} disabled />
                                         <label className="text-sm font-normal">
-                                            {item.name}
+                                            {item.description}
                                         </label>
                                     </div>
                                 ))}

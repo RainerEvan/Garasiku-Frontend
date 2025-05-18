@@ -56,13 +56,11 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
     {
       id: "1",
       group: "001",
-      key: "mobil",
       name: "Mobil"
     },
     {
       id: "2",
       group: "001",
-      key: "motor",
       name: "Motor"
     }
   ]
@@ -71,31 +69,26 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
     {
       id: "1",
       group: "002",
-      key: "honda",
       name: "Honda"
     },
     {
       id: "2",
       group: "002",
-      key: "toyota",
       name: "Toyota"
     },
     {
       id: "3",
       group: "002",
-      key: "suzuki",
       name: "Suzuki"
     },
     {
       id: "4",
       group: "002",
-      key: "bmw",
       name: "BMW"
     },
     {
       id: "5",
       group: "002",
-      key: "mercedes-benz",
       name: "Mercedes-Benz"
     },
   ]
@@ -111,7 +104,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
   // Update the name field dynamically
   useEffect(() => {
     if (brand || model || color || year) {
-      const updatedName = `${vehicleBrandParam.find((item) => item.key == brand)?.name} ${model} ${color} ${year}`;
+      const updatedName = `${brand} ${model} ${color} ${year}`;
       setValue("name", updatedName);
     }
   }, [brand, model, color, year, setValue]);
@@ -190,7 +183,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
                           </FormControl>
                           <SelectContent>
                             {vehicleTypeParam.map((option) => (
-                              <SelectItem key={option.key} value={option.key}>
+                              <SelectItem key={option.id} value={option.name}>
                                 {option.name}
                               </SelectItem>
                             ))}
@@ -215,7 +208,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
                           </FormControl>
                           <SelectContent>
                             {vehicleBrandParam.map((option) => (
-                              <SelectItem key={option.key} value={option.key}>
+                              <SelectItem key={option.id} value={option.name}>
                                 {option.name}
                               </SelectItem>
                             ))}

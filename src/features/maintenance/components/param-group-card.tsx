@@ -12,7 +12,7 @@ export function ParamGroupCard({
   return (
     <Link to={`/maintenance/${paramGroup.group}`} className="bg-background border rounded-lg shadow-xs p-4 hover:shadow-md overflow-hidden">
       {/* Param Group Info */}
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center gap-4">
         <div className="bg-[#f5f5f5] p-2 rounded-full">
           <Settings />
         </div>

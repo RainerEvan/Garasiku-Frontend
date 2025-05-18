@@ -16,7 +16,8 @@ const AdministrasiPage = lazy(() => import("@/features/administrasi/pages/admini
 const AdministrasiDetailPage = lazy(() => import("@/features/administrasi/pages/administrasi-detail-page"));
 const MaintenancePage = lazy(() => import("@/features/maintenance/pages/maintenance-page"));
 const MaintenanceDetailPage = lazy(() => import("@/features/maintenance/pages/maintenance-detail-page"));
-
+const UserPage = lazy(() => import("@/features/user/pages/user-page"));
+const UserDetailPage = lazy(() => import("@/features/user/pages/user-detail-page"));
 
 export default function AppRoutes() {
   const isAuthenticated = true; // Temporarily set to true for testing
@@ -51,6 +52,8 @@ export default function AppRoutes() {
               <Route path="/administrasi/:id" element={<AdministrasiDetailPage />} />
               <Route path="/maintenance" element={<MaintenancePage />} />
               <Route path="/maintenance/:id" element={<MaintenanceDetailPage />} />
+              <Route path="/user" element={<UserPage />} />
+              <Route path="/user/:id" element={<UserDetailPage />} />
             </Route>
           ) : (
             <Route path="*" element={<Navigate to="/login" replace />} />

@@ -84,20 +84,20 @@ export function EditEquipmentVehicleDialog({ equipmentParam, vehicleEquipments, 
                           >
                             <FormControl>
                               <Checkbox
-                                checked={field.value?.includes(item.key)}
+                                checked={field.value?.includes(item.name)}
                                 onCheckedChange={(checked) => {
                                   return checked
-                                    ? field.onChange([...field.value, item.key])
+                                    ? field.onChange([...field.value, item.name])
                                     : field.onChange(
                                       field.value?.filter(
-                                        (value) => value !== item.key
+                                        (value) => value !== item.name
                                       )
                                     )
                                 }}
                               />
                             </FormControl>
                             <FormLabel className="text-sm font-normal">
-                              {item.name}
+                              {item.description}
                             </FormLabel>
                           </FormItem>
                         )

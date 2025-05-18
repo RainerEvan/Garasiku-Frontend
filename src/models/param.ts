@@ -1,7 +1,8 @@
 export interface Param {
-    id: string
+    id?: string
     group: string
-    key: string
     name: string
     description?: string
+    createdAt?: string
+    updatedAt?: string
 }
