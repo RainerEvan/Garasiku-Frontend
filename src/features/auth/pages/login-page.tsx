@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import * as z from "zod"
+import { z } from "zod"
 import { Input } from "@/components/shadcn/input"
 import { Button } from "@/components/shadcn/button"
 import {
@@ -18,8 +18,8 @@ import { supabase } from "@/lib/supabaseClient"
 
 // Define the form schema with validation
 const formSchema = z.object({
-  username: z.string().min(1, { message: "Username is required" }),
-  password: z.string().min(1, { message: "Password is required" }),
+  username: z.string().min(1, { message: "Username harus terisi" }),
+  password: z.string().min(1, { message: "Password harus terisi" }),
 })
 
 export default function LoginPage() {

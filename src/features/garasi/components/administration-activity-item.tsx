@@ -1,41 +1,26 @@
 import SectionItem from "@/components/shared/section-item"
-import StatusLabel from "@/components/shared/status-label"
-import { typeIcons } from "@/lib/constants"
+import StatusBar from "@/components/shared/status-bar"
+import TaskTypeBar from "@/components/shared/task-type-bar"
+import { Status } from "@/lib/constants"
+import { Administration } from "@/models/administration"
 import { Link } from "react-router-dom"
 
 interface AdministrationActivityItemProps {
-    id: string
-    type: keyof typeof typeIcons
-    typeLabel: string
-    dueDate?: string
-    endDate?: string
-    status: "pending" | "inprogress" | "completed" | "cancelled" | "active" | "inactive"
-    statusLabel: string
+    administrasi:Administration
 }
 
 export default function AdministrationActivityItem({
-    id,
-    type,
-    typeLabel,
-    dueDate,
-    endDate,
-    status,
-    statusLabel
+    administrasi
 }: AdministrationActivityItemProps) {
-    const Icon = type ? typeIcons[type] : null
-
     return (
-        <Link to={`/servis/${id}`} className="flex flex-col gap-4 hover:bg-accent">
+        <Link to={`/administrasi/${administrasi.id}`} className="flex flex-col gap-5 hover:bg-accent">
             <div className="flex items-start justify-between">
-                <div className="flex gap-2 items-center justify-center border rounded-lg px-4 py-2 ">
-                    {Icon && <Icon className="w-4 h-4" />}
-                    <span className="text-xs font-medium">{typeLabel}</span>
-                </div>
-                <StatusLabel status={status} label={statusLabel} />
+                <TaskTypeBar taskType={administrasi.type} />
+                <StatusBar status={administrasi.status as Status} />
             </div>
             <div className="flex items-end justify-between">
-                <SectionItem label="Jatuh Tempo" value={dueDate || "-"} />
-                <SectionItem label="Administrasi Selesai" value={endDate || "-"} />
+                <SectionItem label="Jatuh Tempo" value={administrasi.dueDate} />
+                <SectionItem label="Administrasi Selesai" value={administrasi.endDate} />
             </div>
         </Link>
     )

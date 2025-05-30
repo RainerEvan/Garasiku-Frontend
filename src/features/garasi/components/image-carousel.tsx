@@ -9,13 +9,13 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from "@/components/shadcn/carousel";
+import { EditImageVehicleDialog } from "./edit-image-vehicle-dialog";
 
 interface ImageCarouselProps {
     images: string[];
-    name: string;
 }
 
-export function ImageCarousel({ images, name }: ImageCarouselProps) {
+export function ImageCarousel({ images }: ImageCarouselProps) {
     const [api, setApi] = useState<CarouselApi>()
     const [current, setCurrent] = useState(0)
     const [count, setCount] = useState(0)
@@ -39,6 +39,7 @@ export function ImageCarousel({ images, name }: ImageCarouselProps) {
                 <div className="flex h-full items-center justify-center">
                     <ImageIcon className="h-12 w-12 text-muted-foreground" />
                 </div>
+                <EditImageVehicleDialog images={images} />
             </div>
         );
     }
@@ -50,7 +51,7 @@ export function ImageCarousel({ images, name }: ImageCarouselProps) {
                 opts={{
                     loop: true,
                 }}
-                className="w-full rounded-lg"
+                className="w-full"
                 setApi={setApi}
             >
                 <CarouselContent>
@@ -59,7 +60,7 @@ export function ImageCarousel({ images, name }: ImageCarouselProps) {
                             <div className="aspect-video w-full overflow-hidden">
                                 <img
                                     src={image || "/placeholder.svg"}
-                                    alt={`${name} - Image ${index + 1}`}
+                                    alt={`Image ${index + 1}`}
                                     className="object-cover w-full h-full"
                                 />
                             </div>
@@ -67,15 +68,16 @@ export function ImageCarousel({ images, name }: ImageCarouselProps) {
                     ))}
                 </CarouselContent>
                 <CarouselPrevious
-                    className="left-2 bg-background/70 hover:bg-background shadow-md"
+                    className="left-2 bg-background/80 hover:bg-background shadow-md"
                 />
                 <CarouselNext
-                    className="right-2 bg-background/70 hover:bg-background shadow-md"
+                    className="right-2 bg-background/80 hover:bg-background shadow-md"
                 />
-                {/* Thumbnail Indicators */}
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center bg-background/70 px-5 py-1 rounded-xl shadow-md">
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center bg-background/80 px-5 py-1 rounded-xl shadow-md">
                     <span className="text-foreground text-sm">{current} / {count}</span>
                 </div>
+
+                <EditImageVehicleDialog images={images} />
             </Carousel>
         </div>
     );

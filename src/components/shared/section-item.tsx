@@ -1,13 +1,18 @@
 interface SectionItemProps {
-  label: string
-  value: string | number
+  label?: string
+  value?: string | number
+  className?: string
 }
 
-export default function SectionItem({ label, value }: SectionItemProps) {
+export default function SectionItem({ 
+  label = "Label", 
+  value = "-",
+  className = ""
+}: SectionItemProps) {
   return (
-    <div>
+    <div className={`flex flex-col ${className}`}>
       <p className="text-medium text-xs mb-1">{label}</p>
-      <p className="text-medium text-xs font-semibold">{value || "-"}</p>
+      <pre className="text-medium text-xs font-semibold">{value}</pre>
     </div>
   )
 }

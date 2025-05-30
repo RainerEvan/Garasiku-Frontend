@@ -1,44 +1,27 @@
 import SectionItem from "@/components/shared/section-item"
-import StatusLabel from "@/components/shared/status-label"
-import { typeIcons } from "@/lib/constants"
+import StatusBar from "@/components/shared/status-bar"
+import TaskTypeBar from "@/components/shared/task-type-bar"
+import { Status } from "@/lib/constants"
+import { Service } from "@/models/service"
 import { Link } from "react-router-dom"
 
 interface ServiceActivityItemProps {
-    id: string
-    type: keyof typeof typeIcons
-    typeLabel: string
-    scheduleDate?: string
-    startDate?: string
-    endDate?: string
-    status: "pending" | "inprogress" | "completed" | "cancelled" | "active" | "inactive"
-    statusLabel: string
+    service: Service
 }
 
 export default function ServiceActivityItem({
-    id,
-    type,
-    typeLabel,
-    scheduleDate,
-    startDate,
-    endDate,
-    status,
-    statusLabel
+    service
 }: ServiceActivityItemProps) {
-    const Icon = type ? typeIcons[type] : null
-
     return (
-        <Link to={`/servis/${id}`} className="flex flex-col gap-4 hover:bg-accent">
+        <Link to={`/servis/${service.id}`} className="flex flex-col gap-5 hover:bg-accent">
             <div className="flex items-start justify-between">
-                <div className="flex gap-2 items-center justify-center border rounded-lg px-4 py-2 ">
-                    {Icon && <Icon className="w-4 h-4" />}
-                    <span className="text-xs font-medium">{typeLabel}</span>
-                </div>
-                <StatusLabel status={status} label={statusLabel} />
+                <TaskTypeBar taskType={service.type} />
+                <StatusBar status={service.status as Status} />
             </div>
             <div className="flex items-end justify-between">
-                <SectionItem label="Jadwal Servis" value={scheduleDate || "-"} />
-                <SectionItem label="Servis Mulai" value={startDate || "-"} />
-                <SectionItem label="Servis Selesai" value={endDate || "-"} />
+                <SectionItem label="Jadwal Servis" value={service.scheduleDate} />
+                <SectionItem label="Servis Mulai" value={service.startDate} />
+                <SectionItem label="Servis Selesai" value={service.endDate} />
             </div>
         </Link>
     )

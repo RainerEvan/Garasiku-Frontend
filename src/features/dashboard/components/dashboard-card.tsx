@@ -23,7 +23,7 @@ export function DashboardCard({
 }: DashboardCardProps) {
 
   return (
-    <div className={`rounded-xl p-6 shadow-xs ${className} ${background} ${text}`}>
+    <div className={`rounded-xl p-6 shadow-xs hover:shadow-md ${className} ${background} ${text}`}>
       <div className="flex justify-between items-start">
         <div>
           <h2 className="mb-2">{title}</h2>

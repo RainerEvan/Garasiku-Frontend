@@ -1,72 +1,55 @@
-import { MapPin, Tag } from "lucide-react"
+import { TaskTypeIcons } from "@/lib/constants";
+import { Vehicle } from "@/models/vehicle"
 import { Link } from "react-router-dom"
 
 type VehicleCardProps = {
-  id: string
-  variant: "active" | "sold"
-  name: string
-  licensePlate: string
-  type: string
-  location?: {
-    name: string
-    address: string
-  }
-  soldDate?: string
-  image?: string
+  vehicle: Vehicle
 }
 
 export function VehicleCard({
-  id,
-  variant,
-  name,
-  licensePlate,
-  type,
-  location,
-  soldDate,
-  image
+  vehicle
 }: VehicleCardProps) {
+  const variant = vehicle.isSold ? "sold" : "active";
+  const Icon = vehicle.isSold ? TaskTypeIcons["terjual"] : TaskTypeIcons["lokasi"]
+
   return (
-    <Link to={`/daftar-kendaraan/${id}`} className="bg-background border rounded-lg shadow-xs overflow-hidden">
+    <Link to={`/kendaraan/${vehicle.id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
       {/* Image Placeholder */}
       <div className="relative aspect-video w-full overflow-hidden text-[#b3b3b3] bg-[#d9d9d9] flex items-center justify-center">
         <img
-          src={image || "/placeholder.svg"}
+          src={vehicle.image || "/placeholder.svg"}
           alt={`${name} - Image`}
           className="object-cover w-full h-full"
         />
         <div className="absolute top-2 right-2 flex items-center bg-background/90 px-5 py-1 rounded-xl shadow-md">
-          <span className="text-medium text-sm">{type}</span>
+          <p className="text-medium text-sm">{vehicle.type}</p>
         </div>
       </div>
 
       {/* Vehicle Info */}
       <div className="w-full p-5 flex flex-col">
         <div className="flex flex-col">
-          <h3 className="font-medium">{name}</h3>
-          <p className="text-xs text-light">{licensePlate}</p>
+          <p className="font-medium">{vehicle.name}</p>
+          <p className="text-xs text-light">{vehicle.licensePlate}</p>
         </div>
 
         {/* Location or Sold Status */}
         <div className="mt-3 border rounded-lg p-3 flex items-start gap-2">
-          {variant === "active" && location && (
-            <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-medium shrink-0" />
-              <div>
-                <p className="text-sm font-medium">{location.name}</p>
-                <p className="text-xs text-medium">{location.address}</p>
-              </div>
-            </div>
-          )}
-
-          {variant === "sold" && soldDate && (
-            <div className="flex items-center gap-3">
-              <Tag className="h-5 w-5 text-medium shrink-0" />
-              <div>
-                <p className="text-sm font-medium">Terjual</p>
-                <p className="text-xs text-medium">{soldDate}</p>
-              </div>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {Icon && <Icon className="h-5 w-5 text-medium shrink-0" />}
+            {variant === "active" && location && (
+                <div>
+                  <p className="text-sm font-medium">{vehicle.location?.name}</p>
+                  <p className="text-xs text-medium">{vehicle.location?.address}</p>
+                </div>
+            )}
+            {variant === "sold" && vehicle.soldDate && (
+                <div>
+                  <p className="text-sm font-medium">Terjual</p>
+                  <p className="text-xs text-medium">{vehicle.soldDate}</p>
+                </div>
+            )}
+          </div>
         </div>
       </div>
     </Link>

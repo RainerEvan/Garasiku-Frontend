@@ -1,11 +1,12 @@
 import { VehicleCard } from "../components/vehicle-card"
-import { Plus, PlusCircle, Search } from "lucide-react"
+import { Search } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs"
 import { Input } from "@/components/shadcn/input"
 import { Button } from "@/components/shadcn/button"
 import { supabase } from "@/lib/supabaseClient"
 import { useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
+import { AddVehicleDialog } from "../components/add-vehicle-dialog"
 
 
 type Vehicle = {
@@ -23,7 +24,6 @@ type Vehicle = {
   sold_date?: string;
 }
 
-export default function DaftarKendaraan() {
   // Sample data
   // const activeVehicles = [
   //   {
@@ -134,6 +134,13 @@ export default function DaftarKendaraan() {
 
       const active = data.filter((v: Vehicle) => v.status === "active");
       const sold = data.filter((v: Vehicle) => v.status === "sold");
+    //   const filteredActiveVehicles = activeVehicles.filter((vehicle) =>
+    //   vehicle.licensePlate && vehicle.licensePlate.toLowerCase().includes(searchActive.toLowerCase())
+    // );
+  
+    // const filteredSoldVehicles = soldVehicles.filter((vehicle) =>
+    //   vehicle.licensePlate && vehicle.licensePlate.toLowerCase().includes(searchSold.toLowerCase())
+    // );
       setActiveVehicles(active);
       setSoldVehicles(sold);
     }
@@ -147,13 +154,11 @@ export default function DaftarKendaraan() {
       <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Daftar Kendaraan</h1>
-          <Button className="hidden sm:flex">
-            <PlusCircle /> Tambah Kendaraan
-          </Button>
+          <AddVehicleDialog />
         </div>
 
         <Tabs defaultValue="active" className="w-full">
-          <TabsList className="w-full">
+          <TabsList className="w-full md:max-w-sm">
             <TabsTrigger value="active">Aktif</TabsTrigger>
             <TabsTrigger value="sold">Terjual</TabsTrigger>
           </TabsList>
@@ -165,6 +170,8 @@ export default function DaftarKendaraan() {
                 type="text"
                 placeholder="Filter Plat No kendaraan"
                 className="w-full pl-10"
+                value={searchActive}
+                onChange={(e) => setSearchActive(e.target.value)}
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -193,6 +200,8 @@ export default function DaftarKendaraan() {
                 type="text"
                 placeholder="Filter Plat No kendaraan"
                 className="w-full pl-10"
+                value={searchSold}
+                onChange={(e) => setSearchSold(e.target.value)}
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -212,10 +221,6 @@ export default function DaftarKendaraan() {
           </TabsContent>
         </Tabs>
       </main>
-
-      <Button variant="default" size="icon2" className="fixed bottom-4 right-4 sm:hidden">
-        <Plus className="size-8" />
-      </Button>
     </div>
   )
 }

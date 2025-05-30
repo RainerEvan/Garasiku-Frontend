@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-inter: 'Inter', 'sans-serif';
+  --font-inter: "Inter", "sans-serif";
 }
 
 :root {
@@ -98,7 +98,7 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-status-pending: var(--tertiary);
-  --color-status-inprogress: var(--secondary);
+  --color-status-ongoing: var(--secondary);
   --color-status-completed: var(--quarternary);
   --color-status-cancelled: var(--destructive);
   --color-status-active: var(--success);
@@ -111,6 +111,9 @@
   }
   body {
     @apply font-inter bg-background text-foreground;
+  }
+  pre {
+    @apply font-inter text-foreground;
   }
 }
 
