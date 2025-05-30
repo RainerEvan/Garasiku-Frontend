@@ -14,7 +14,7 @@ export default function MaintenancePage() {
             name: "Merk Kendaraan",
             description: "List merk kendaraan",
             isMaintain: true,
-            isFixed: false,
+            isTotalFixed: false,
         },
         {
             id: "2",
@@ -22,7 +22,7 @@ export default function MaintenancePage() {
             name: "Lokasi Kendaraan",
             description: "List lokasi kendaraan",
             isMaintain: true,
-            isFixed: false,
+            isTotalFixed: false,
         },
         {
             id: "3",
@@ -30,7 +30,7 @@ export default function MaintenancePage() {
             name: "Lokasi Servis",
             description: "List lokasi servis",
             isMaintain: true,
-            isFixed: false,
+            isTotalFixed: false,
         },
         {
             id: "4",
@@ -38,7 +38,7 @@ export default function MaintenancePage() {
             name: "Waktu Reminder",
             description: "List waktu reminder",
             isMaintain: true,
-            isFixed: true,
+            isTotalFixed: true,
         },
         {
             id: "5",
@@ -46,7 +46,7 @@ export default function MaintenancePage() {
             name: "Kelengkapan Kendaraan",
             description: "List kelengkapan kendaraan",
             isMaintain: true,
-            isFixed: false,
+            isTotalFixed: false,
         }
     ]
 
