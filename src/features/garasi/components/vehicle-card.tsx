@@ -22,7 +22,7 @@ export function VehicleCard({
           className="object-cover w-full h-full"
         />
         <div className="absolute top-2 right-2 flex items-center bg-background/90 px-5 py-1 rounded-xl shadow-md">
-          <p className="text-medium text-sm">{vehicle.type}</p>
+          <p className="text-medium text-sm">{vehicle.category}</p>
         </div>
       </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { Button } from "@/components/shadcn/button"
 import {
@@ -18,8 +18,6 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ServiceRecord } from "@/models/service-record"
 import { Textarea } from "@/components/shadcn/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
-import { Param } from "@/models/param"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover"
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/shadcn/calendar"
@@ -36,8 +34,6 @@ const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
   serviceId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
   startDate: z.date({ required_error: "Tanggal Mulai harus terisi" }),
-  locationName: z.string().min(1, { message: "Nama Lokasi harus terisi" }),
-  locationAddress: z.string().min(1, { message: "Alamat Lokasi harus terisi" }),
   mileage: z.number().min(0, { message: "Kilometer harus terisi" }),
   totalCost: z.number().optional(),
   mechanicName: z.string().optional(),
@@ -54,8 +50,6 @@ export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialog
     defaultValues: {
       id: serviceRecord.id,
       serviceId: serviceRecord.serviceId,
-      locationName: "",
-      locationAddress: "",
       mileage: serviceRecord.mileage,
       totalCost: serviceRecord.totalCost,
       mechanicName: serviceRecord.mechanicName,
@@ -65,42 +59,7 @@ export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialog
     },
   })
 
-  const locationServiceParam: Param[] = [
-    {
-      id: "1",
-      group: "005",
-      name: "Bengkel Honda",
-      description: "Jl. Sukajadi No. 57, Bandung"
-    },
-    {
-      id: "2",
-      group: "005",
-      name: "Bengkel ASCO",
-      description: "Jl. Kolonel Sugiono No. 20, Jakarta"
-    },
-    {
-      id: "3",
-      group: "005",
-      name: "Lain-lain",
-      description: ""
-    }
-  ]
-
-  const { watch, setValue, reset } = form;
-
-  const name = watch("locationName");
-
-  const isLocationAddressDisabled = name !== "Lain-lain";
-
-  // Update the nama field dynamically
-  useEffect(() => {
-    const location = locationServiceParam.find((location => location.name == name));
-    if (isLocationAddressDisabled) {
-      setValue("locationAddress", location?.description || "");
-    } else {
-      setValue("locationAddress", "");
-    }
-  }, [name, setValue]);
+  const { reset } = form;
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     const formattedValues = {
@@ -181,50 +140,6 @@ export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialog
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <FormField
-                  control={form.control}
-                  name="locationName"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Nama Lokasi Servis</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Pilih nama lokasi servis" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {locationServiceParam.map((option) => (
-                            <SelectItem key={option.id} value={option.name}>
-                              {option.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="locationAddress"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Alamat Lokasi Servis</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Masukkan alamat lokasi servis"
-                          {...field}
-                          className="w-full"
-                          disabled={isLocationAddressDisabled}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <FormField
                   control={form.control}
                   name="mileage"

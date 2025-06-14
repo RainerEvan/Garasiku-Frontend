@@ -37,8 +37,8 @@ const items = [
         url: "user",
     },
     {
-        title: "Maintenance",
-        url: "maintenance",
+        title: "Parameter",
+        url: "parameter",
     },
 ]
 

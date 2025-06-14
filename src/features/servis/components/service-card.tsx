@@ -50,7 +50,7 @@ export function ServiceCard({
         <div className="flex items-start justify-between gap-5">
           <div className="flex flex-col capitalize">
             <h3 className="font-medium">{service.vehicle?.name}</h3>
-            <p className="text-sm text-medium ">{service.vehicle?.type}</p>
+            <p className="text-sm text-medium ">{service.vehicle?.category}</p>
             <p className="text-xs text-light">{service.vehicle?.licensePlate}</p>
           </div>
           <div>

@@ -18,11 +18,11 @@ export default function ServisPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "mobil",
+                category: "mobil",
                 year: "2022",
                 brand: "honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
             type: "servis-regular",
@@ -37,14 +37,14 @@ export default function ServisPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "mobil",
+                category: "mobil",
                 year: "2022",
                 brand: "honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
-            type: "servis-heavy",
+            type: "servis-berat",
             scheduleDate: "15 Jan 2028",
             startDate: undefined,
             endDate: undefined,
@@ -56,14 +56,14 @@ export default function ServisPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "mobil",
+                category: "mobil",
                 year: "2022",
                 brand: "honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
-            type: "servis-regular",
+            type: "servis-lainnya",
             scheduleDate: "15 Jan 2028",
             startDate: undefined,
             endDate: undefined,
@@ -78,11 +78,11 @@ export default function ServisPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "mobil",
+                category: "mobil",
                 year: "2022",
                 brand: "honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
             type: "servis-regular",
@@ -97,14 +97,14 @@ export default function ServisPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "mobil",
+                category: "mobil",
                 year: "2022",
                 brand: "honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
-            type: "servis-heavy",
+            type: "servis-berat",
             scheduleDate: "15 Jan 2028",
             startDate: "15 Jan 2028",
             endDate: undefined,
@@ -119,11 +119,11 @@ export default function ServisPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "mobil",
+                category: "mobil",
                 year: "2022",
                 brand: "honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
             type: "servis-regular",
@@ -138,14 +138,14 @@ export default function ServisPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "mobil",
+                category: "mobil",
                 year: "2022",
                 brand: "honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
-            type: "servis-heavy",
+            type: "servis-lainnya",
             scheduleDate: "15 Jan 2028",
             startDate: "15 Jan 2028",
             endDate: "15 Jan 2028",
@@ -157,11 +157,11 @@ export default function ServisPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "mobil",
+                category: "mobil",
                 year: "2022",
                 brand: "honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
             type: "servis-regular",
@@ -173,15 +173,21 @@ export default function ServisPage() {
     ]
 
     const filteredTodoServices = todoServices.filter((service) =>
-        service.vehicle?.licensePlate && service.vehicle?.licensePlate.toLowerCase().includes(searchTodo.toLowerCase())
+        (service.vehicle?.licensePlate && service.vehicle?.licensePlate.toLowerCase().includes(searchTodo.toLowerCase())) ||
+        (service.vehicle?.name && service.vehicle?.name.toLowerCase().includes(searchTodo.toLowerCase())) ||
+        (service.type && service.type.toLowerCase().includes(searchTodo.toLowerCase()))
     );
 
     const filteredProsesServices = prosesServices.filter((service) =>
-        service.vehicle?.licensePlate && service.vehicle?.licensePlate.toLowerCase().includes(searchProses.toLowerCase())
+        (service.vehicle?.licensePlate && service.vehicle?.licensePlate.toLowerCase().includes(searchProses.toLowerCase())) ||
+        (service.vehicle?.name && service.vehicle?.name.toLowerCase().includes(searchProses.toLowerCase())) ||
+        (service.type && service.type.toLowerCase().includes(searchProses.toLowerCase()))
     );
 
     const filteredHistoriServices = historiServices.filter((service) =>
-        service.vehicle?.licensePlate && service.vehicle?.licensePlate.toLowerCase().includes(searchHistori.toLowerCase())
+        (service.vehicle?.licensePlate && service.vehicle?.licensePlate.toLowerCase().includes(searchHistori.toLowerCase())) ||
+        (service.vehicle?.name && service.vehicle?.name.toLowerCase().includes(searchHistori.toLowerCase())) ||
+        (service.type && service.type.toLowerCase().includes(searchHistori.toLowerCase()))
     );
 
     return (
@@ -205,7 +211,7 @@ export default function ServisPage() {
                             <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
                             <Input
                                 type="text"
-                                placeholder="Filter Plat No kendaraan"
+                                placeholder="Filter kendaraan dan servis"
                                 className="w-full pl-10"
                                 value={searchTodo}
                                 onChange={(e) => setSearchTodo(e.target.value)}
@@ -226,7 +232,7 @@ export default function ServisPage() {
                             <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
                             <Input
                                 type="text"
-                                placeholder="Filter Plat No kendaraan"
+                                placeholder="Filter kendaraan dan servis"
                                 className="w-full pl-10"
                                 value={searchTodo}
                                 onChange={(e) => setSearchProses(e.target.value)}
@@ -247,7 +253,7 @@ export default function ServisPage() {
                             <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
                             <Input
                                 type="text"
-                                placeholder="Filter Plat No kendaraan"
+                                placeholder="Filter kendaraan dan servis"
                                 className="w-full pl-10"
                                 value={searchTodo}
                                 onChange={(e) => setSearchHistori(e.target.value)}

@@ -30,9 +30,9 @@ interface EditDetailVehicleDialogProps {
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
   name: z.string().min(1, { message: "Nama harus terisi" }),
-  type: z.string().min(1, { message: "Jenis harus terisi" }),
+  category: z.string().min(1, { message: "Jenis harus terisi" }),
   brand: z.string().min(1, { message: "Merk harus terisi" }),
-  model: z.string().min(1, { message: "Model harus terisi" }),
+  type: z.string().min(1, { message: "Tipe harus terisi" }),
   year: z.string().min(1, { message: "Tahun harus terisi" }),
   color: z.string().min(1, { message: "Warna harus terisi" }),
   licensePlate: z.string().min(1, { message: "Plat No harus terisi" }),
@@ -46,16 +46,16 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
     defaultValues: {
       id: vehicle.id,
       name: vehicle.name,
-      type: vehicle.type,
+      category: vehicle.category,
       brand: vehicle.brand,
-      model: vehicle.model,
+      type: vehicle.type,
       year: vehicle.year,
       color: vehicle.color,
       licensePlate: vehicle.licensePlate,
     },
   })
 
-  const vehicleTypeParam: Param[] = [
+  const vehicleCategoryParam: Param[] = [
     {
       id: "1",
       group: "001",
@@ -99,15 +99,15 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
   const { watch, setValue } = form;
 
   const brand = watch("brand");
-  const model = watch("model");
+  const type = watch("type");
   const color = watch("color");
   const year = watch("year");
 
   // Update the nama field dynamically
   useEffect(() => {
-    const updatedName = `${brand} ${model} ${color} ${year}`;
+    const updatedName = `${brand} ${type} ${color} ${year}`;
     setValue("name", updatedName);
-  }, [brand, model, color, year, setValue]);
+  }, [brand, type, color, year, setValue]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Edit detail kendaraan data: ", values)
@@ -159,7 +159,7 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
                 <div className="grid grid-cols-1 gap-5">
                   <FormField
                     control={form.control}
-                    name="type"
+                    name="category"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
                         <FormLabel className="font-medium">Jenis</FormLabel>
@@ -170,7 +170,7 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {vehicleTypeParam.map((option) => (
+                            {vehicleCategoryParam.map((option) => (
                               <SelectItem key={option.id} value={option.name}>
                                 {option.name}
                               </SelectItem>
@@ -209,13 +209,13 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
 
                   <FormField
                     control={form.control}
-                    name="model"
+                    name="type"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Model</FormLabel>
+                        <FormLabel className="font-medium">Tipe</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Masukkan model kendaraan"
+                            placeholder="Masukkan tipe kendaraan"
                             {...field}
                             className="w-full"
                           />

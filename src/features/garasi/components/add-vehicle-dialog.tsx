@@ -31,7 +31,7 @@ interface AddVehicleDialogProps {
 // Define the form schema with validation
 const formSchema = z.object({
   name: z.string().min(1, { message: "Nama harus terisi" }),
-  type: z.string().min(1, { message: "Jenis harus terisi" }),
+  category: z.string().min(1, { message: "Jenis harus terisi" }),
   brand: z.string().min(1, { message: "Merk harus terisi" }),
   model: z.string().min(1, { message: "Model harus terisi" }),
   year: z.string().min(1, { message: "Tahun harus terisi" }),
@@ -48,7 +48,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      type: "",
+      category: "",
       brand: "",
       model: "",
       year: "",
@@ -57,7 +57,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
     },
   })
 
-  const vehicleTypeParam: Param[] = [
+  const vehicleCategoryParam: Param[] = [
     {
       id: "1",
       group: "001",
@@ -176,7 +176,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
                 <div className="grid grid-cols-1 gap-5">
                   <FormField
                     control={form.control}
-                    name="type"
+                    name="category"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
                         <FormLabel className="font-medium">Jenis</FormLabel>
@@ -187,7 +187,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {vehicleTypeParam.map((option) => (
+                            {vehicleCategoryParam.map((option) => (
                               <SelectItem key={option.id} value={option.name}>
                                 {option.name}
                               </SelectItem>

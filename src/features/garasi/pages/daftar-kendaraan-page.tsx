@@ -14,7 +14,7 @@ type Vehicles = {
   year: string;
   brand: string;
   color: string;
-  model: string;
+  category: string;
   licensePlate: string;
   image: string;
   isSold: boolean;
@@ -159,7 +159,7 @@ export default function DaftarKendaraanPage() {
         year: v.year,
         brand: v.brand,
         color: v.color,
-        model: v.model,
+        category: v.category,
         licensePlate: v.licensePlate,
         image: v.image,
         isSold: v.isSold,
@@ -209,7 +209,7 @@ export default function DaftarKendaraanPage() {
               <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
               <Input
                 type="text"
-                placeholder="Filter Plat No kendaraan"
+                placeholder="Filter kendaraan"
                 className="w-full pl-10"
                 value={searchActive}
                 onChange={(e) => setSearchActive(e.target.value)}
@@ -227,7 +227,7 @@ export default function DaftarKendaraanPage() {
               <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
               <Input
                 type="text"
-                placeholder="Filter Plat No kendaraan"
+                placeholder="Filter kendaraan"
                 className="w-full pl-10"
                 value={searchSold}
                 onChange={(e) => setSearchSold(e.target.value)}

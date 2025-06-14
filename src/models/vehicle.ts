@@ -3,9 +3,9 @@ import { LocationVehicle } from "./location-vehicle";
 export interface Vehicle {
     id?: string;
     name?: string;
-    type?: string;
+    category?: string;
     brand?: string;
-    model?: string;
+    type?: string;
     year?: string;
     color?: string;
     licensePlate?: string;

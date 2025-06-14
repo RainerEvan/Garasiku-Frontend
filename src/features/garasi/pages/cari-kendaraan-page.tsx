@@ -16,11 +16,11 @@ export default function CariKendaraanPage() {
     {
       id: "1",
       name: "Honda Civic Turbo Hitam 2022",
-      type: "Mobil",
+      category: "Mobil",
       year: "2022",
       brand: "Honda",
       color: "Hitam",
-      model: "Civic Turbo",
+      type: "Civic Turbo",
       licensePlate: "D 1234 ABC",
       location: {
         id: "1",
@@ -33,11 +33,11 @@ export default function CariKendaraanPage() {
     {
       id: "2",
       name: "Toyota Innova Putih 2023",
-      type: "Mobil",
+      category: "Mobil",
       year: "2023",
       brand: "Toyota",
       color: "Putih",
-      model: "Innova",
+      type: "Innova",
       licensePlate: "D 7890 DFE",
       location: {
         id: "1",
@@ -50,11 +50,11 @@ export default function CariKendaraanPage() {
     {
       id: "3",
       name: "Honda Civic Turbo Hitam 2022",
-      type: "Mobil",
+      category: "Mobil",
       year: "2022",
       brand: "Honda",
       color: "Hitam",
-      model: "Civic Turbo",
+      type: "Civic Turbo",
       licensePlate: "D 1234 ABC",
       location: {
         id: "1",
@@ -97,7 +97,7 @@ export default function CariKendaraanPage() {
               type="text"
               placeholder="Cari Plat No kendaraan"
               className="w-full pl-10"
-              value={search} // Bind input value to state
+              value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>

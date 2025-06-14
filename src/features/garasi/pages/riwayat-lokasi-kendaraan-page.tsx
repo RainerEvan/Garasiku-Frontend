@@ -10,7 +10,7 @@ export default function RiwayatLokasiKendaraanPage() {
             id: "1",
             vehicleId: "1",
             name: "Rumah Bandung",
-            address: "Jl. Sukajadi No. 57, Bandung",
+            address: "Jl. Taman Sukajadi Baru Blok A VIII 12 No. 57, Bandung",
             createdAt: "01 Jan 2025 10:00",
             createdBy: "rainerevan"
         },
