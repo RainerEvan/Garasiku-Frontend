@@ -16,7 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ServiceRecord } from "@/models/service-record"
+import { Service } from "@/models/service"
 import { Textarea } from "@/components/shadcn/textarea"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover"
 import { CalendarIcon } from "lucide-react"
@@ -25,14 +25,13 @@ import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 
 interface StartServiceDialogProps {
-  serviceRecord: ServiceRecord
-  onSave?: (updatedServiceRecord: ServiceRecord) => void
+  service: Service
+  onSave?: (updatedService: Service) => void
 }
 
 // Define the form schema with validation
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
-  serviceId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
   startDate: z.date({ required_error: "Tanggal Mulai harus terisi" }),
   mileage: z.number().min(0, { message: "Kilometer harus terisi" }),
   totalCost: z.number().optional(),
@@ -42,20 +41,19 @@ const formSchema = z.object({
   notes: z.string().optional(),
 })
 
-export function StartServiceDialog({ serviceRecord, onSave }: StartServiceDialogProps) {
+export function StartServiceDialog({ service, onSave }: StartServiceDialogProps) {
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      id: serviceRecord.id,
-      serviceId: serviceRecord.serviceId,
-      mileage: serviceRecord.mileage,
-      totalCost: serviceRecord.totalCost,
-      mechanicName: serviceRecord.mechanicName,
-      task: serviceRecord.task,
-      sparepart: serviceRecord.sparepart,
-      notes: serviceRecord.notes
+      id: service.id,
+      mileage: service.mileage,
+      totalCost: service.totalCost,
+      mechanicName: service.mechanicName,
+      task: service.task,
+      sparepart: service.sparepart,
+      notes: service.notes
     },
   })
 

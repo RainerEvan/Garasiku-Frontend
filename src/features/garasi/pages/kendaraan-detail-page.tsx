@@ -37,6 +37,7 @@ export default function KendaraanDetailPage() {
         lastServiceDate: "15 Jul 2025",
         soldDate: "15 Jul 2025",
         isSold: false,
+        equipments: "bpkb,ban-cadangan",
     };
 
     const stnk: Stnk = {
@@ -119,7 +120,7 @@ export default function KendaraanDetailPage() {
         }
     ]
 
-    const listAttachment: AttachmentVehicle[] = [
+    const vehicleAttachments: AttachmentVehicle[] = [
         {
             id: "1",
             vehicleId: "1",
@@ -127,6 +128,7 @@ export default function KendaraanDetailPage() {
             fileType: "pdf",
             fileSize: "1 MB",
             fileLink: "dokumen-stnk-link",
+            attachmentType: "lampiran",
             createdAt: "12 Jan 2025",
             createdBy: "rainerevan"
         },
@@ -137,18 +139,38 @@ export default function KendaraanDetailPage() {
             fileType: "pdf",
             fileSize: "300 KB",
             fileLink: "dokumen-bpkb-link",
+            attachmentType: "lampiran",
             createdAt: "11 Jan 2025",
             createdBy: "rainerevan"
         },
     ]
 
-    const images = [
-        "/assets/car.jpg?text=Front",
-        "/assets/car.jpg?text=Front",
-        "/assets/car.jpg?text=Front",
+    const vehicleImages: AttachmentVehicle[] = [
+        {
+            id: "1",
+            vehicleId: "1",
+            fileName: "Dokumen STNK.pdf",
+            fileType: "pdf",
+            fileSize: "1 MB",
+            fileLink: "/assets/car.jpg?text=Front",
+            attachmentType: "galeri",
+            createdAt: "12 Jan 2025",
+            createdBy: "rainerevan"
+        },
+        {
+            id: "2",
+            vehicleId: "1",
+            fileName: "Dokumen BPKB.pdf",
+            fileType: "pdf",
+            fileSize: "300 KB",
+            fileLink: "/assets/car.jpg?text=Front",
+            attachmentType: "galeri",
+            createdAt: "11 Jan 2025",
+            createdBy: "rainerevan"
+        }
     ]
 
-    const vehicleEquipments = ["bpkb", "ban-cadangan"];
+    const vehicleEquipments = vehicle.equipments ? vehicle.equipments.split(",") : [];
 
     const equipmentParam: Param[] = [
         {
@@ -210,7 +232,7 @@ export default function KendaraanDetailPage() {
 
                     {/* Image Carousel */}
                     <div className="col-span-1 md:col-span-4 md:p-5 md:pr-0">
-                        <ImageCarousel images={images} />
+                        <ImageCarousel images={vehicleImages.map(image => image.fileLink || '')} />
                     </div>
 
                     <div className="col-span-1 md:col-span-3 w-full flex flex-col justify-between gap-3 p-5">
@@ -479,15 +501,15 @@ export default function KendaraanDetailPage() {
                             <AddAttachmentVehicleDialog vehicleId={vehicle.id} />
                         }
                     >
-                        {listAttachment.length > 0 && (
+                        {vehicleAttachments.length > 0 && (
                             <div className="flex flex-col">
                                 {
-                                    listAttachment.map((attachment, index) => (
+                                    vehicleAttachments.map((attachment, index) => (
                                         <div key={attachment.id}>
                                             <AttachmentItem
                                                 attachment={attachment}
                                             />
-                                            {index < listAttachment.length - 1 && (
+                                            {index < vehicleAttachments.length - 1 && (
                                                 <Separator className="my-4" />
                                             )}
                                         </div>

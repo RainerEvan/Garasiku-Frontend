@@ -6,7 +6,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Service } from "@/models/service"
 import AttachmentItem from "@/components/shared/attachment-item"
 import { AttachmentService } from "@/models/attachment-service"
-import { ServiceRecord } from "@/models/service-record"
 import TaskTypeBar from "@/components/shared/task-type-bar"
 import StatusBar from "@/components/shared/status-bar"
 import { Status } from "@/lib/constants"
@@ -37,17 +36,12 @@ export default function ServisDetailPage() {
         startDate: "15 Jan 2028",
         endDate: "15 Jan 2028",
         status: "ongoing",
-    };
-
-    const serviceRecord: ServiceRecord = {
-        id: "1",
-        serviceId: "1",
         mileage: 30000,
         totalCost: 1500000,
         mechanicName: "Agus Purnama",
         task: "-Tune Up\n-Ganti Oli & Filter\n-Ganti Kampas Rem",
         sparepart: "-Oli\n-Filter\n-Kampas Rem",
-        notes: "Ban depan udah mulai gundul",
+        notes: "Ban depan udah mulai gundul"
     };
 
     const latestLocation = {
@@ -129,7 +123,7 @@ export default function ServisDetailPage() {
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
                                     </AlertDialog>
-                                    <StartServiceDialog serviceRecord={serviceRecord} />
+                                    <StartServiceDialog service={service} />
                                 </div>
                             )}
 
@@ -152,7 +146,7 @@ export default function ServisDetailPage() {
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
                                     </AlertDialog>
-                                    <CompleteServiceDialog serviceRecord={serviceRecord} />
+                                    <CompleteServiceDialog service={service} />
                                 </div>
                             )}
                         </div>
@@ -192,21 +186,21 @@ export default function ServisDetailPage() {
                         headerAction={
                             <>
                                 {service.status == "ongoing" && (
-                                    <EditServiceRecordDialog serviceRecord={serviceRecord} />
+                                    <EditServiceRecordDialog service={service} />
                                 )}
                             </>
                         }
                     >
-                        {serviceRecord && (
+                        {service && (
                             <div className="grid grid-cols-1 gap-3 py-1">
                                 <div className="grid grid-cols-2 gap-3">
-                                    <SectionItem label="Kilometer" value={`${serviceRecord.mileage} KM`} />
-                                    <SectionItem label="Biaya" value={`Rp ${serviceRecord.totalCost}`} />
+                                    <SectionItem label="Kilometer" value={`${service.mileage} KM`} />
+                                    <SectionItem label="Biaya" value={`Rp ${service.totalCost}`} />
                                 </div>
-                                <SectionItem label="Nama Mekanik" value={serviceRecord.mechanicName} />
-                                <SectionItem label="Jasa" value={serviceRecord.task} />
-                                <SectionItem label="Sparepart" value={serviceRecord.sparepart} />
-                                <SectionItem label="Catatan" value={serviceRecord.notes} />
+                                <SectionItem label="Nama Mekanik" value={service.mechanicName} />
+                                <SectionItem label="Jasa" value={service.task} />
+                                <SectionItem label="Sparepart" value={service.sparepart} />
+                                <SectionItem label="Catatan" value={service.notes} />
                             </div>
                         )}
                     </SectionCard>

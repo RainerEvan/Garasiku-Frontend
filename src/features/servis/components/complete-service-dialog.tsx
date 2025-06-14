@@ -16,7 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ServiceRecord } from "@/models/service-record"
+import { Service } from "@/models/service"
 import { Textarea } from "@/components/shadcn/textarea"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover"
 import { CalendarIcon } from "lucide-react"
@@ -27,14 +27,13 @@ import { Switch } from "@/components/shadcn/switch"
 import { Separator } from "@/components/shadcn/separator"
 
 interface CompleteServiceDialogProps {
-  serviceRecord: ServiceRecord
-  onSave?: (updatedServiceRecord: ServiceRecord) => void
+  service: Service
+  onSave?: (updatedService: Service) => void
 }
 
 // Define the form schema with validation
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
-  serviceId: z.string().min(1, { message: "Service Id harus terisi" }),
   endDate: z.date({ required_error: "Tanggal Selesai harus terisi" }),
   mileage: z.number().min(0, { message: "Kilometer harus terisi" }),
   totalCost: z.number().min(0, { message: "Biaya harus terisi" }),
@@ -57,20 +56,19 @@ const formSchema = z.object({
   }
 )
 
-export function CompleteServiceDialog({ serviceRecord, onSave }: CompleteServiceDialogProps) {
+export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialogProps) {
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      id: serviceRecord.id,
-      serviceId: serviceRecord.serviceId,
-      mileage: serviceRecord.mileage,
-      totalCost: serviceRecord.totalCost,
-      mechanicName: serviceRecord.mechanicName,
-      task: serviceRecord.task,
-      sparepart: serviceRecord.sparepart,
-      notes: serviceRecord.notes,
+      id: service.id,
+      mileage: service.mileage,
+      totalCost: service.totalCost,
+      mechanicName: service.mechanicName,
+      task: service.task,
+      sparepart: service.sparepart,
+      notes: service.notes,
       isSetNextReminder: true,
     },
   })

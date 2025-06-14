@@ -24,18 +24,17 @@ import { cn } from "@/lib/utils"
 import { addYears, format } from "date-fns"
 import { Switch } from "@/components/shadcn/switch"
 import { Separator } from "@/components/shadcn/separator"
-import { AdministrationRecord } from "@/models/administration-record"
+import { Administration } from "@/models/administration"
 
 interface CompleteAdministrationDialogProps {
-  administrationRecord: AdministrationRecord
+  administration: Administration
   dueDate: string
-  onSave?: (updatedAdministrationRecord: AdministrationRecord) => void
+  onSave?: (updatedAdministration: Administration) => void
 }
 
 // Define the form schema with validation
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
-  administrationId: z.string().min(1, { message: "Administration Id harus terisi" }),
   endDate: z.date({ required_error: "Tanggal Selesai harus terisi" }),
   totalCost: z.number().min(0, { message: "Biaya harus terisi" }),
   notes: z.string().optional(),
@@ -54,16 +53,15 @@ const formSchema = z.object({
   }
 )
 
-export function CompleteAdministrationDialog({ administrationRecord, dueDate, onSave }: CompleteAdministrationDialogProps) {
+export function CompleteAdministrationDialog({ administration, dueDate, onSave }: CompleteAdministrationDialogProps) {
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      id: administrationRecord.id,
-      administrationId: administrationRecord.administrationId,
-      totalCost: administrationRecord.totalCost,
-      notes: administrationRecord.notes,
+      id: administration.id,
+      totalCost: administration.totalCost,
+      notes: administration.notes,
       isSetNextReminder: true,
       nextDueDate: addYears(dueDate,1)
     },
@@ -76,7 +74,7 @@ export function CompleteAdministrationDialog({ administrationRecord, dueDate, on
   function onSubmit(values: z.infer<typeof formSchema>) {
     const formattedValues = {
       ...values,
-      startDate: values.endDate ? format(values.endDate, "yyyy-MM-dd") : undefined,
+      endDate: values.endDate ? format(values.endDate, "yyyy-MM-dd") : undefined,
       nextDueDate: values.nextDueDate ? format(values.nextDueDate, "yyyy-MM-dd") : undefined,
     };
 
