@@ -15,11 +15,11 @@ export default function DaftarKendaraanPage() {
     {
       id: "1",
       name: "Honda Civic Turbo Hitam 2022",
-      type: "Mobil",
+      category: "Mobil",
       year: "2022",
       brand: "Honda",
       color: "Hitam",
-      model: "Civic Turbo",
+      type: "Civic Turbo",
       licensePlate: "D 1234 ABC",
       location: {
         id: "1",
@@ -33,11 +33,11 @@ export default function DaftarKendaraanPage() {
     {
       id: "2",
       name: "Toyota Innova Putih 2023",
-      type: "Mobil",
+      category: "Mobil",
       year: "2023",
       brand: "Toyota",
       color: "Putih",
-      model: "Innova",
+      type: "Innova",
       licensePlate: "D 7890 DFE",
       location: {
         id: "1",
@@ -51,11 +51,11 @@ export default function DaftarKendaraanPage() {
     {
       id: "3",
       name: "Honda Civic Turbo Hitam 2022",
-      type: "Mobil",
+      category: "Mobil",
       year: "2022",
       brand: "Honda",
       color: "Hitam",
-      model: "Civic Turbo",
+      type: "Civic Turbo",
       licensePlate: "D 1234 ABC",
       location: {
         id: "1",
@@ -72,11 +72,11 @@ export default function DaftarKendaraanPage() {
     {
       id: "1",
       name: "Honda Civic Turbo Hitam 2022",
-      type: "Mobil",
+      category: "Mobil",
       year: "2022",
       brand: "Honda",
       color: "Hitam",
-      model: "Civic Turbo",
+      type: "Civic Turbo",
       licensePlate: "D 1234 ABC",
       location: {
         id: "1",
@@ -91,11 +91,11 @@ export default function DaftarKendaraanPage() {
     {
       id: "2",
       name: "Toyota Innova Putih 2023",
-      type: "Mobil",
+      category: "Mobil",
       year: "2023",
       brand: "Toyota",
       color: "Putih",
-      model: "Innova",
+      type: "Innova",
       licensePlate: "D 7890 DFE",
       location: {
         id: "1",
@@ -110,11 +110,13 @@ export default function DaftarKendaraanPage() {
   ]
 
   const filteredActiveVehicles = activeVehicles.filter((vehicle) =>
-    vehicle.licensePlate && vehicle.licensePlate.toLowerCase().includes(searchActive.toLowerCase())
+    (vehicle.licensePlate && vehicle.licensePlate.toLowerCase().includes(searchActive.toLowerCase())) ||
+    (vehicle.name && vehicle.name.toLowerCase().includes(searchActive.toLowerCase()))
   );
 
   const filteredSoldVehicles = soldVehicles.filter((vehicle) =>
-    vehicle.licensePlate && vehicle.licensePlate.toLowerCase().includes(searchSold.toLowerCase())
+    (vehicle.licensePlate && vehicle.licensePlate.toLowerCase().includes(searchSold.toLowerCase())) ||
+    (vehicle.name && vehicle.name.toLowerCase().includes(searchSold.toLowerCase()))
   );
 
   return (
@@ -137,7 +139,7 @@ export default function DaftarKendaraanPage() {
               <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
               <Input
                 type="text"
-                placeholder="Filter Plat No kendaraan"
+                placeholder="Filter kendaraan"
                 className="w-full pl-10"
                 value={searchActive}
                 onChange={(e) => setSearchActive(e.target.value)}
@@ -158,7 +160,7 @@ export default function DaftarKendaraanPage() {
               <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
               <Input
                 type="text"
-                placeholder="Filter Plat No kendaraan"
+                placeholder="Filter kendaraan"
                 className="w-full pl-10"
                 value={searchSold}
                 onChange={(e) => setSearchSold(e.target.value)}

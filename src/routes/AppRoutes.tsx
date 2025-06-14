@@ -14,7 +14,6 @@ const AktivitasAdministrasiKendaraanPage = lazy(() => import("@/features/garasi/
 const RiwayatLokasiKendaraanPage = lazy(() => import("@/features/garasi/pages/riwayat-lokasi-kendaraan-page"));
 const ServisPage = lazy(() => import("@/features/servis/pages/servis-page"));
 const ServisDetailPage = lazy(() => import("@/features/servis/pages/servis-detail-page"));
-const RiwayatLokasiServisPage = lazy(() => import("@/features/servis/pages/riwayat-lokasi-servis-page"));
 const AdministrasiPage = lazy(() => import("@/features/administrasi/pages/administrasi-page"));
 const AdministrasiDetailPage = lazy(() => import("@/features/administrasi/pages/administrasi-detail-page"));
 const MaintenancePage = lazy(() => import("@/features/maintenance/pages/maintenance-page"));
@@ -53,11 +52,10 @@ export default function AppRoutes() {
               <Route path="/kendaraan/:id/riwayat-lokasi" element={<RiwayatLokasiKendaraanPage />} />
               <Route path="/servis" element={<ServisPage />} />
               <Route path="/servis/:id" element={<ServisDetailPage />} />
-              <Route path="/servis/:id/riwayat-lokasi" element={<RiwayatLokasiServisPage />} />
               <Route path="/administrasi" element={<AdministrasiPage />} />
               <Route path="/administrasi/:id" element={<AdministrasiDetailPage />} />
-              <Route path="/maintenance" element={<MaintenancePage />} />
-              <Route path="/maintenance/:id" element={<MaintenanceDetailPage />} />
+              <Route path="/parameter" element={<MaintenancePage />} />
+              <Route path="/parameter/:id" element={<MaintenanceDetailPage />} />
               <Route path="/user" element={<UserPage />} />
               <Route path="/user/:id" element={<UserDetailPage />} />
             </Route>

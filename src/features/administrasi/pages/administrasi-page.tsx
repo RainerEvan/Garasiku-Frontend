@@ -16,14 +16,14 @@ export default function AdministrasiPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "Mobil",
+                category: "Mobil",
                 year: "2022",
                 brand: "Honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
-            type: "administrasi-stnk",
+            type: "administrasi-stnk-1tahun",
             dueDate: "15 Jan 2028",
             endDate: undefined,
             status: "pending",
@@ -34,11 +34,11 @@ export default function AdministrasiPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "Mobil",
+                category: "Mobil",
                 year: "2022",
                 brand: "Honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
             type: "administrasi-asuransi",
@@ -52,14 +52,14 @@ export default function AdministrasiPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "Mobil",
+                category: "Mobil",
                 year: "2022",
                 brand: "Honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
-            type: "administrasi-stnk",
+            type: "administrasi-stnk-1tahun",
             dueDate: "15 Jan 2028",
             endDate: undefined,
             status: "pending",
@@ -73,14 +73,14 @@ export default function AdministrasiPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "Mobil",
+                category: "Mobil",
                 year: "2022",
                 brand: "Honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
-            type: "administrasi-stnk",
+            type: "administrasi-stnk-1tahun",
             dueDate: "15 Jan 2028",
             endDate: "15 Jan 2028",
             status: "completed",
@@ -91,11 +91,11 @@ export default function AdministrasiPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "Mobil",
+                category: "Mobil",
                 year: "2022",
                 brand: "Honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
             type: "administrasi-asuransi",
@@ -109,14 +109,14 @@ export default function AdministrasiPage() {
             vehicle: {
                 id: "1",
                 name: "Honda Civic Turbo Hitam 2022",
-                type: "Mobil",
+                category: "Mobil",
                 year: "2022",
                 brand: "Honda",
                 color: "Hitam",
-                model: "Civic Turbo",
+                type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
-            type: "administrasi-stnk",
+            type: "administrasi-stnk-1tahun",
             dueDate: "15 Jan 2028",
             endDate: "15 Jan 2028",
             status: "cancelled",
@@ -124,11 +124,15 @@ export default function AdministrasiPage() {
     ]
 
     const filteredTodoAdministrations = todoAdministrations.filter((administration) =>
-        administration.vehicle?.licensePlate && administration.vehicle?.licensePlate.toLowerCase().includes(searchTodo.toLowerCase())
+        (administration.vehicle?.licensePlate && administration.vehicle?.licensePlate.toLowerCase().includes(searchTodo.toLowerCase())) ||
+        (administration.vehicle?.name && administration.vehicle?.name.toLowerCase().includes(searchTodo.toLowerCase())) ||
+        (administration.type && administration.type.toLowerCase().includes(searchTodo.toLowerCase()))
     );
 
     const filteredHistoriAdministrations = historiAdministrations.filter((administration) =>
-        administration.vehicle?.licensePlate && administration.vehicle?.licensePlate.toLowerCase().includes(searchHistori.toLowerCase())
+        (administration.vehicle?.licensePlate && administration.vehicle?.licensePlate.toLowerCase().includes(searchHistori.toLowerCase())) ||
+        (administration.vehicle?.name && administration.vehicle?.name.toLowerCase().includes(searchHistori.toLowerCase())) ||
+        (administration.type && administration.type.toLowerCase().includes(searchHistori.toLowerCase()))
     );
 
     return (
@@ -150,7 +154,7 @@ export default function AdministrasiPage() {
                             <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
                             <Input
                                 type="text"
-                                placeholder="Filter Plat No kendaraan"
+                                placeholder="Filter kendaraan"
                                 className="w-full pl-10"
                                 value={searchTodo}
                                 onChange={(e) => setSearchTodo(e.target.value)}
@@ -171,7 +175,7 @@ export default function AdministrasiPage() {
                             <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
                             <Input
                                 type="text"
-                                placeholder="Filter Plat No kendaraan"
+                                placeholder="Filter kendaraan"
                                 className="w-full pl-10"
                                 value={searchTodo}
                                 onChange={(e) => setSearchHistori(e.target.value)}

@@ -18,12 +18,13 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
 import { Param } from "@/models/param"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover"
-import { CalendarIcon, Plus, PlusCircle } from "lucide-react"
+import { CalendarIcon, Check, ChevronsUpDown, Plus, PlusCircle } from "lucide-react"
 import { Calendar } from "@/components/shadcn/calendar"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Service } from "@/models/service"
 import { Vehicle } from "@/models/vehicle"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/shadcn/command"
 
 interface AddServiceDialogProps {
   onSave?: (newService: Service) => void
@@ -50,57 +51,15 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
   const listVehicle: Vehicle[] = [
     {
       id: "1",
-      name: "Honda Civic Turbo Hitam 2022",
-      type: "Mobil",
-      year: "2022",
-      brand: "Honda",
-      color: "Hitam",
-      model: "Civic Turbo",
-      licensePlate: "D 1234 ABC",
-      location: {
-        id: "1",
-        vehicleId: "1",
-        name: "Rumah Bandung",
-        address: "Jl. Sukajadi No. 57, Bandung",
-      },
-      image: "/assets/car.jpg",
-      isSold: false
+      name: "D 1234 ABC - Honda Civic Turbo Hitam 2022"
     },
     {
       id: "2",
-      name: "Toyota Innova Putih 2023",
-      type: "Mobil",
-      year: "2023",
-      brand: "Toyota",
-      color: "Putih",
-      model: "Innova",
-      licensePlate: "D 7890 DFE",
-      location: {
-        id: "1",
-        vehicleId: "1",
-        name: "Rumah Jakarta",
-        address: "Jl. Sriwijaya No. 5, Jakarta",
-      },
-      image: "/assets/car.jpg",
-      isSold: false
+      name: "D 7890 DFE - Toyota Innova Putih 2023"
     },
     {
       id: "3",
-      name: "Honda Civic Turbo Hitam 2022",
-      type: "Mobil",
-      year: "2022",
-      brand: "Honda",
-      color: "Hitam",
-      model: "Civic Turbo",
-      licensePlate: "D 1234 ABC",
-      location: {
-        id: "1",
-        vehicleId: "1",
-        name: "Rumah Bandung",
-        address: "Jl. Sukajadi No. 57, Bandung",
-      },
-      image: "/assets/car.jpg",
-      isSold: false
+      name: "D 0000 CDE - BMW M4 Putih 2020"
     },
   ]
 
@@ -114,8 +73,14 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
     {
       id: "2",
       group: "006",
-      name: "servis-heavy",
+      name: "servis-berat",
       description: "Servis Berat",
+    },
+    {
+      id: "3",
+      group: "006",
+      name: "servis-lainnya",
+      description: "Servis Lainnya",
     },
   ]
 
@@ -211,20 +176,65 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
                   render={({ field }) => (
                     <FormItem className="space-y-1">
                       <FormLabel className="font-medium">Kendaraan</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Pilih kendaraan" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {listVehicle.map((option) => (
-                            <SelectItem key={option.id} value={option.id || ""}>
-                              {`${option.name} - ${option.licensePlate}`}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between font-normal h-fit",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              <span className="whitespace-normal break-words text-left">
+                                {field.value
+                                  ? listVehicle.find((vehicle) => vehicle.id === field.value)?.name
+                                  : "Pilih kendaraan"}
+                              </span>
+                              <ChevronsUpDown className="opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-full p-0"
+                          style={{
+                            minWidth: 'var(--radix-popover-trigger-width)',
+                            maxWidth: 'var(--radix-popover-trigger-width)',
+                          }}>
+                          <Command>
+                            <CommandInput
+                              placeholder="Cari kendaraan..."
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>Kendaraan tidak ditemukan.</CommandEmpty>
+                              <CommandGroup>
+                                {listVehicle.map((vehicle) => (
+                                  <CommandItem
+                                    value={vehicle.name}
+                                    key={vehicle.id}
+                                    onSelect={() => {
+                                      form.setValue("vehicleId", vehicle.id || "");
+                                    }}
+                                  >
+                                    <span className="whitespace-normal break-words text-left">
+                                      {vehicle.name}
+                                    </span>
+                                    <Check
+                                      className={cn(
+                                        "ml-auto",
+                                        vehicle.id === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}

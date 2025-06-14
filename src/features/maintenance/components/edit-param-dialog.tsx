@@ -18,6 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Param } from "@/models/param"
 import { Input } from "@/components/shadcn/input"
 import { DropdownMenuItem } from "@/components/shadcn/dropdown-menu"
+import { Textarea } from "@/components/shadcn/textarea"
 
 interface EditParamDialogProps {
   param: Param,
@@ -103,7 +104,7 @@ export function EditParamDialog({ param, onSave }: EditParamDialogProps) {
                   <FormItem className="space-y-1">
                     <FormLabel className="font-medium">Description</FormLabel>
                     <FormControl>
-                      <Input
+                      <Textarea
                         placeholder="Masukkan deskripsi param"
                         {...field}
                         className="w-full"

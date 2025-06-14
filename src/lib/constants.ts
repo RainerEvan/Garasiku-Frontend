@@ -1,17 +1,21 @@
-import { Anvil, CarFront, IdCard, MapPin, ShieldCheck, Tag, Wrench, type LucideIcon } from "lucide-react";
+import { Anvil, Bolt, CarFront, IdCard, MapPin, ShieldCheck, Tag, Wrench, type LucideIcon } from "lucide-react";
 
 export const TaskTypeLabel: Record<string, string> = {
   "servis-regular": "Servis Regular",
-  "servis-heavy": "Servis Berat",
-  "administrasi-stnk": "Perpanjang STNK",
-  "administrasi-asuransi": "Perpanjang Asuransi"
+  "servis-berat": "Servis Berat",
+  "servis-lainnya": "Servis Lainnya",
+  "administrasi-stnk-1tahun": "STNK 1 Tahun",
+  "administrasi-stnk-5tahun": "STNK 5 Tahun",
+  "administrasi-asuransi": "Asuransi"
 };
 
 export const TaskTypeIcons: Record<string, LucideIcon> = {
-  "administrasi-stnk": IdCard,
+  "administrasi-stnk-1tahun": IdCard,
+  "administrasi-stnk-5tahun": IdCard,
   "administrasi-asuransi": ShieldCheck,
   "servis-regular": Wrench,
-  "servis-heavy": Anvil,
+  "servis-berat": Anvil,
+  "servis-lainnya": Bolt,
   "lokasi": MapPin,
   "terjual": Tag,
   "kendaraan": CarFront,

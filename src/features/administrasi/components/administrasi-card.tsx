@@ -50,7 +50,7 @@ export function AdministrationCard({
         <div className="flex items-start justify-between gap-5">
           <div className="flex flex-col capitalize">
             <h3 className="font-medium">{administration.vehicle?.name}</h3>
-            <p className="text-sm text-medium ">{administration.vehicle?.type}</p>
+            <p className="text-sm text-medium ">{administration.vehicle?.category}</p>
             <p className="text-xs text-light">{administration.vehicle?.licensePlate}</p>
           </div>
           <div>

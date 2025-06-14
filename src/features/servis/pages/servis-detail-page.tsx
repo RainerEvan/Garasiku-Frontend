@@ -25,11 +25,11 @@ export default function ServisDetailPage() {
         vehicle: {
             id: "1",
             name: "Honda Civic Turbo Hitam 2022",
-            type: "mobil",
+            category: "mobil",
             year: "2022",
             brand: "honda",
             color: "Hitam",
-            model: "Civic Turbo",
+            type: "Civic Turbo",
             licensePlate: "D 1234 ABC",
         },
         type: "servis-regular",
@@ -52,8 +52,8 @@ export default function ServisDetailPage() {
 
     const latestLocation = {
         id: "1",
-        serviceId: "1",
-        name: "Bengkel Honda",
+        vehicleId: "1",
+        name: "Rumah Bandung",
         address: "Jl. Sukajadi No. 57, Bandung",
     }
 
@@ -173,7 +173,7 @@ export default function ServisDetailPage() {
 
                     {/* Lokasi Bar */}
                     {latestLocation && (
-                        <Link to={`/servis/${service.id}/riwayat-lokasi`}>
+                        <Link to={`/kendaraan/${service.vehicleId}/riwayat-lokasi`}>
                             <DataBarCard
                                 variant="button"
                                 type="lokasi"

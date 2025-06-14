@@ -29,22 +29,23 @@ const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
   vehicleId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
   licensePlate: z.string().optional(),
+  stnkNumber: z.string().optional(),
+  ownerName: z.string().optional(),
+  ownerAddress: z.string().optional(),
   brand: z.string().optional(),
-  model: z.string().optional(),
   type: z.string().optional(),
-  bodyModel: z.string().optional(),
-  manufactureYear: z.string().optional(),
-  engineCapacity: z.string().optional(),
+  category: z.string().optional(),
+  model: z.string().optional(),
+  manufacturedYear: z.string().optional(),
+  cylinderCapacity: z.string().optional(),
   chassisNumber: z.string().optional(),
   engineNumber: z.string().optional(),
-  stnkNumber: z.string().optional(),
   color: z.string().optional(),
   fuelType: z.string().optional(),
-  tnkbColor: z.string().optional(),
+  licensePlateColor: z.string().optional(),
   registrationYear: z.string().optional(),
   bpkbNumber: z.string().optional(),
-  registrationOrderNumber: z.string().optional(),
-  locationCode: z.string().optional(),
+  registrationNumber: z.string().optional(),
   validUntil: z.string().optional()
 })
 
@@ -57,22 +58,23 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
       id: stnk.id,
       vehicleId: stnk.vehicleId,
       licensePlate: stnk.licensePlate,
+      stnkNumber: stnk.stnkNumber,
+      ownerName: stnk.ownerName,
+      ownerAddress: stnk.ownerAddress,
       brand: stnk.brand,
-      model: stnk.model,
       type: stnk.type,
-      bodyModel: stnk.bodyModel,
-      manufactureYear: stnk.manufactureYear,
-      engineCapacity: stnk.engineCapacity,
+      category: stnk.category,
+      model: stnk.model,
+      manufacturedYear: stnk.manufacturedYear,
+      cylinderCapacity: stnk.cylinderCapacity,
       chassisNumber: stnk.chassisNumber,
       engineNumber: stnk.engineNumber,
-      stnkNumber: stnk.stnkNumber,
       color: stnk.color,
       fuelType: stnk.fuelType,
-      tnkbColor: stnk.tnkbColor,
+      licensePlateColor: stnk.licensePlateColor,
       registrationYear: stnk.registrationYear,
       bpkbNumber: stnk.bpkbNumber,
-      registrationOrderNumber: stnk.registrationOrderNumber,
-      locationCode: stnk.chassisNumber,
+      registrationNumber: stnk.registrationNumber,
       validUntil: stnk.validUntil,
     },
   })
@@ -104,25 +106,81 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
             {/* Detail Kendaraan */}
             <div className="flex flex-col gap-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="grid grid-cols-1 gap-5">
-                  <FormField
-                    control={form.control}
-                    name="licensePlate"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">No Polisi</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Masukkan no polisi kendaraan"
-                            {...field}
-                            className="w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={form.control}
+                  name="licensePlate"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="font-medium">No Polisi</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Masukkan no polisi kendaraan"
+                          {...field}
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
+                <FormField
+                  control={form.control}
+                  name="stnkNumber"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="font-medium">No STNK</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Masukkan no STNK kendaraan"
+                          {...field}
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="ownerName"
+                  render={({ field }) => (
+                    <FormItem className="col-span-1 md:col-span-2 space-y-1">
+                      <FormLabel className="font-medium">Nama Pemilik</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Masukkan nama pemilik kendaraan"
+                          {...field}
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="ownerAddress"
+                  render={({ field }) => (
+                    <FormItem className="col-span-1 md:col-span-2 space-y-1">
+                      <FormLabel className="font-medium">Alamat</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Masukkan alamat kendaraan"
+                          {...field}
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="flex flex-col gap-5">
                   <FormField
                     control={form.control}
                     name="brand"
@@ -143,7 +201,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
 
                   <FormField
                     control={form.control}
-                    name="model"
+                    name="type"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
                         <FormLabel className="font-medium">Tipe</FormLabel>
@@ -161,7 +219,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
 
                   <FormField
                     control={form.control}
-                    name="type"
+                    name="category"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
                         <FormLabel className="font-medium">Jenis</FormLabel>
@@ -179,7 +237,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
 
                   <FormField
                     control={form.control}
-                    name="bodyModel"
+                    name="model"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
                         <FormLabel className="font-medium">Model</FormLabel>
@@ -197,7 +255,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
 
                   <FormField
                     control={form.control}
-                    name="manufactureYear"
+                    name="manufacturedYear"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
                         <FormLabel className="font-medium">Tahun Pembuatan</FormLabel>
@@ -215,7 +273,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
 
                   <FormField
                     control={form.control}
-                    name="engineCapacity"
+                    name="cylinderCapacity"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
                         <FormLabel className="font-medium">Isi Silinder</FormLabel>
@@ -268,25 +326,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
                   />
                 </div>
 
-                <div className="grid grid-cols-1 gap-5">
-                  <FormField
-                    control={form.control}
-                    name="stnkNumber"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">No STNK</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Masukkan no STNK kendaraan"
-                            {...field}
-                            className="w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
+                <div className="flex flex-col gap-5">
                   <FormField
                     control={form.control}
                     name="color"
@@ -325,7 +365,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
 
                   <FormField
                     control={form.control}
-                    name="tnkbColor"
+                    name="licensePlateColor"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
                         <FormLabel className="font-medium">Warna TNKB</FormLabel>
@@ -379,31 +419,13 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
 
                   <FormField
                     control={form.control}
-                    name="registrationOrderNumber"
+                    name="registrationNumber"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">No Urut Pendaftaran</FormLabel>
+                        <FormLabel className="font-medium">No Pendaftaran</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Masukkan no urut pendaftaran kendaraan"
-                            {...field}
-                            className="w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="locationCode"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Kode Lokasi</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Masukkan kode lokasi kendaraan"
+                            placeholder="Masukkan no pendaftaran kendaraan"
                             {...field}
                             className="w-full"
                           />

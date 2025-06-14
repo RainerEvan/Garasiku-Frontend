@@ -26,11 +26,11 @@ export default function KendaraanDetailPage() {
     const vehicle: Vehicle = {
         id: "1",
         name: "Honda Civic Turbo Hitam 2022",
-        type: "Mobil",
+        category: "Mobil",
         year: "2022",
         brand: "Honda",
         color: "Hitam",
-        model: "Civic Turbo",
+        type: "Civic Turbo",
         licensePlate: "D 1234 ABC",
         stnkDueDate: "22 Feb 2026",
         insuranceDueDate: "1 Feb 2026",
@@ -44,22 +44,23 @@ export default function KendaraanDetailPage() {
         vehicleId: "1",
         licensePlate: "D 1234 ABC",
         stnkNumber: "123456789",
+        ownerName: "Rainer Evan",
+        ownerAddress: "Jl. Sukajadi VIII No. 57 RT1/2 Bandung",
         brand: "Honda",
-        color: "Hitam",
-        model: "Civic Turbo",
-        fuelType: "Bensin",
-        type: "Mobil",
-        tnkbColor: "Putih",
-        bodyModel: "Sedan",
-        registrationYear: "2023",
-        manufactureYear: "2022",
-        bpkbNumber: "00123456789",
-        engineCapacity: "1498 CC",
-        registrationOrderNumber: "001/002-1238/1234/0123",
+        type: "Civic Turbo",
+        category: "Mobil",
+        model: "Sedan",
+        manufacturedYear: "2022",
+        cylinderCapacity: "1498 CC",
         chassisNumber: "MRHFC1610NT0023",
-        locationCode: "0123",
         engineNumber: "L15B7-1234567",
-        validUntil: "15 Jan 2028",
+        color: "Hitam",
+        fuelType: "Bensin",
+        licensePlateColor: "Putih",
+        registrationYear: "2023",
+        bpkbNumber: "00123456789",
+        registrationNumber: "001/002-1238/1234/0123",
+        validUntil: "15 Jan 2028"
     };
 
     const latestLocation = {
@@ -103,7 +104,7 @@ export default function KendaraanDetailPage() {
         {
             id: "1",
             vehicleId: "1",
-            type: "administrasi-stnk",
+            type: "administrasi-stnk-1tahun",
             dueDate: "15 Jan 2028",
             endDate: undefined,
             status: "pending",
@@ -223,11 +224,11 @@ export default function KendaraanDetailPage() {
                             <Separator />
 
                             <div className="grid grid-cols-2 gap-3 py-1">
-                                <SectionItem label="Jenis" value={vehicle.type} />
+                                <SectionItem label="Jenis" value={vehicle.category} />
                                 <SectionItem label="Tahun" value={vehicle.year} />
                                 <SectionItem label="Merk" value={vehicle.brand} />
                                 <SectionItem label="Warna" value={vehicle.color} />
-                                <SectionItem label="Model" value={vehicle.model} />
+                                <SectionItem label="Tipe" value={vehicle.type} />
                                 <SectionItem label="Plat No" value={vehicle.licensePlate} />
                             </div>
                         </div>
@@ -323,7 +324,7 @@ export default function KendaraanDetailPage() {
                         {/* STNK Bar */}
                         <DataBarCard
                             variant="default"
-                            type="administrasi-stnk"
+                            type="administrasi-stnk-1tahun"
                             label="Jatuh Tempo STNK"
                             description={vehicle.stnkDueDate}
                         />
@@ -356,28 +357,33 @@ export default function KendaraanDetailPage() {
                         }
                         collapsible
                         defaultCollapsed={true}
-                        collapsedHeight={100}
+                        collapsedHeight={140}
                     >
                         {stnk && (
-                            <div className="grid grid-cols-2 gap-3 py-1 md:grid-cols-3">
-                                <SectionItem label="No Polisi" value={stnk.licensePlate} />
-                                <SectionItem label="No STNK" value={stnk.stnkNumber} />
-                                <SectionItem label="Merk" value={stnk.brand} />
-                                <SectionItem label="Warna" value={stnk.color} />
-                                <SectionItem label="Tipe" value={stnk.model} />
-                                <SectionItem label="Bahan Bakar" value={stnk.fuelType} />
-                                <SectionItem label="Jenis" value={stnk.type} />
-                                <SectionItem label="Warna TNKB" value={stnk.tnkbColor} />
-                                <SectionItem label="Model" value={stnk.bodyModel} />
-                                <SectionItem label="Tahun Registrasi" value={stnk.registrationYear} />
-                                <SectionItem label="Tahun Pembuatan" value={stnk.manufactureYear} />
-                                <SectionItem label="No BPKB" value={stnk.bpkbNumber} />
-                                <SectionItem label="Isi Silinder" value={stnk.engineCapacity} />
-                                <SectionItem label="No Urut Pendaftaran" value={stnk.registrationOrderNumber} />
-                                <SectionItem label="No Rangka" value={stnk.chassisNumber} />
-                                <SectionItem label="Kode Lokasi" value={stnk.locationCode} />
-                                <SectionItem label="No Mesin" value={stnk.engineNumber} />
-                                <SectionItem label="Berlaku Sampai" value={stnk.validUntil} />
+                            <div className="flex flex-col gap-3 py-1">
+                                <div className="grid grid-cols-2 gap-3 mb-5 md:mb-0">
+                                    <SectionItem label="No Polisi" value={stnk.licensePlate} />
+                                    <SectionItem label="No STNK" value={stnk.stnkNumber} />
+                                    <SectionItem className="col-span-2 md:col-span-1" label="Nama Pemilik" value={stnk.ownerName} />
+                                    <SectionItem className="col-span-2 md:col-span-1" label="Alamat" value={stnk.ownerAddress} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <SectionItem label="Merk" value={stnk.brand} />
+                                    <SectionItem label="Warna" value={stnk.color} />
+                                    <SectionItem label="Tipe" value={stnk.type} />
+                                    <SectionItem label="Bahan Bakar" value={stnk.fuelType} />
+                                    <SectionItem label="Jenis" value={stnk.category} />
+                                    <SectionItem label="Warna TNKB" value={stnk.licensePlateColor} />
+                                    <SectionItem label="Model" value={stnk.model} />
+                                    <SectionItem label="Tahun Registrasi" value={stnk.registrationYear} />
+                                    <SectionItem label="Tahun Pembuatan" value={stnk.manufacturedYear} />
+                                    <SectionItem label="No BPKB" value={stnk.bpkbNumber} />
+                                    <SectionItem label="Isi Silinder" value={stnk.cylinderCapacity} />
+                                    <SectionItem label="No Pendaftaran" value={stnk.registrationNumber} />
+                                    <SectionItem label="No Rangka" value={stnk.chassisNumber} />
+                                    <SectionItem label="Berlaku Sampai" value={stnk.validUntil} />
+                                    <SectionItem label="No Mesin" value={stnk.engineNumber} />
+                                </div>
                             </div>
                         )}
                     </SectionCard>

@@ -19,6 +19,7 @@ import { Param } from "@/models/param"
 import { Plus, PlusCircle } from "lucide-react"
 import { Input } from "@/components/shadcn/input"
 import { ParamGroup } from "@/models/param-group"
+import { Textarea } from "@/components/shadcn/textarea"
 
 interface AddParamDialogProps {
   paramGroup: ParamGroup
@@ -130,7 +131,7 @@ export function AddParamDialog({ paramGroup, onSave }: AddParamDialogProps) {
                   <FormItem className="space-y-1">
                     <FormLabel className="font-medium">Description</FormLabel>
                     <FormControl>
-                      <Input
+                      <Textarea
                         placeholder="Masukkan deskripsi param"
                         {...field}
                         className="w-full"

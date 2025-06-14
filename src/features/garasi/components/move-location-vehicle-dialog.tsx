@@ -10,7 +10,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/shadcn/dialog"
-import { Input } from "@/components/shadcn/input"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/shadcn/form"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
@@ -18,6 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
 import { LocationVehicle } from "@/models/location-vehicle"
 import { Param } from "@/models/param"
+import { Textarea } from "@/components/shadcn/textarea"
 
 interface MoveLocationVehicleDialogProps {
   vehicleId?: string
@@ -48,7 +48,7 @@ export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVeh
       id: "1",
       group: "004",
       name: "Rumah Bandung",
-      description: "Jl. Sukajadi No. 57, Bandung"
+      description: "Jl. Taman Sukajadi Baru Blok A VIII 12 No. 57, Bandung"
     },
     {
       id: "2",
@@ -150,7 +150,7 @@ export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVeh
                   <FormItem className="space-y-1">
                     <FormLabel className="font-medium">Alamat Lokasi</FormLabel>
                     <FormControl>
-                      <Input
+                      <Textarea
                         placeholder="Masukkan alamat lokasi kendaraan"
                         {...field}
                         className="w-full"
