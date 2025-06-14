@@ -1,4 +1,4 @@
-import { LocationService } from "./location-service"
+import { LocationVehicle } from "./location-vehicle"
 import { Vehicle } from "./vehicle"
 
 export interface Service{
@@ -11,5 +11,5 @@ export interface Service{
     startDate?: string
     endDate?: string
     status?: string
-    location?: LocationService;
+    location?: LocationVehicle;
 }
