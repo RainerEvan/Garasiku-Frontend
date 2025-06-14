@@ -2,155 +2,196 @@ import { VehicleCard } from "../components/vehicle-card"
 import { Search } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs"
 import { Input } from "@/components/shadcn/input"
-import { Button } from "@/components/shadcn/button"
-import { supabase } from "@/lib/supabaseClient"
-import { useNavigate } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { AddVehicleDialog } from "../components/add-vehicle-dialog"
+import { Vehicle } from "@/models/vehicle"
+import { supabase } from "@/lib/supabaseClient"
 
-
-type Vehicle = {
+type Vehicles = {
   id: string;
-  jenis: string;
-  tahun: string;
-  merek: string;
-  warna: string;
-  tipe: string;
-  plat_no: string;
-  location_name: string;
-  location_address: string;
-  status: "active" | "sold";
-  image_url: string;
-  sold_date?: string;
+  name:string;
+  type: string;
+  year: string;
+  brand: string;
+  color: string;
+  model: string;
+  licensePlate: string;
+  image: string;
+  isSold: boolean;
+  location: {
+    id:string;
+    vehicleId:string;
+    name: string;
+    address: string;
+  };
 }
 
-  // Sample data
-  // const activeVehicles = [
-  //   {
-  //     id: '1',
-  //     jenis: "Mobil",
-  //     tahun: "2022",
-  //     merk: "Honda",
-  //     warna: "Hitam",
-  //     tipe: "Civic Turbo",
-  //     platNo: "D 1234 ABC",
-  //     location: {
-  //       name: "Rumah Bandung",
-  //       address: "Jl. Sukajadi No. 57, Bandung",
-  //     },
-  //     image: "/assets/car.jpg"
-  //   },
-  //   {
-  //     id: '2',
-  //     jenis: "Mobil",
-  //     tahun: "2023",
-  //     merk: "Toyota",
-  //     warna: "Putih",
-  //     tipe: "Innova",
-  //     platNo: "D 7890 DFE",
-  //     location: {
-  //       name: "Rumah Jakarta",
-  //       address: "Jl. Sriwijaya No. 5, Jakarta",
-  //     },
-  //     image: "/assets/car.jpg"
-  //   },
-  //   {
-  //     id: '3',
-  //     jenis: "Mobil",
-  //     tahun: "2022",
-  //     merk: "Honda",
-  //     warna: "Hitam",
-  //     tipe: "Civic Turbo",
-  //     platNo: "D 1234 ABC",
-  //     location: {
-  //       name: "Rumah Bandung",
-  //       address: "Jl. Sukajadi No. 57, Bandung",
-  //     },
-  //     image: "/assets/car.jpg"
-  //   },
-  // ]
-
-  // const soldVehicles = [
-  //   {
-  //     id: '4',
-  //     jenis: "Mobil",
-  //     tahun: "2022",
-  //     merk: "Honda",
-  //     warna: "Hitam",
-  //     tipe: "Civic Turbo",
-  //     platNo: "D 1234 ABC",
-  //     soldDate: "10 Mar 2025",
-  //     image: "/assets/car.jpg"
-  //   },
-  //   {
-  //     id: '5',
-  //     jenis: "Mobil",
-  //     tahun: "2022",
-  //     merk: "Honda",
-  //     warna: "Hitam",
-  //     tipe: "Civic Turbo",
-  //     platNo: "D 1234 ABC",
-  //     soldDate: "15 Feb 2025",
-  //     image: "/assets/car.jpg"
-  //   },
-  // ]
-
-  
-  const navigate = useNavigate();
+export default function DaftarKendaraanPage() {
+  const [searchActive, setSearchActive] = useState("");
+  const [searchSold, setSearchSold] = useState("");
   const [activeVehicles, setActiveVehicles] = useState<Vehicle[]>([]);
   const [soldVehicles, setSoldVehicles] = useState<Vehicle[]>([]);
 
+  // // Sample data
+  // const activeVehicles: Vehicle[] = [
+  //   {
+  //     id: "1",
+  //     name: "Honda Civic Turbo Hitam 2022",
+  //     type: "Mobil",
+  //     year: "2022",
+  //     brand: "Honda",
+  //     color: "Hitam",
+  //     model: "Civic Turbo",
+  //     licensePlate: "D 1234 ABC",
+  //     location: {
+  //       id: "1",
+  //       vehicleId: "1",
+  //       name: "Rumah Bandung",
+  //       address: "Jl. Sukajadi No. 57, Bandung",
+  //     },
+  //     image: "/assets/car.jpg",
+  //     isSold: false
+  //   },
+  //   {
+  //     id: "2",
+  //     name: "Toyota Innova Putih 2023",
+  //     type: "Mobil",
+  //     year: "2023",
+  //     brand: "Toyota",
+  //     color: "Putih",
+  //     model: "Innova",
+  //     licensePlate: "D 7890 DFE",
+  //     location: {
+  //       id: "1",
+  //       vehicleId: "1",
+  //       name: "Rumah Jakarta",
+  //       address: "Jl. Sriwijaya No. 5, Jakarta",
+  //     },
+  //     image: "/assets/car.jpg",
+  //     isSold: false
+  //   },
+  //   {
+  //     id: "3",
+  //     name: "Honda Civic Turbo Hitam 2022",
+  //     type: "Mobil",
+  //     year: "2022",
+  //     brand: "Honda",
+  //     color: "Hitam",
+  //     model: "Civic Turbo",
+  //     licensePlate: "D 1234 ABC",
+  //     location: {
+  //       id: "1",
+  //       vehicleId: "1",
+  //       name: "Rumah Bandung",
+  //       address: "Jl. Sukajadi No. 57, Bandung",
+  //     },
+  //     image: "/assets/car.jpg",
+  //     isSold: false
+  //   },
+  // ]
+
+  // const soldVehicles: Vehicle[] = [
+  //   {
+  //     id: "1",
+  //     name: "Honda Civic Turbo Hitam 2022",
+  //     type: "Mobil",
+  //     year: "2022",
+  //     brand: "Honda",
+  //     color: "Hitam",
+  //     model: "Civic Turbo",
+  //     licensePlate: "D 1234 ABC",
+  //     location: {
+  //       id: "1",
+  //       vehicleId: "1",
+  //       name: "Rumah Bandung",
+  //       address: "Jl. Sukajadi No. 57, Bandung",
+  //     },
+  //     soldDate: "10 Mar 2025",
+  //     image: "/assets/car.jpg",
+  //     isSold: true
+  //   },
+  //   {
+  //     id: "2",
+  //     name: "Toyota Innova Putih 2023",
+  //     type: "Mobil",
+  //     year: "2023",
+  //     brand: "Toyota",
+  //     color: "Putih",
+  //     model: "Innova",
+  //     licensePlate: "D 7890 DFE",
+  //     location: {
+  //       id: "1",
+  //       vehicleId: "1",
+  //       name: "Rumah Jakarta",
+  //       address: "Jl. Sriwijaya No. 5, Jakarta",
+  //     },
+  //     soldDate: "10 Mar 2025",
+  //     image: "/assets/car.jpg",
+  //     isSold: true
+  //   },
+  // ]
+
   useEffect(() => {
-    const fetchVehicles = async () => {
-      // Cek login dan role user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate("/login");
-        return;
-      }
+  const fetchVehicles = async () => {
+    const { data, error } = await supabase
+      .from("vehicles")
+      .select(`
+        *,
+        vehicle_locations (
+          id,
+          vehicleId,
+          name,
+          address
+        )
+      `);
 
-      const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
+    if (error) {
+      console.error("Failed to fetch kendaraan:", error.message);
+      return;
+    }
 
-      if (profile?.role !== "owner" && profile?.role !== "divisi") {
-        navigate("/unauthorized"); // atau tampilkan pesan tidak boleh akses
-        return;
-      }
-
-      // Fetch kendaraan
-      const { data, error } = await supabase.rpc("get_kendaraan_latest_location");
-      // const { data, error } = await supabase
-      // .from("kendaraan")
-      // .select("*");
+    if (data) {
       console.log(data);
+      const mappedVehicles = data.map((v) => ({
+        id: v.id,
+        name: v.name,
+        type: v.type,
+        year: v.year,
+        brand: v.brand,
+        color: v.color,
+        model: v.model,
+        licensePlate: v.licensePlate,
+        image: v.image,
+        isSold: v.isSold,
+        location: {
+          id: v.vehicle_locations.id ?? "",
+          vehicleId: v.vehicle_locations.vehicleId ?? "",
+          name: v.vehicle_locations.name ?? "-",
+          address: v.vehicle_locations.address ?? "-",
+        },
+        soldDate: v.soldDate ?? undefined
+      }));
 
-      if (error) {
-        console.error("Gagal fetch kendaraan:", error.message);
-        return;
-      }
-
-      const active = data.filter((v: Vehicle) => v.status === "active");
-      const sold = data.filter((v: Vehicle) => v.status === "sold");
-    //   const filteredActiveVehicles = activeVehicles.filter((vehicle) =>
-    //   vehicle.licensePlate && vehicle.licensePlate.toLowerCase().includes(searchActive.toLowerCase())
-    // );
-  
-    // const filteredSoldVehicles = soldVehicles.filter((vehicle) =>
-    //   vehicle.licensePlate && vehicle.licensePlate.toLowerCase().includes(searchSold.toLowerCase())
-    // );
+      const active = mappedVehicles.filter((v) => v.isSold === false);
+      const sold = mappedVehicles.filter((v) => v.isSold === true);
       setActiveVehicles(active);
       setSoldVehicles(sold);
     }
+  };
 
-    fetchVehicles();
-  }, [navigate]);
-  
+  fetchVehicles();
+}, []);
+
+  const filteredActiveVehicles = activeVehicles.filter((vehicle) =>
+    vehicle.licensePlate?.toLowerCase().includes(searchActive.toLowerCase())
+  );
+
+  const filteredSoldVehicles = soldVehicles.filter((vehicle) =>
+    vehicle.licensePlate?.toLowerCase().includes(searchSold.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Main content */}
       <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Daftar Kendaraan</h1>
@@ -162,8 +203,8 @@ type Vehicle = {
             <TabsTrigger value="active">Aktif</TabsTrigger>
             <TabsTrigger value="sold">Terjual</TabsTrigger>
           </TabsList>
+
           <TabsContent value="active">
-            {/* Search Bar */}
             <div className="relative mb-5 flex w-full items-center space-x-2">
               <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
               <Input
@@ -175,25 +216,13 @@ type Vehicle = {
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-            {activeVehicles.map((vehicle) => (
-                <VehicleCard
-                  key={vehicle.id}
-                  id={vehicle.id}
-                  variant="active"
-                  name={`${vehicle.merek} ${vehicle.tipe} ${vehicle.warna} ${vehicle.tahun}`}
-                  licensePlate={vehicle.plat_no}
-                  type={vehicle.jenis}
-                  location={{
-                    name: vehicle.location_name,
-                    address: vehicle.location_address,
-                  }}
-                  image={vehicle.image_url}
-                />
+              {filteredActiveVehicles.map((vehicle) => (
+                <VehicleCard key={vehicle.id} vehicle={vehicle} />
               ))}
             </div>
           </TabsContent>
+
           <TabsContent value="sold">
-            {/* Search Bar */}
             <div className="relative mb-5">
               <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
               <Input
@@ -205,17 +234,8 @@ type Vehicle = {
               />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-             {soldVehicles.map((vehicle) => (
-                <VehicleCard
-                  key={vehicle.id}
-                  id={vehicle.id}
-                  variant="sold"
-                  name={`${vehicle.merek} ${vehicle.tipe} ${vehicle.warna} ${vehicle.tahun}`}
-                  licensePlate={vehicle.plat_no}
-                  type={vehicle.jenis}
-                  soldDate={vehicle.sold_date}
-                  image={vehicle.image_url}
-                />
+              {filteredSoldVehicles.map((vehicle) => (
+                <VehicleCard key={vehicle.id} vehicle={vehicle} />
               ))}
             </div>
           </TabsContent>
