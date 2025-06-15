@@ -16,4 +16,5 @@ export interface Vehicle {
     soldDate?: string;
     image?: string;
     isSold?: boolean;
+    equipments?: string;
 }

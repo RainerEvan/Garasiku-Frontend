@@ -4,7 +4,6 @@ import { Button } from "@/components/shadcn/button"
 import { Separator } from "@/components/shadcn/separator"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/shadcn/alert-dialog"
 import { Administration } from "@/models/administration"
-import { AdministrationRecord } from "@/models/administration-record"
 import TaskTypeBar from "@/components/shared/task-type-bar"
 import StatusBar from "@/components/shared/status-bar"
 import { Status } from "@/lib/constants"
@@ -31,11 +30,6 @@ export default function AdministrasiDetailPage() {
         dueDate: "15 Jan 2028",
         endDate: "15 Jan 2028",
         status: "pending",
-    };
-
-    const administrationRecord: AdministrationRecord = {
-        id: "1",
-        administrationId: "1",
         totalCost: 1500000,
         notes: "Ban depan udah mulai gundul",
         newDueDate: undefined,
@@ -89,7 +83,7 @@ export default function AdministrasiDetailPage() {
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
                                     </AlertDialog>
-                                    <CompleteAdministrationDialog administrationRecord={administrationRecord} dueDate={administration.dueDate || ""}/>
+                                    <CompleteAdministrationDialog administration={administration} dueDate={administration.dueDate || ""}/>
                                 </div>
                             )}
                         </div>
@@ -115,13 +109,13 @@ export default function AdministrasiDetailPage() {
                     <SectionCard
                         title="Rincian Administrasi"
                     >
-                        {administrationRecord && (
+                        {administration && (
                             <div className="grid grid-cols-1 gap-3 py-1">
                                 <div className="grid grid-cols-2 gap-3">
-                                    <SectionItem label="Jatuh Tempo Baru" value={administrationRecord.newDueDate} />
-                                    <SectionItem label="Biaya" value={`Rp ${administrationRecord.totalCost}`} />
+                                    <SectionItem label="Jatuh Tempo Baru" value={administration.newDueDate} />
+                                    <SectionItem label="Biaya" value={`Rp ${administration.totalCost}`} />
                                 </div>
-                                <SectionItem label="Catatan" value={administrationRecord.notes} />
+                                <SectionItem label="Catatan" value={administration.notes} />
                             </div>
                         )}
                     </SectionCard>
