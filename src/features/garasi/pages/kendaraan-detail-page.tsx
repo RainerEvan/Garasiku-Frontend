@@ -20,87 +20,13 @@ import { Stnk } from "@/models/stnk"
 import { Param } from "@/models/param"
 import { AddAttachmentVehicleDialog } from "../components/add-attachment-vehicle-dialog"
 import AdministrationActivityItem from "../components/administration-activity-item"
-import { Link } from "react-router-dom"
+import { Link, useParams } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { supabase } from "@/lib/supabaseClient"
 
 export default function KendaraanDetailPage() {
-    const vehicle: Vehicle = {
-        id: "1",
-        name: "Honda Civic Turbo Hitam 2022",
-        category: "Mobil",
-        year: "2022",
-        brand: "Honda",
-        color: "Hitam",
-        type: "Civic Turbo",
-        licensePlate: "D 1234 ABC",
-        stnkDueDate: "22 Feb 2026",
-        insuranceDueDate: "1 Feb 2026",
-        lastServiceDate: "15 Jul 2025",
-        soldDate: "15 Jul 2025",
-        isSold: false,
-        equipments: "bpkb,ban-cadangan",
-    };
-
-    const stnk: Stnk = {
-        id: "1",
-        vehicleId: "1",
-        licensePlate: "D 1234 ABC",
-        stnkNumber: "123456789",
-        ownerName: "Rainer Evan",
-        ownerAddress: "Jl. Sukajadi VIII No. 57 RT1/2 Bandung",
-        brand: "Honda",
-        type: "Civic Turbo",
-        category: "Mobil",
-        model: "Sedan",
-        manufacturedYear: "2022",
-        cylinderCapacity: "1498 CC",
-        chassisNumber: "MRHFC1610NT0023",
-        engineNumber: "L15B7-1234567",
-        color: "Hitam",
-        fuelType: "Bensin",
-        licensePlateColor: "Putih",
-        registrationYear: "2023",
-        bpkbNumber: "00123456789",
-        registrationNumber: "001/002-1238/1234/0123",
-        validUntil: "15 Jan 2028"
-    };
-
-    const latestLocation = {
-        id: "1",
-        vehicleId: "1",
-        name: "Rumah Bandung",
-        address: "Jl. Sukajadi No. 57, Bandung"
-    }
-
-    const listServis: Service[] = [
-        {
-            id: "1",
-            vehicleId: "1",
-            type: "servis-regular",
-            scheduleDate: "15 Jan 2028",
-            startDate: undefined,
-            endDate: undefined,
-            status: "pending",
-        },
-        {
-            id: "2",
-            vehicleId: "1",
-            type: "servis-regular",
-            scheduleDate: "15 Jan 2028",
-            startDate: "15 Jan 2028",
-            endDate: undefined,
-            status: "ongoing",
-        },
-        {
-            id: "3",
-            vehicleId: "1",
-            type: "servis-regular",
-            scheduleDate: "15 Jan 2028",
-            startDate: "15 Jan 2028",
-            endDate: "15 Jan 2028",
-            status: "completed",
-        }
-    ]
-
+  const { id } = useParams<{ id: string }>();
+        console.log(id);
     const listAdministrasi: Administration[] = [
         {
             id: "1",
@@ -145,32 +71,7 @@ export default function KendaraanDetailPage() {
         },
     ]
 
-    const vehicleImages: AttachmentVehicle[] = [
-        {
-            id: "1",
-            vehicleId: "1",
-            fileName: "Dokumen STNK.pdf",
-            fileType: "pdf",
-            fileSize: "1 MB",
-            fileLink: "/assets/car.jpg?text=Front",
-            attachmentType: "galeri",
-            createdAt: "12 Jan 2025",
-            createdBy: "rainerevan"
-        },
-        {
-            id: "2",
-            vehicleId: "1",
-            fileName: "Dokumen BPKB.pdf",
-            fileType: "pdf",
-            fileSize: "300 KB",
-            fileLink: "/assets/car.jpg?text=Front",
-            attachmentType: "galeri",
-            createdAt: "11 Jan 2025",
-            createdBy: "rainerevan"
-        }
-    ]
-
-    const vehicleEquipments = vehicle.equipments ? vehicle.equipments.split(",") : [];
+   
 
     const equipmentParam: Param[] = [
         {
@@ -218,6 +119,104 @@ export default function KendaraanDetailPage() {
     const handleSellVehicle = () => {
         console.log("Sell Kendaraan button clicked")
     }
+    const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+    // const [latestLocation, setLatestLocation] = useState<VehicleLocation | null>(null);
+    const [stnk, setStnk] = useState<Stnk | null>(null);
+    const [services, setServices] = useState<Service[]>([]);
+    const [vehicleImages, setVehicleImages] = useState<AttachmentVehicle[]>([]);
+
+    useEffect(() => {
+        const fetchDetail = async () => {
+                const { data, error } = await supabase
+                .from("vehicle_full_details")
+                .select("*")
+                .eq("vehicleid", id);
+
+                console.log("Data:", data);
+                console.log("Error:", error);
+
+            if (error) return console.error(error);
+            if (data && data.length) {
+                const base = data[0];
+                setVehicle({
+                    id: base.vehicleid,
+                    name: base.name,
+                    type: base.type,
+                    brand: base.brand,
+                    color: base.color,
+                    category: base.category,
+                    licensePlate: base.license_plate,
+                    year: base.year,
+                    isSold: base.is_sold,
+                    soldDate: base.sold_date,
+                    image: base.image_url,
+                });
+                // setLatestLocation(base.location_id ? {
+                //     id: base.location_id,
+                //     vehicleId: base.id,
+                //     name: base.location_name,
+                //     address: base.location_address,
+                //     createdAt: base.location_created_at,
+                // } : null);
+
+                setStnk(base.stnk_id ? {
+                    id: base.stnk_id,
+                    vehicleId: base.vehicle_id,
+                    stnkNumber: base.stnk_number,
+                    fuelType: base.fuel_type,
+                    licensePlate: base.license_plate_color,
+                    registrationYear: base.registration_year,
+                    manufacturedYear: base.manufactured_year,
+                    bpkbNumber: base.bpkb_number,
+                    cylinderCapacity: base.cylinder_capacity,
+                    registrationNumber: base.registration_number,
+                    chassisNumber: base.chassis_number,
+                    engineNumber: base.engine_number,
+                    validUntil: base.valid_until,
+                    brand: base.brand,
+                    ownerName: base.owner_name,
+                    ownerAddress: base.owner_address,
+                    type: base.type,
+                    category: base.category,
+                    color: base.color,
+
+                } : null);
+
+                setServices(data.map(row => ({
+                    id: base.service_id,
+                    vehicleId: base.vehicleid,
+                    ticketNum: base.ticket_num,
+                    type: base.service_type,
+                    scheduleDate: base.schedule_date,
+                    startDate: base.start_date,
+                    endDate: base.end_date,
+                    status: base.service_status,
+                    location: base.cost,
+                    mileage: base.mileage,
+                    totalCost: base.total_cost,
+                    mechanicName: base.mechanic_name,
+                    task: base.task,
+                    sparepart: base.sparepart,
+                    notes: base.notes
+                })));
+
+                // For multiple gallery images, replace the lateral join with a proper service call.
+                setVehicleImages(base.image_url ? [{
+                    id: base.av_id,
+                    vehicleId: base.id,
+                    attachmentType: 'gallery',
+                    // sort: base.image_sort,
+                    fileLink: base.image_url
+                }] : []);
+            }
+        };
+
+        fetchDetail();
+    }, [id]);
+
+    if (!vehicle) return <p>Loading...</p>;
+
+    const vehicleEquipments = vehicle.equipments ? vehicle.equipments.split(",") : [];
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -321,7 +320,7 @@ export default function KendaraanDetailPage() {
                 {/* Info Bar */}
                 <div className="flex flex-col gap-5">
                     {/* Lokasi Bar */}
-                    {latestLocation && (
+                    {/* {latestLocation && (
                         <Link to={`/kendaraan/${vehicle.id}/riwayat-lokasi`}>
                             <DataBarCard
                                 variant="button"
@@ -330,7 +329,7 @@ export default function KendaraanDetailPage() {
                                 description={latestLocation.address}
                             />
                         </Link >
-                    )}
+                    )} */}
 
                     {/* Terjual Bar */}
                     {(vehicle.isSold && vehicle.soldDate) && (
@@ -374,9 +373,9 @@ export default function KendaraanDetailPage() {
                     {/* STNK Details */}
                     <SectionCard
                         title="Detail STNK"
-                        headerAction={
-                            <EditDetailStnkDialog stnk={stnk} />
-                        }
+                        // headerAction={
+                        //     <EditDetailStnkDialog stnk={stnk} />
+                        // }
                         collapsible
                         defaultCollapsed={true}
                         collapsedHeight={140}
@@ -415,22 +414,22 @@ export default function KendaraanDetailPage() {
                         <SectionCard
                             title="Aktivitas Servis"
                             headerAction={
-                                <Link to={`/kendaraan/${vehicle.id}/aktivitas-servis`}>
+                                <Link to={`/kendaraan/${vehicle.vehicleid}/aktivitas-servis`}>
                                     <Button variant="ghost" size="sm">
                                         <ChevronRight />
                                     </Button>
                                 </Link >
                             }
                         >
-                            {listServis.length > 0 && (
+                            {services.length > 0 && (
                                 <div className="flex flex-col py-2">
                                     {
-                                        listServis.map((servis, index) => (
+                                        services.map((servis, index) => (
                                             <div key={servis.id}>
                                                 <ServiceActivityItem
                                                     service={servis}
                                                 />
-                                                {index < listServis.length - 1 && (
+                                                {index < services.length - 1 && (
                                                     <Separator className="my-4" />
                                                 )}
                                             </div>
@@ -444,7 +443,7 @@ export default function KendaraanDetailPage() {
                         <SectionCard
                             title="Aktivitas Administrasi"
                             headerAction={
-                                <Link to={`/kendaraan/${vehicle.id}/aktivitas-administrasi`}>
+                                <Link to={`/kendaraan/${vehicle.vehicleid}/aktivitas-administrasi`}>
                                     <Button variant="ghost" size="sm">
                                         <ChevronRight />
                                     </Button>
@@ -455,7 +454,7 @@ export default function KendaraanDetailPage() {
                                 <div className="flex flex-col py-2">
                                     {
                                         listAdministrasi.map((administrasi, index) => (
-                                            <div key={administrasi.id}>
+                                            <div key={administrasi.vehicleid}>
                                                 <AdministrationActivityItem
                                                     administrasi={administrasi}
                                                 />

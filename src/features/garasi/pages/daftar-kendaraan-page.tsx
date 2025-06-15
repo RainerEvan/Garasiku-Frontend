@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabaseClient"
 
 type Vehicles = {
   id: string;
-  name:string;
+  name: string;
   type: string;
   year: string;
   brand: string;
@@ -19,8 +19,8 @@ type Vehicles = {
   image: string;
   isSold: boolean;
   location: {
-    id:string;
-    vehicleId:string;
+    id: string;
+    vehicleId: string;
     name: string;
     address: string;
   };
@@ -32,155 +32,49 @@ export default function DaftarKendaraanPage() {
   const [activeVehicles, setActiveVehicles] = useState<Vehicle[]>([]);
   const [soldVehicles, setSoldVehicles] = useState<Vehicle[]>([]);
 
-  // // Sample data
-  // const activeVehicles: Vehicle[] = [
-  //   {
-  //     id: "1",
-  //     name: "Honda Civic Turbo Hitam 2022",
-  //     type: "Mobil",
-  //     year: "2022",
-  //     brand: "Honda",
-  //     color: "Hitam",
-  //     model: "Civic Turbo",
-  //     licensePlate: "D 1234 ABC",
-  //     location: {
-  //       id: "1",
-  //       vehicleId: "1",
-  //       name: "Rumah Bandung",
-  //       address: "Jl. Sukajadi No. 57, Bandung",
-  //     },
-  //     image: "/assets/car.jpg",
-  //     isSold: false
-  //   },
-  //   {
-  //     id: "2",
-  //     name: "Toyota Innova Putih 2023",
-  //     type: "Mobil",
-  //     year: "2023",
-  //     brand: "Toyota",
-  //     color: "Putih",
-  //     model: "Innova",
-  //     licensePlate: "D 7890 DFE",
-  //     location: {
-  //       id: "1",
-  //       vehicleId: "1",
-  //       name: "Rumah Jakarta",
-  //       address: "Jl. Sriwijaya No. 5, Jakarta",
-  //     },
-  //     image: "/assets/car.jpg",
-  //     isSold: false
-  //   },
-  //   {
-  //     id: "3",
-  //     name: "Honda Civic Turbo Hitam 2022",
-  //     type: "Mobil",
-  //     year: "2022",
-  //     brand: "Honda",
-  //     color: "Hitam",
-  //     model: "Civic Turbo",
-  //     licensePlate: "D 1234 ABC",
-  //     location: {
-  //       id: "1",
-  //       vehicleId: "1",
-  //       name: "Rumah Bandung",
-  //       address: "Jl. Sukajadi No. 57, Bandung",
-  //     },
-  //     image: "/assets/car.jpg",
-  //     isSold: false
-  //   },
-  // ]
-
-  // const soldVehicles: Vehicle[] = [
-  //   {
-  //     id: "1",
-  //     name: "Honda Civic Turbo Hitam 2022",
-  //     type: "Mobil",
-  //     year: "2022",
-  //     brand: "Honda",
-  //     color: "Hitam",
-  //     model: "Civic Turbo",
-  //     licensePlate: "D 1234 ABC",
-  //     location: {
-  //       id: "1",
-  //       vehicleId: "1",
-  //       name: "Rumah Bandung",
-  //       address: "Jl. Sukajadi No. 57, Bandung",
-  //     },
-  //     soldDate: "10 Mar 2025",
-  //     image: "/assets/car.jpg",
-  //     isSold: true
-  //   },
-  //   {
-  //     id: "2",
-  //     name: "Toyota Innova Putih 2023",
-  //     type: "Mobil",
-  //     year: "2023",
-  //     brand: "Toyota",
-  //     color: "Putih",
-  //     model: "Innova",
-  //     licensePlate: "D 7890 DFE",
-  //     location: {
-  //       id: "1",
-  //       vehicleId: "1",
-  //       name: "Rumah Jakarta",
-  //       address: "Jl. Sriwijaya No. 5, Jakarta",
-  //     },
-  //     soldDate: "10 Mar 2025",
-  //     image: "/assets/car.jpg",
-  //     isSold: true
-  //   },
-  // ]
 
   useEffect(() => {
-  const fetchVehicles = async () => {
-    const { data, error } = await supabase
-      .from("vehicles")
-      .select(`
-        *,
-        vehicle_locations (
-          id,
-          vehicleId,
-          name,
-          address
-        )
-      `);
+    const fetchVehicles = async () => {
+      const { data, error } = await supabase
+        .from("vehicles_with_latest_location")
+        .select("*");
 
-    if (error) {
-      console.error("Failed to fetch kendaraan:", error.message);
-      return;
-    }
+      if (error) {
+        console.error("Failed to fetch kendaraan:", error.message);
+        return;
+      }
 
-    if (data) {
-      console.log(data);
-      const mappedVehicles = data.map((v) => ({
-        id: v.id,
-        name: v.name,
-        type: v.type,
-        year: v.year,
-        brand: v.brand,
-        color: v.color,
-        category: v.category,
-        licensePlate: v.licensePlate,
-        image: v.image,
-        isSold: v.isSold,
-        location: {
-          id: v.vehicle_locations.id ?? "",
-          vehicleId: v.vehicle_locations.vehicleId ?? "",
-          name: v.vehicle_locations.name ?? "-",
-          address: v.vehicle_locations.address ?? "-",
-        },
-        soldDate: v.soldDate ?? undefined
-      }));
+      if (data) {
+        const mappedVehicles = data.map((v) => ({
+          id: v.id,
+          name: v.name,
+          type: v.type,
+          year: v.year,
+          brand: v.brand,
+          color: v.color,
+          category: v.category,
+          licensePlate: v.license_plate,
+          image: v.image_url,
+          isSold: v.is_sold,
+          location: {
+            id: v.location_id ?? "",
+            vehicleId: v.id ?? "",
+            name: v.location_name ?? "-",
+            address: v.location_address ?? "-",
+          },
+          soldDate: v.soldDate ?? undefined,
+        }));
 
-      const active = mappedVehicles.filter((v) => v.isSold === false);
-      const sold = mappedVehicles.filter((v) => v.isSold === true);
-      setActiveVehicles(active);
-      setSoldVehicles(sold);
-    }
-  };
+        const active = mappedVehicles.filter((v) => v.isSold === false);
+        const sold = mappedVehicles.filter((v) => v.isSold === true);
+        setActiveVehicles(active);
+        setSoldVehicles(sold);
+ 
+      }
+    };
 
-  fetchVehicles();
-}, []);
+    fetchVehicles();
+  }, []);
 
   const filteredActiveVehicles = activeVehicles.filter((vehicle) =>
     vehicle.licensePlate?.toLowerCase().includes(searchActive.toLowerCase())
