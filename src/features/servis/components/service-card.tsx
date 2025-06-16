@@ -49,9 +49,9 @@ export function ServiceCard({
       <div className={cn(statusVariants({ status }), "w-full p-5 flex flex-col gap-5")}>
         <div className="flex items-start justify-between gap-5">
           <div className="flex flex-col capitalize">
-            <h3 className="font-medium">{service.vehicle?.name}</h3>
-            <p className="text-sm text-medium ">{service.vehicle?.category}</p>
-            <p className="text-xs text-light">{service.vehicle?.licensePlate}</p>
+            <h3 className="text-lg font-medium">{service.ticketNum}</h3>
+            <p className="text-sm text-medium ">{service.vehicle?.name}</p>
+            <p className="text-xs text-light">{service.vehicle?.category} - {service.vehicle?.licensePlate}</p>
           </div>
           <div>
             <StatusBar status={status} />

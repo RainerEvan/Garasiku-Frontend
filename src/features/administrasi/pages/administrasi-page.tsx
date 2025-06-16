@@ -12,6 +12,7 @@ export default function AdministrasiPage() {
     const todoAdministrations: Administration[] = [
         {
             id: "1",
+            ticketNum: "ADM25-00001",
             vehicleId: "1",
             vehicle: {
                 id: "1",
@@ -30,6 +31,7 @@ export default function AdministrasiPage() {
         },
         {
             id: "2",
+            ticketNum: "ADM25-00002",
             vehicleId: "1",
             vehicle: {
                 id: "1",
@@ -48,6 +50,7 @@ export default function AdministrasiPage() {
         },
         {
             id: "3",
+            ticketNum: "ADM25-00003",
             vehicleId: "1",
             vehicle: {
                 id: "1",
@@ -69,6 +72,7 @@ export default function AdministrasiPage() {
     const historiAdministrations: Administration[] = [
         {
             id: "1",
+            ticketNum: "ADM25-00004",
             vehicleId: "1",
             vehicle: {
                 id: "1",
@@ -87,6 +91,7 @@ export default function AdministrasiPage() {
         },
         {
             id: "2",
+            ticketNum: "ADM25-00005",
             vehicleId: "1",
             vehicle: {
                 id: "1",
@@ -105,6 +110,7 @@ export default function AdministrasiPage() {
         },
         {
             id: "3",
+            ticketNum: "ADM25-00006",
             vehicleId: "1",
             vehicle: {
                 id: "1",

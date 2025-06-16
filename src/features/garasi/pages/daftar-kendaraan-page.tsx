@@ -22,52 +22,70 @@ export default function DaftarKendaraanPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectCategory, setSelectCategory] = useState("all");
 
-  const [selectCategoryOptions, setSelectCategoryOptions] = useState<SelectOption[]>([
-    { label: "Semua", value: "all" }
-  ])
-
-  const [vehicleCategoryParams, setVehicleCategoryParams] = useState<Param[]>([])
+  const [selectCategoryOptions, setSelectCategoryOptions] = useState<SelectOption[]>([])
 
   const [listVehicles, setListVehicles] = useState<Vehicle[]>([]);
 
   useEffect(() => {
-    fetchParams()
-  }, []);
-
-  async function fetchParams() {
-    try {
+    const fetchAll = async () => {
       setLoading(true);
 
-      const res = [
-        {
-          id: "1",
-          group: "001",
-          name: "Mobil"
-        },
-        {
-          id: "2",
-          group: "001",
-          name: "Motor"
+      try {
+        const [
+          paramsRes,
+          vehiclesRes
+        ] = await Promise.all([
+          // simulate fetching params (you might replace this with supabase or API call)
+          Promise.resolve([
+            { id: "1", group: "001", name: "Mobil" },
+            { id: "2", group: "001", name: "Motor" },
+          ]),
+          supabase.from("vehicles_with_latest_location").select("*"),
+        ]);
+
+        // === PARAMS ===
+        const paramData: Param[] = paramsRes;
+        const optionsFromParams: SelectOption[] = paramData.map((param) => ({
+          label: param.name,
+          value: param.name,
+        }));
+        setSelectCategoryOptions([{ label: "Semua", value: "all" }, ...optionsFromParams]);
+
+        // === VEHICLES ===
+        const { data: vehiclesData, error: vehiclesError } = vehiclesRes;
+        if (vehiclesError) {
+          console.error("Failed to fetch vehicles:", vehiclesError.message);
+        } else if (vehiclesData) {
+          const mappedVehicles = vehiclesData.map((v: any) => ({
+            id: v.id,
+            name: v.name,
+            type: v.type,
+            year: v.year,
+            brand: v.brand,
+            color: v.color,
+            category: v.category,
+            licensePlate: v.license_plate,
+            image: v.image_url,
+            isSold: v.is_sold,
+            location: {
+              id: v.location_id ?? "",
+              vehicleId: v.id ?? "",
+              name: v.location_name ?? "-",
+              address: v.location_address ?? "-",
+            },
+            soldDate: v.soldDate ?? undefined,
+          }));
+          setListVehicles(mappedVehicles);
         }
-      ]
-      const data: Param[] = await res
-      setVehicleCategoryParams(data)
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      const optionsFromParams: SelectOption[] = data.map((param) => ({
-        label: param.name,
-        value: param.name
-      }))
-
-      setSelectCategoryOptions([
-        { label: "Semua", value: "all" },
-        ...optionsFromParams
-      ])
-    } catch (error) {
-      console.error("Failed to fetch vehicle categories", error)
-    } finally {
-      setLoading(false);
-    }
-  }
+    fetchAll();
+  }, []);
 
   const filteredAndSortedVehicle = useMemo(() => {
     const filtered = listVehicles.filter((vehicle) => {
@@ -77,52 +95,19 @@ export default function DaftarKendaraanPage() {
       const matchesSearch =
         (vehicle.licensePlate && vehicle.licensePlate.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (vehicle.name && vehicle.name.toLowerCase().includes(searchQuery.toLowerCase()))
-      const matchesType = selectCategory === "all" || vehicle.category === selectCategory
+      const matchesType = selectCategory === "all" || vehicle.category?.toLowerCase() === selectCategory.toLowerCase()
 
       return matchesStatus && matchesSearch && matchesType
     })
 
     return filtered
-  }, [activeTab, searchQuery, selectCategory])
+  }, [activeTab, searchQuery, selectCategory, listVehicles])
 
-  useEffect(() => {
-    const fetchVehicles = async () => {
-      const { data, error } = await supabase
-        .from("vehicles_with_latest_location")
-        .select("*");
-
-      if (error) {
-        console.error("Failed to fetch kendaraan:", error.message);
-        return;
-      }
-
-      if (data) {
-        const mappedVehicles = data.map((v: any) => ({
-          id: v.id,
-          name: v.name,
-          type: v.type,
-          year: v.year,
-          brand: v.brand,
-          color: v.color,
-          category: v.category,
-          licensePlate: v.license_plate,
-          image: v.image_url,
-          isSold: v.is_sold,
-          location: {
-            id: v.location_id ?? "",
-            vehicleId: v.id ?? "",
-            name: v.location_name ?? "-",
-            address: v.location_address ?? "-",
-          },
-          soldDate: v.soldDate ?? undefined,
-        }));
-
-        setListVehicles(mappedVehicles);
-      }
-    };
-
-    fetchVehicles();
-  }, []);
+  const vehicleCounts = useMemo(() => {
+    const active = listVehicles.filter(v => !v.isSold).length
+    const sold = listVehicles.filter(v => v.isSold).length
+    return { active, sold }
+  }, [listVehicles])
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -134,12 +119,12 @@ export default function DaftarKendaraanPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full md:max-w-sm">
-            <TabsTrigger value="active">Aktif ({listVehicles.filter(v => !v.isSold).length})</TabsTrigger>
-            <TabsTrigger value="sold">Terjual ({listVehicles.filter(v => v.isSold).length})</TabsTrigger>
+            <TabsTrigger value="active">Aktif ({vehicleCounts.active})</TabsTrigger>
+            <TabsTrigger value="sold">Terjual ({vehicleCounts.sold})</TabsTrigger>
           </TabsList>
           <TabsContent value={activeTab}>
             <div className="flex flex-col gap-5">
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-row flex-wrap md:flex-nowrap gap-3">
                 {/* Search Bar */}
                 <div className="relative w-full flex items-center space-x-2">
                   <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
@@ -153,7 +138,7 @@ export default function DaftarKendaraanPage() {
                 </div>
 
                 {/* Select Category */}
-                <Select onValueChange={setSelectCategory} defaultValue="all">
+                <Select onValueChange={setSelectCategory} value={selectCategory}>
                   <SelectTrigger>
                     <span className="flex items-center gap-2">
                       <span className="text-muted-foreground">Kategori:</span>
@@ -170,7 +155,7 @@ export default function DaftarKendaraanPage() {
                 </Select>
               </div>
 
-              {listVehicles.length > 0 && filteredAndSortedVehicle.length > 0 ? (
+              {filteredAndSortedVehicle.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {filteredAndSortedVehicle.map((vehicle) => (
                     <VehicleCard
@@ -181,7 +166,7 @@ export default function DaftarKendaraanPage() {
                 </div>
               ) : (
                 <div className="flex items-center justify-center w-full py-6">
-                  <p>Tidak ada kendaraan.</p>
+                  <p>Tidak ada data kendaraan.</p>
                 </div>
               )}
             </div>

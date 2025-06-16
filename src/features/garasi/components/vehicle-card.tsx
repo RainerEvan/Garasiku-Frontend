@@ -22,7 +22,7 @@ export function VehicleCard({
           alt={`${vehicle.name} - Image`}
           className="object-cover w-full h-full"
         />
-        <div className="absolute top-2 right-2 flex items-center bg-background/90 px-5 py-1 rounded-xl shadow-md">
+        <div className="absolute top-2 right-2 flex items-center border bg-background px-5 py-1 rounded-xl shadow-md">
           <p className="text-medium text-sm">{vehicle.category}</p>
         </div>
       </div>

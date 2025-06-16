@@ -116,7 +116,7 @@ export default function CariKendaraanPage() {
           </div>
         ) : (
           <div className="flex items-center justify-center w-full py-6">
-            <p>Tidak ada kendaraan.</p>
+            <p>Data kendaraan tidak ditemukan.</p>
           </div>
         )}
       </main>

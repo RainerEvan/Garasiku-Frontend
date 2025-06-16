@@ -49,9 +49,9 @@ export function AdministrationCard({
       <div className={cn(statusVariants({ status }), "w-full p-5 flex flex-col gap-5")}>
         <div className="flex items-start justify-between gap-5">
           <div className="flex flex-col capitalize">
-            <h3 className="font-medium">{administration.vehicle?.name}</h3>
-            <p className="text-sm text-medium ">{administration.vehicle?.category}</p>
-            <p className="text-xs text-light">{administration.vehicle?.licensePlate}</p>
+            <h3 className="text-lg font-medium">{administration.ticketNum}</h3>
+            <p className="text-sm text-medium ">{administration.vehicle?.name}</p>
+            <p className="text-xs text-light">{administration.vehicle?.category} - {administration.vehicle?.licensePlate}</p>
           </div>
           <div>
             <StatusBar status={status} />

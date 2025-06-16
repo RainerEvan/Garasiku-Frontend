@@ -58,7 +58,7 @@ export function EditImageVehicleDialog({ images = [], onSave }: EditImageVehicle
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="absolute top-2 right-2 bg-background/80 hover:bg-background shadow-md">
+                <Button variant="outline" size="sm" className="absolute top-2 right-2 bg-background hover:bg-background shadow-md">
                     <ImageIcon />Ubah
                 </Button>
             </DialogTrigger>

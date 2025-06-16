@@ -414,7 +414,7 @@ export default function KendaraanDetailPage() {
                         <SectionCard
                             title="Aktivitas Servis"
                             headerAction={
-                                <Link to={`/kendaraan/${vehicle.vehicleid}/aktivitas-servis`}>
+                                <Link to={`/kendaraan/${vehicle.id}/aktivitas-servis`}>
                                     <Button variant="ghost" size="sm">
                                         <ChevronRight />
                                     </Button>
@@ -443,7 +443,7 @@ export default function KendaraanDetailPage() {
                         <SectionCard
                             title="Aktivitas Administrasi"
                             headerAction={
-                                <Link to={`/kendaraan/${vehicle.vehicleid}/aktivitas-administrasi`}>
+                                <Link to={`/kendaraan/${vehicle.id}/aktivitas-administrasi`}>
                                     <Button variant="ghost" size="sm">
                                         <ChevronRight />
                                     </Button>
@@ -454,7 +454,7 @@ export default function KendaraanDetailPage() {
                                 <div className="flex flex-col py-2">
                                     {
                                         listAdministrasi.map((administrasi, index) => (
-                                            <div key={administrasi.vehicleid}>
+                                            <div key={administrasi.id}>
                                                 <AdministrationActivityItem
                                                     administrasi={administrasi}
                                                 />

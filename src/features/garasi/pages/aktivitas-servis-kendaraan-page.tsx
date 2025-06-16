@@ -7,6 +7,7 @@ export default function AktivitasServisKendaraanPage() {
     const serviceActivities: Service[] = [
         {
             id: "1",
+            ticketNum: "SRV25-00001",
             vehicleId: "1",
             vehicle: {
                 id: "1",
@@ -26,6 +27,7 @@ export default function AktivitasServisKendaraanPage() {
         },
         {
             id: "2",
+            ticketNum: "SRV25-00002",
             vehicleId: "1",
             vehicle: {
                 id: "1",
@@ -45,6 +47,7 @@ export default function AktivitasServisKendaraanPage() {
         },
         {
             id: "3",
+            ticketNum: "SRV25-00003",
             vehicleId: "1",
             vehicle: {
                 id: "1",
