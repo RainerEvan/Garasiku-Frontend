@@ -8,6 +8,7 @@ import { Vehicle } from "@/models/vehicle"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
 import { Param } from "@/models/param"
 import { useLoading } from "@/lib/loading-context"
+import { supabase } from "@/lib/supabaseClient"
 
 type SelectOption = {
   label: string
@@ -27,102 +28,7 @@ export default function DaftarKendaraanPage() {
 
   const [vehicleCategoryParams, setVehicleCategoryParams] = useState<Param[]>([])
 
-  // Sample data
-  const listVehicles: Vehicle[] = [
-    {
-      id: "1",
-      name: "Honda Civic Turbo Hitam 2022",
-      category: "Mobil",
-      year: "2022",
-      brand: "Honda",
-      color: "Hitam",
-      type: "Civic Turbo",
-      licensePlate: "D 1234 ABC",
-      location: {
-        id: "1",
-        vehicleId: "1",
-        name: "Rumah Bandung",
-        address: "Jl. Sukajadi No. 57, Bandung",
-      },
-      image: "/assets/car.jpg",
-      isSold: false
-    },
-    {
-      id: "2",
-      name: "Toyota Innova Putih 2023",
-      category: "Mobil",
-      year: "2023",
-      brand: "Toyota",
-      color: "Putih",
-      type: "Innova",
-      licensePlate: "D 7890 DFE",
-      location: {
-        id: "1",
-        vehicleId: "1",
-        name: "Rumah Jakarta",
-        address: "Jl. Sriwijaya No. 5, Jakarta",
-      },
-      image: "/assets/car.jpg",
-      isSold: false
-    },
-    {
-      id: "3",
-      name: "Honda CBR Hitam 2023",
-      category: "Motor",
-      year: "2022",
-      brand: "Honda",
-      color: "Hitam",
-      type: "Civic Turbo",
-      licensePlate: "D 1234 ABC",
-      location: {
-        id: "1",
-        vehicleId: "1",
-        name: "Rumah Bandung",
-        address: "Jl. Sukajadi No. 57, Bandung",
-      },
-      image: "/assets/car.jpg",
-      isSold: false
-    },
-    {
-      id: "4",
-      name: "Honda Civic Turbo Hitam 2022",
-      category: "Mobil",
-      year: "2022",
-      brand: "Honda",
-      color: "Hitam",
-      type: "Civic Turbo",
-      licensePlate: "D 1234 ABC",
-      location: {
-        id: "1",
-        vehicleId: "1",
-        name: "Rumah Bandung",
-        address: "Jl. Sukajadi No. 57, Bandung",
-      },
-      soldDate: "10 Mar 2025",
-      image: "/assets/car.jpg",
-      isSold: true
-    },
-    {
-      id: "5",
-      name: "Toyota Innova Putih 2023",
-      category: "Mobil",
-      year: "2023",
-      brand: "Toyota",
-      color: "Putih",
-      type: "Innova",
-      licensePlate: "D 7890 DFE",
-      location: {
-        id: "1",
-        vehicleId: "1",
-        name: "Rumah Jakarta",
-        address: "Jl. Sriwijaya No. 5, Jakarta",
-      },
-      soldDate: "10 Mar 2025",
-      image: "/assets/car.jpg",
-      isSold: true
-    },
-  ]
-
+  const [listVehicles, setListVehicles] = useState<Vehicle[]>([]);
 
   useEffect(() => {
     fetchParams()
@@ -132,8 +38,6 @@ export default function DaftarKendaraanPage() {
     try {
       setLoading(true);
 
-      await new Promise((resolve) => setTimeout(resolve, 3000))
-      
       const res = [
         {
           id: "1",
@@ -181,9 +85,47 @@ export default function DaftarKendaraanPage() {
     return filtered
   }, [activeTab, searchQuery, selectCategory])
 
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      const { data, error } = await supabase
+        .from("vehicles_with_latest_location")
+        .select("*");
+
+      if (error) {
+        console.error("Failed to fetch kendaraan:", error.message);
+        return;
+      }
+
+      if (data) {
+        const mappedVehicles = data.map((v: any) => ({
+          id: v.id,
+          name: v.name,
+          type: v.type,
+          year: v.year,
+          brand: v.brand,
+          color: v.color,
+          category: v.category,
+          licensePlate: v.license_plate,
+          image: v.image_url,
+          isSold: v.is_sold,
+          location: {
+            id: v.location_id ?? "",
+            vehicleId: v.id ?? "",
+            name: v.location_name ?? "-",
+            address: v.location_address ?? "-",
+          },
+          soldDate: v.soldDate ?? undefined,
+        }));
+
+        setListVehicles(mappedVehicles);
+      }
+    };
+
+    fetchVehicles();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Main content */}
       <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Daftar Kendaraan</h1>
@@ -246,6 +188,6 @@ export default function DaftarKendaraanPage() {
           </TabsContent>
         </Tabs>
       </main>
-    </div>
+    </div >
   )
 }

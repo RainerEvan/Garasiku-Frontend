@@ -14,6 +14,7 @@ import {
 import { Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { supabase } from "@/lib/supabaseClient"
 
 // Define the form schema with validation
 const formSchema = z.object({
@@ -34,10 +35,41 @@ export default function LoginPage() {
   })
 
   // Handle form submission
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Login attempt with:", values)
-
-    navigate("/");
+  const onSubmit = async (values: z.infer<typeof formSchema>): Promise<void> => {
+    const { username, password } = values
+  
+    const { data: userProfile, error: userError } = await supabase
+      .from("user_profiles")
+      .select("email, status")
+      .eq("username", username)
+      .single()
+  
+    if (userError || !userProfile?.email) {
+      form.setError("username", {
+        message: "Username tidak ditemukan atau tidak memiliki email",
+      })
+      return
+    }
+  
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: userProfile.email,
+      password,
+    })
+  
+    if (error) {
+      form.setError("password", { message: "Login gagal: " + error.message })
+      return
+    }
+  
+    if (userProfile.status !== "active") {
+      form.setError("username", {
+        message: "Akun nonaktif, hubungi admin.",
+      })
+      await supabase.auth.signOut()
+      return
+    }
+  
+    navigate("/")
   }
 
   return (
