@@ -4,12 +4,13 @@ import { Button } from "@/components/shadcn/button"
 import { Search } from "lucide-react"
 import { useState } from "react"
 import { Vehicle } from "@/models/vehicle"
-import { Skeleton } from "@/components/shadcn/skeleton"
+import { useLoading } from "@/lib/loading-context"
 
 export default function CariKendaraanPage() {
+  const { setLoading } = useLoading();
+
   const [search, setSearch] = useState("");
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
-  const [loading, setLoading] = useState(false);
 
   // Sample data
   const activeVehicles: Vehicle[] = [
@@ -106,11 +107,7 @@ export default function CariKendaraanPage() {
           </Button>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1">
-            <Skeleton className="w-full h-72" />
-          </div>
-        ) : (vehicle) ? (
+        {(vehicle) ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
             <VehicleCard
               key={vehicle.id}
@@ -118,7 +115,7 @@ export default function CariKendaraanPage() {
             />
           </div>
         ) : (
-          <div className="flex items-center justify-center w-full">
+          <div className="flex items-center justify-center w-full py-6">
             <p>Tidak ada kendaraan.</p>
           </div>
         )}

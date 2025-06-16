@@ -27,14 +27,14 @@ export function VehicleCard({
       </div>
 
       {/* Vehicle Info */}
-      <div className="w-full p-5 flex flex-col">
+      <div className="w-full p-5 flex flex-col gap-3">
         <div className="flex flex-col">
           <p className="font-medium">{vehicle.name}</p>
           <p className="text-xs text-light">{vehicle.licensePlate}</p>
         </div>
 
         {/* Location or Sold Status */}
-        <div className="mt-3 border rounded-lg p-3 flex items-start gap-2">
+        <div className="border rounded-lg p-3 flex items-start gap-2">
           <div className="flex items-center gap-3">
             {Icon && <Icon className="h-5 w-5 text-medium shrink-0" />}
             {variant === "active" && location && (
