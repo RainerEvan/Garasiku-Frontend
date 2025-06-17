@@ -1,4 +1,4 @@
-import { TaskTypeIcons } from "@/lib/constants";
+import { TASK_TYPE_ICONS } from "@/lib/constants";
 import { Vehicle } from "@/models/vehicle"
 import { Link } from "react-router-dom"
 
@@ -10,11 +10,11 @@ export function VehicleCard({
   vehicle
 }: VehicleCardProps) {
   const variant = vehicle.isSold ? "sold" : "active";
-  const Icon = vehicle.isSold ? TaskTypeIcons["terjual"] : TaskTypeIcons["lokasi"]
+  const Icon = vehicle.isSold ? TASK_TYPE_ICONS["terjual"] : TASK_TYPE_ICONS["lokasi"]
   console.log(vehicle);
   console.log("masuk");
   return (
-    <Link to={`/kendaraan/${vehicle.id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
+    <Link to={`/kendaraan/detail/${vehicle.id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
       {/* Image Placeholder */}
       <div className="relative aspect-video w-full overflow-hidden text-[#b3b3b3] bg-[#d9d9d9] flex items-center justify-center">
       <img

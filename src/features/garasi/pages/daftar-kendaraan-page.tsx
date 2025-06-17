@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Param } from "@/models/param"
 import { useLoading } from "@/lib/loading-context"
 import { supabase } from "@/lib/supabaseClient"
+import { VEHICLE_CATEGORY_PARAM } from "@/lib/constants"
 
 type SelectOption = {
   label: string
@@ -32,21 +33,18 @@ export default function DaftarKendaraanPage() {
 
       try {
         const [
-          paramsRes,
+          vehicleCategoryParamsRes,
           vehiclesRes
         ] = await Promise.all([
           // simulate fetching params (you might replace this with supabase or API call)
-          Promise.resolve([
-            { id: "1", group: "001", name: "Mobil" },
-            { id: "2", group: "001", name: "Motor" },
-          ]),
+          Promise.resolve(VEHICLE_CATEGORY_PARAM),
           supabase.from("vehicles_with_latest_location").select("*"),
         ]);
 
         // === PARAMS ===
-        const paramData: Param[] = paramsRes;
-        const optionsFromParams: SelectOption[] = paramData.map((param) => ({
-          label: param.name,
+        const vehicleCategoryParamsData: Param[] = vehicleCategoryParamsRes;
+        const optionsFromParams: SelectOption[] = vehicleCategoryParamsData.map((param) => ({
+          label: param.description || param.name,
           value: param.name,
         }));
         setSelectCategoryOptions([{ label: "Semua", value: "all" }, ...optionsFromParams]);

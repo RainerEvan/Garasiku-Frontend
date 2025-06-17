@@ -9,6 +9,7 @@ import { useLoading } from "@/lib/loading-context";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Param } from "@/models/param";
 import { Button } from "@/components/shadcn/button";
+import { SERVICE_TYPE_PARAM } from "@/lib/constants";
 
 type SelectOption = {
     label: string
@@ -184,22 +185,20 @@ export default function ServisPage() {
                 else if (activeTab === "proses") statusQuery = prosesServices
                 else if (activeTab === "histori") statusQuery = historiServices
 
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+
                 const [
-                    paramsRes,
+                    serviceTypeParamsRes,
                     servicesRes
                 ] = await Promise.all([
                     // simulate fetching params (you might replace this with supabase or API call)
-                    Promise.resolve([
-                        { id: "1", group: "006", name: "servis-regular", description: "Servis Regular" },
-                        { id: "2", group: "006", name: "servis-berat", description: "Servis Berat" },
-                        { id: "3", group: "006", name: "servis-lainnya", description: "Servis Lainnya" },
-                    ]),
+                    Promise.resolve(SERVICE_TYPE_PARAM),
                     Promise.resolve(statusQuery),
                 ]);
 
                 // === PARAMS ===
-                const paramData: Param[] = paramsRes;
-                const optionsFromParams: SelectOption[] = paramData.map((param) => ({
+                const serviceTypeParamsData: Param[] = serviceTypeParamsRes;
+                const optionsFromParams: SelectOption[] = serviceTypeParamsData.map((param) => ({
                     label: param.description || param.name,
                     value: param.name,
                 }));
@@ -252,9 +251,9 @@ export default function ServisPage() {
     const filteredAndSortedService = useMemo(() => {
         const filtered = listServices.filter((service) => {
             const matchesSearch =
+                (service.ticketNum && service.ticketNum.toLowerCase().includes(searchQuery.toLowerCase())) ||
                 (service.vehicle?.licensePlate && service.vehicle?.licensePlate.toLowerCase().includes(searchQuery.toLowerCase())) ||
                 (service.vehicle?.name && service.vehicle?.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                (service.type && service.type.toLowerCase().includes(searchQuery.toLowerCase())) ||
                 (service.task && service.task.toLowerCase().includes(searchQuery.toLowerCase())) ||
                 (service.sparepart && service.sparepart.toLowerCase().includes(searchQuery.toLowerCase()))
             const matchesType = selectType === "all" || service.type?.toLowerCase() === selectType.toLowerCase()
@@ -349,7 +348,7 @@ export default function ServisPage() {
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center w-full py-6">
-                                    <p>Tidak ada data service.</p>
+                                    <p>Tidak ada data servis.</p>
                                 </div>
                             )}
                         </div>

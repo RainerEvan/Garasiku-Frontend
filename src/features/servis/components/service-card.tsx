@@ -44,7 +44,7 @@ export function ServiceCard({
   const status = service.status as Status;
 
   return (
-    <Link to={`/servis/${service.id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
+    <Link to={`/servis/detail/${service.id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
       {/* Service Info */}
       <div className={cn(statusVariants({ status }), "w-full p-5 flex flex-col gap-5")}>
         <div className="flex items-start justify-between gap-5">

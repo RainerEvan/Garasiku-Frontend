@@ -18,7 +18,7 @@ export default function AktivitasAdministrasiKendaraanPage() {
                 type: "Civic Turbo",
                 licensePlate: "D 1234 ABC",
             },
-            type: "administrasi-stnk-1tahun",
+            type: "administrasi-stnk-1",
             dueDate: "15 Jan 2028",
             endDate: undefined,
             status: "pending",

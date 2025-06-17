@@ -1,6 +1,6 @@
 import SectionItem from "@/components/shared/section-item"
 import StatusBar from "@/components/shared/status-bar"
-import TaskType from "@/components/shared/task-type-bar"
+import TaskTypeBar from "@/components/shared/task-type-bar"
 import { Status } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { Administration } from "@/models/administration"
@@ -44,7 +44,7 @@ export function AdministrationCard({
   const status = administration.status as Status;
 
   return (
-    <Link to={`/administrasi/${administration.id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
+    <Link to={`/administrasi/detail/${administration.id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
       {/* Administration Info */}
       <div className={cn(statusVariants({ status }), "w-full p-5 flex flex-col gap-5")}>
         <div className="flex items-start justify-between gap-5">
@@ -60,7 +60,7 @@ export function AdministrationCard({
 
         <div className="flex items-end justify-between gap-2">
           <div>
-            <TaskType taskType={administration.type} />
+            <TaskTypeBar taskType={administration.type} />
           </div>
           <div>
             <SectionItem label="Jatuh Tempo" value={administration.dueDate} className="items-end" />

@@ -20,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Vehicle } from "@/models/vehicle"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
 import { Param } from "@/models/param"
+import { VEHICLE_CATEGORY_PARAM } from "@/lib/constants"
 
 interface EditDetailVehicleDialogProps {
   vehicle: Vehicle
@@ -55,18 +56,7 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
     },
   })
 
-  const vehicleCategoryParam: Param[] = [
-    {
-      id: "1",
-      group: "001",
-      name: "Mobil"
-    },
-    {
-      id: "2",
-      group: "001",
-      name: "Motor"
-    }
-  ]
+  const vehicleCategoryParam = VEHICLE_CATEGORY_PARAM;
 
   const vehicleBrandParam: Param[] = [
     {

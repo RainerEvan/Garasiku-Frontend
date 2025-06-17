@@ -23,6 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/pop
 import { Calendar } from "@/components/shadcn/calendar"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import { VEHICLE_CATEGORY_PARAM } from "@/lib/constants"
 
 interface AddVehicleDialogProps {
   onSave?: (newVehicle: string) => void
@@ -57,18 +58,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
     },
   })
 
-  const vehicleCategoryParam: Param[] = [
-    {
-      id: "1",
-      group: "001",
-      name: "Mobil"
-    },
-    {
-      id: "2",
-      group: "001",
-      name: "Motor"
-    }
-  ]
+  const vehicleCategoryParam = VEHICLE_CATEGORY_PARAM;
 
   const vehicleBrandParam: Param[] = [
     {
@@ -189,7 +179,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
                           <SelectContent>
                             {vehicleCategoryParam.map((option) => (
                               <SelectItem key={option.id} value={option.name}>
-                                {option.name}
+                                {option.description}
                               </SelectItem>
                             ))}
                           </SelectContent>
