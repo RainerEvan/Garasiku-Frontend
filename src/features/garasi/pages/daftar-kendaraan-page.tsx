@@ -1,5 +1,5 @@
 import { VehicleCard } from "../components/vehicle-card"
-import { Search } from "lucide-react"
+import { CarFront, Search } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs"
 import { Input } from "@/components/shadcn/input"
 import { useEffect, useMemo, useState } from "react"
@@ -101,12 +101,6 @@ export default function DaftarKendaraanPage() {
     return filtered
   }, [activeTab, searchQuery, selectCategory, listVehicles])
 
-  const vehicleCounts = useMemo(() => {
-    const active = listVehicles.filter(v => !v.isSold).length
-    const sold = listVehicles.filter(v => v.isSold).length
-    return { active, sold }
-  }, [listVehicles])
-
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
@@ -117,11 +111,11 @@ export default function DaftarKendaraanPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full md:max-w-sm">
-            <TabsTrigger value="active">Aktif ({vehicleCounts.active})</TabsTrigger>
-            <TabsTrigger value="sold">Terjual ({vehicleCounts.sold})</TabsTrigger>
+            <TabsTrigger value="active">Aktif</TabsTrigger>
+            <TabsTrigger value="sold">Terjual</TabsTrigger>
           </TabsList>
           <TabsContent value={activeTab}>
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-3">
               <div className="flex flex-row flex-wrap md:flex-nowrap gap-3">
                 {/* Search Bar */}
                 <div className="relative w-full flex items-center space-x-2">
@@ -153,6 +147,12 @@ export default function DaftarKendaraanPage() {
                 </Select>
               </div>
 
+              <div className="flex items-center">
+                <p className="text-sm text-muted-foreground">
+                  Total Data: <span className="font-medium">{filteredAndSortedVehicle.length}</span>
+                </p>
+              </div>
+
               {filteredAndSortedVehicle.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {filteredAndSortedVehicle.map((vehicle) => (
@@ -163,8 +163,9 @@ export default function DaftarKendaraanPage() {
                   ))}
                 </div>
               ) : (
-                <div className="flex items-center justify-center w-full py-6">
-                  <p>Tidak ada data kendaraan.</p>
+                <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
+                  <CarFront className="h-5 w-5 text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">Data kendaraan tidak ditemukan.</p>
                 </div>
               )}
             </div>

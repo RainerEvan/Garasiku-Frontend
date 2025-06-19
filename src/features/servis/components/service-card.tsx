@@ -1,7 +1,7 @@
 import SectionItem from "@/components/shared/section-item"
 import StatusBar from "@/components/shared/status-bar"
 import TaskType from "@/components/shared/task-type-bar"
-import { CANCELLED, COMPLETED, ONGOING, PENDING, Status } from "@/lib/constants"
+import { Status } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { Service } from "@/models/service"
 import { cva } from "class-variance-authority"
@@ -63,15 +63,7 @@ export function ServiceCard({
             <TaskType taskType={service.type} />
           </div>
           <div>
-            {service.status == PENDING && (
-              <SectionItem label="Jadwal Servis" value={service.scheduleDate} className="items-end" />
-            )}
-            {service.status == ONGOING && (
-              <SectionItem label="Servis Mulai" value={service.startDate} className="items-end" />
-            )}
-            {(service.status == COMPLETED || service.status == CANCELLED) && (
-              <SectionItem label="Servis Selesai" value={service.endDate} className="items-end" />
-            )}
+            <SectionItem label="Jadwal Servis" value={service.scheduleDate} className="items-end" />
           </div>
         </div>
       </div>

@@ -53,20 +53,28 @@ export default function MaintenanceDetailPage() {
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-bold">{paramGroup.name}</h1>
                     {!paramGroup.isTotalFixed && (
-                        <AddParamDialog paramGroup={paramGroup}/>
+                        <AddParamDialog paramGroup={paramGroup} />
                     )}
                 </div>
 
-                {/* List Param */}
-                <div className="flex flex-col gap-5 overflow-auto">
-                    {listParam.map((param, index) => (
-                        <ParamCard
-                            key={param.id}
-                            param={param}
-                            paramGroup={paramGroup}
-                            index={index}
-                        />
-                    ))}
+                <div  className="flex flex-col gap-3">
+                    <div className="flex items-center">
+                        <p className="text-sm text-muted-foreground">
+                            Total Data: <span className="font-medium">{listParam.length}</span>
+                        </p>
+                    </div>
+
+                    {/* List Param */}
+                    <div className="flex flex-col gap-5 overflow-auto">
+                        {listParam.map((param, index) => (
+                            <ParamCard
+                                key={param.id}
+                                param={param}
+                                paramGroup={paramGroup}
+                                index={index}
+                            />
+                        ))}
+                    </div>
                 </div>
             </main>
         </div>

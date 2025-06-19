@@ -54,24 +54,33 @@ export default function MaintenancePage() {
                     <h1 className="text-3xl font-bold">Parameter</h1>
                 </div>
 
-                {/* Search Bar */}
-                <div className="relative flex w-full items-center space-x-2">
-                    <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
-                    <Input
-                        type="text"
-                        placeholder="Cari nama parameter"
-                        className="w-full pl-10"
-                        value={searchGroup}
-                        onChange={(e) => setSearchGroup(e.target.value)}
-                    />
-                </div>
-                <div className="flex flex-col gap-5">
-                    {filteredParamGroups.map((paramGroup) => (
-                        <ParamGroupCard
-                            key={paramGroup.group}
-                            paramGroup={paramGroup}
+                <div className="flex flex-col gap-3">
+                    {/* Search Bar */}
+                    <div className="relative flex w-full items-center space-x-2">
+                        <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
+                        <Input
+                            type="text"
+                            placeholder="Cari nama parameter"
+                            className="w-full pl-10"
+                            value={searchGroup}
+                            onChange={(e) => setSearchGroup(e.target.value)}
                         />
-                    ))}
+                    </div>
+
+                    <div className="flex items-center">
+                        <p className="text-sm text-muted-foreground">
+                            Total Data: <span className="font-medium">{filteredParamGroups.length}</span>
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-5">
+                        {filteredParamGroups.map((paramGroup) => (
+                            <ParamGroupCard
+                                key={paramGroup.group}
+                                paramGroup={paramGroup}
+                            />
+                        ))}
+                    </div>
                 </div>
             </main>
         </div>

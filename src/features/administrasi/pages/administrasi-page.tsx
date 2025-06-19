@@ -1,7 +1,7 @@
 import { Input } from "@/components/shadcn/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs";
 import { Administration } from "@/models/administration";
-import { ArrowDownNarrowWide, ArrowUpNarrowWide, Search } from "lucide-react";
+import { ArrowDownNarrowWide, ArrowUpNarrowWide, IdCard, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AdministrationCard } from "../components/administrasi-card";
 import { useLoading } from "@/lib/loading-context";
@@ -37,7 +37,7 @@ export default function AdministrasiPage() {
                 license_plate: "D 1234 ABC",
             },
             type: "administrasi-stnk-1",
-            due_date: "2028-01-15",
+            due_date: "2025-07-19",
             end_date: undefined,
             status: "pending",
         },
@@ -100,7 +100,7 @@ export default function AdministrasiPage() {
                 license_plate: "D 1234 ABC",
             },
             type: "administrasi-stnk-5",
-            due_date: "2028-01-15",
+            due_date: "2025-07-18",
             end_date: undefined,
             status: "pending",
         },
@@ -148,7 +148,7 @@ export default function AdministrasiPage() {
                 license_plate: "D 1234 ABC",
             },
             type: "administrasi-asuransi",
-            due_date: "2028-01-15",
+            due_date: "2025-07-15",
             end_date: undefined,
             status: "pending",
         },
@@ -166,22 +166,7 @@ export default function AdministrasiPage() {
             due_date: "2028-02-15",
             end_date: undefined,
             status: "pending",
-        },
-        {
-            id: "3",
-            ticket_num: "ADM25-00006",
-            vehicle_id: "1",
-            vehicle: {
-                id: "1",
-                name: "Suzuki Ertiga Merah 2020",
-                category: "mobil",
-                license_plate: "B 1234 GHI",
-            },
-            type: "administrasi-asuransi",
-            due_date: "2028-03-15",
-            end_date: "2028-03-15",
-            status: "completed",
-        },
+        }
     ]
 
     useEffect(() => {
@@ -195,12 +180,23 @@ export default function AdministrasiPage() {
                 else if (type === "stnk-5") typeQuery = stnk5Administrations
                 else if (type === "asuransi") typeQuery = asuransiAdministrations
 
-                let todoAdministrations: any[] = typeQuery.filter((a: any) => a.status === "pending");
+                let todoAdministrations: any[] = typeQuery.filter((a: any) => {
+                    const today = new Date();
+                    const dueDate = new Date(a.due_date);
+                    dueDate.setMonth(dueDate.getMonth() - 1);
+                    return (
+                        a.status === "pending" &&
+                        a.due_date &&
+                        today >= dueDate
+                    )
+                });
+                let pendingAdministrations: any[] = typeQuery.filter((a: any) => a.status === "pending");
                 let historiAdministrations: any[] = typeQuery.filter((a: any) => a.status === "completed" || a.status === "cancelled");
 
                 let statusQuery = todoAdministrations;
 
                 if (activeTab === "todo") statusQuery = todoAdministrations
+                else if (activeTab === "pending") statusQuery = pendingAdministrations
                 else if (activeTab === "histori") statusQuery = historiAdministrations
 
                 await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -247,6 +243,10 @@ export default function AdministrasiPage() {
         setSearchQuery("");
     }, [activeTab, type]);
 
+    useEffect(() => {
+        setActiveTab("todo");
+    }, [type]);
+
     const filteredAndSortedAdministration = useMemo(() => {
         const filtered = listAdministrations.filter((administration) => {
             const matchesSearch =
@@ -283,10 +283,11 @@ export default function AdministrasiPage() {
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="w-full md:max-w-sm">
                         <TabsTrigger value="todo">To-do</TabsTrigger>
+                        <TabsTrigger value="pending">Pending</TabsTrigger>
                         <TabsTrigger value="histori">Histori</TabsTrigger>
                     </TabsList>
                     <TabsContent value={activeTab}>
-                        <div className="flex flex-col gap-5">
+                        <div className="flex flex-col gap-3">
                             <div className="flex flex-row flex-wrap md:flex-nowrap gap-3">
                                 {/* Search Bar */}
                                 <div className="relative w-full flex items-center space-x-2">
@@ -315,6 +316,12 @@ export default function AdministrasiPage() {
                                 </Button>
                             </div>
 
+                            <div className="flex items-center">
+                                <p className="text-sm text-muted-foreground">
+                                    Total Data: <span className="font-medium">{filteredAndSortedAdministration.length}</span>
+                                </p>
+                            </div>
+
                             {filteredAndSortedAdministration.length > 0 ? (
                                 <div className="flex flex-col gap-5">
                                     {filteredAndSortedAdministration.map((administration) => (
@@ -325,8 +332,9 @@ export default function AdministrasiPage() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="flex items-center justify-center w-full py-6">
-                                    <p>Tidak ada data administrasi.</p>
+                                <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
+                                    <IdCard className="h-5 w-5 text-muted-foreground mb-2" />
+                                    <p className="text-sm text-muted-foreground">Data administrasi tidak ditemukan.</p>
                                 </div>
                             )}
                         </div>

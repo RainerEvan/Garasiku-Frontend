@@ -94,12 +94,7 @@ export function EditImageVehicleDialog({ images = [], onSave }: EditImageVehicle
 
                         <div className="">
                             <ScrollArea className="h-[50vh]">
-                                {carImages.length === 0 ? (
-                                    <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
-                                        <ImageIcon className="h-5 w-5 text-muted-foreground mb-2" />
-                                        <p className="text-sm text-muted-foreground">Belum ada foto kendaraan</p>
-                                    </div>
-                                ) : (
+                                {carImages.length > 0 ? (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                                         {carImages.map((image, index) => (
                                             <div
@@ -121,6 +116,11 @@ export function EditImageVehicleDialog({ images = [], onSave }: EditImageVehicle
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+                                ) : (
+                                    <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
+                                        <ImageIcon className="h-5 w-5 text-muted-foreground mb-2" />
+                                        <p className="text-sm text-muted-foreground">Belum ada foto kendaraan</p>
                                     </div>
                                 )}
                             </ScrollArea>

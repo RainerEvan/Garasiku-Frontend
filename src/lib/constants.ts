@@ -21,23 +21,6 @@ export const TASK_TYPE_ICONS: Record<string, LucideIcon> = {
   "kendaraan": CarFront,
 };
 
-export const VEHICLE_CATEGORY_PARAM = [
-  { id: "1", group: "0001", name: "Mobil", description: "Mobil" },
-  { id: "2", group: "0001", name: "Motor", description: "Motor" },
-]
-
-export const SERVICE_TYPE_PARAM = [
-  { id: "1", group: "0002", name: "servis-regular", description: TASK_TYPE_LABEL["servis-regular"] },
-  { id: "2", group: "0002", name: "servis-berat", description: TASK_TYPE_LABEL["servis-berat"] },
-  { id: "3", group: "0002", name: "servis-lainnya", description: TASK_TYPE_LABEL["servis-lainnya"] },
-]
-
-export const ADMINISTRATION_TYPE_PARAM = [
-  { id: "1", group: "0003", name: "administrasi-stnk-1", description: TASK_TYPE_LABEL["administrasi-stnk-1"] },
-  { id: "2", group: "0003", name: "administrasi-stnk-5", description: TASK_TYPE_LABEL["administrasi-stnk-5"] },
-  { id: "3", group: "0003", name: "administrasi-asuransi", description: TASK_TYPE_LABEL["administrasi-asuransi"] },
-]
-
 export const PENDING = "pending";
 export const ONGOING = "ongoing";
 export const COMPLETED = "completed";
@@ -55,3 +38,27 @@ export const STATUS_LABEL: Record<Status, string> = {
   [ACTIVE]: "Aktif",
   [INACTIVE]: "Nonaktif"
 };
+
+export const VEHICLE_CATEGORY_PARAM = [
+  { id: "1", group: "0001", name: "Mobil", description: "Mobil" },
+  { id: "2", group: "0001", name: "Motor", description: "Motor" },
+]
+
+export const SERVICE_TYPE_PARAM = [
+  { id: "1", group: "0002", name: "servis-regular", description: TASK_TYPE_LABEL["servis-regular"] },
+  { id: "2", group: "0002", name: "servis-berat", description: TASK_TYPE_LABEL["servis-berat"] },
+  { id: "3", group: "0002", name: "servis-lainnya", description: TASK_TYPE_LABEL["servis-lainnya"] },
+]
+
+export const ADMINISTRATION_TYPE_PARAM = [
+  { id: "1", group: "0003", name: "administrasi-stnk-1", description: TASK_TYPE_LABEL["administrasi-stnk-1"] },
+  { id: "2", group: "0003", name: "administrasi-stnk-5", description: TASK_TYPE_LABEL["administrasi-stnk-5"] },
+  { id: "3", group: "0003", name: "administrasi-asuransi", description: TASK_TYPE_LABEL["administrasi-asuransi"] },
+]
+
+export const STATUS_PARAM = [
+  { id: "1", group: "0004", name: "pending", description: STATUS_LABEL["pending"] },
+  { id: "2", group: "0004", name: "ongoing", description: STATUS_LABEL["ongoing"] },
+  { id: "3", group: "0004", name: "completed", description: STATUS_LABEL["completed"] },
+  { id: "4", group: "0004", name: "cancelled", description: STATUS_LABEL["cancelled"] },
+]

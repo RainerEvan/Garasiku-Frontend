@@ -47,7 +47,7 @@ export default function RiwayatLokasiKendaraanPage() {
     return (
         <div className="min-h-screen flex flex-col">
             {/* Main content */}
-            <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
+            <main className="flex-1 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
                 <div className="bg-background border rounded-lg p-5 shadow-xs flex flex-col gap-8">
                     <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
                         <div className="flex flex-col">
@@ -62,12 +62,7 @@ export default function RiwayatLokasiKendaraanPage() {
                     </div>
 
                     <div>
-                        {carLocations.length === 0 ? (
-                            <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
-                                <MapPin className="h-5 w-5 text-muted-foreground mb-2" />
-                                <p className="text-sm text-muted-foreground">Belum ada lokasi kendaraan</p>
-                            </div>
-                        ) : (
+                        {carLocations.length > 0 ? (
                             <div className="relative">
                                 {/* Location Cards */}
                                 {carLocations.map((location, index) => (
@@ -98,7 +93,11 @@ export default function RiwayatLokasiKendaraanPage() {
                                         </div>
                                     </div>
                                 ))}
-
+                            </div>
+                        ) : (
+                            <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
+                                <MapPin className="h-5 w-5 text-muted-foreground mb-2" />
+                                <p className="text-sm text-muted-foreground">Belum ada lokasi kendaraan</p>
                             </div>
                         )}
                     </div>

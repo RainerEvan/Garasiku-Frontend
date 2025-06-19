@@ -1,6 +1,6 @@
 import { Input } from "@/components/shadcn/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/tabs";
-import { ArrowDownNarrowWide, ArrowUpNarrowWide, Search } from "lucide-react";
+import { ArrowDownNarrowWide, ArrowUpNarrowWide, Search, Wrench } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { ServiceCard } from "../components/service-card";
 import { Service } from "@/models/service";
@@ -30,6 +30,41 @@ export default function ServisPage() {
 
     // Sample Data
     const todoServices: any[] = [
+        {
+            id: "1",
+            ticket_num: "SRV25-00001",
+            vehicle_id: "1",
+            vehicle: {
+                id: "1",
+                name: "Honda Civic Turbo Hitam 2022",
+                category: "mobil",
+                license_plate: "D 1234 ABC",
+            },
+            type: "servis-regular",
+            schedule_date: "2025-07-15",
+            startDate: undefined,
+            end_date: undefined,
+            status: "pending",
+        },
+        {
+            id: "2",
+            ticket_num: "SRV25-00002",
+            vehicle_id: "1",
+            vehicle: {
+                id: "1",
+                name: "Toyota Avanza Putih 2021",
+                category: "mobil",
+                license_plate: "D 5678 DEF",
+            },
+            type: "servis-berat",
+            schedule_date: "2025-07-17",
+            start_date: undefined,
+            end_date: undefined,
+            status: "pending",
+        }
+    ]
+
+    const pendingServices: any[] = [
         {
             id: "1",
             ticket_num: "SRV25-00001",
@@ -182,6 +217,7 @@ export default function ServisPage() {
                 let statusQuery = todoServices;
 
                 if (activeTab === "todo") statusQuery = todoServices
+                else if (activeTab === "pending") statusQuery = pendingServices
                 else if (activeTab === "proses") statusQuery = prosesServices
                 else if (activeTab === "histori") statusQuery = historiServices
 
@@ -217,10 +253,6 @@ export default function ServisPage() {
                             id: s.vehicle.id,
                             name: s.vehicle.name,
                             category: s.vehicle.category,
-                            year: s.vehicle.year,
-                            brand: s.vehicle.brand,
-                            color: s.vehicle.color,
-                            type: s.vehicle.type,
                             licensePlate: s.vehicle.license_plate,
                         },
                         type: s.type,
@@ -287,11 +319,12 @@ export default function ServisPage() {
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     <TabsList className="w-full md:max-w-sm">
                         <TabsTrigger value="todo">To-do</TabsTrigger>
+                        <TabsTrigger value="pending">Pending</TabsTrigger>
                         <TabsTrigger value="proses">Proses</TabsTrigger>
                         <TabsTrigger value="histori">Histori</TabsTrigger>
                     </TabsList>
                     <TabsContent value={activeTab}>
-                        <div className="flex flex-col gap-5">
+                        <div className="flex flex-col gap-3">
                             <div className="flex flex-row flex-wrap md:flex-nowrap gap-3">
                                 {/* Search Bar */}
                                 <div className="relative w-full flex items-center space-x-2">
@@ -333,8 +366,14 @@ export default function ServisPage() {
                                     ) : (
                                         <ArrowDownNarrowWide className="h-4 w-4" />
                                     )}
-                                    Sort Tanggal 
+                                    Sort Tanggal
                                 </Button>
+                            </div>
+
+                            <div className="flex items-center">
+                                <p className="text-sm text-muted-foreground">
+                                    Total Data: <span className="font-medium">{filteredAndSortedService.length}</span>
+                                </p>
                             </div>
 
                             {filteredAndSortedService.length > 0 ? (
@@ -347,8 +386,9 @@ export default function ServisPage() {
                                     ))}
                                 </div>
                             ) : (
-                                <div className="flex items-center justify-center w-full py-6">
-                                    <p>Tidak ada data servis.</p>
+                                <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
+                                    <Wrench className="h-5 w-5 text-muted-foreground mb-2" />
+                                    <p className="text-sm text-muted-foreground">Data servis tidak ditemukan.</p>
                                 </div>
                             )}
                         </div>

@@ -57,6 +57,10 @@ export default function UserDetailPage() {
         <div className="min-h-screen flex flex-col">
             {/* Main content */}
             <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-3xl font-bold">User Detail</h1>
+                </div>
+
                 <div className="flex flex-col gap-5">
                     {/* User Details */}
                     <div className="flex flex-col gap-3 rounded-lg border bg-background p-5">
