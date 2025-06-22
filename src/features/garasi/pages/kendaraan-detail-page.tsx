@@ -31,90 +31,16 @@ export default function KendaraanDetailPage() {
 
     const { setLoading } = useLoading();
 
-    const listAdministrasi: Administration[] = [
-        {
-            id: "1",
-            vehicleId: "1",
-            type: "administrasi-stnk-1",
-            dueDate: "15 Jan 2028",
-            endDate: undefined,
-            status: "pending",
-        },
-        {
-            id: "2",
-            vehicleId: "1",
-            type: "administrasi-asuransi",
-            dueDate: "15 Jan 2028",
-            endDate: "15 Jan 2028",
-            status: "completed",
-        }
-    ]
-
-    const vehicleAttachments: AttachmentVehicle[] = [
-        {
-            id: "1",
-            vehicleId: "1",
-            fileName: "Dokumen STNK.pdf",
-            fileType: "pdf",
-            fileSize: "1 MB",
-            fileLink: "dokumen-stnk-link",
-            attachmentType: "lampiran",
-            createdAt: "12 Jan 2025",
-            createdBy: "rainerevan"
-        },
-        {
-            id: "2",
-            vehicleId: "1",
-            fileName: "Dokumen BPKB.pdf",
-            fileType: "pdf",
-            fileSize: "300 KB",
-            fileLink: "dokumen-bpkb-link",
-            attachmentType: "lampiran",
-            createdAt: "11 Jan 2025",
-            createdBy: "rainerevan"
-        },
-    ]
-
-
 
     const equipmentParam: Param[] = [
-        {
-            id: "1",
-            group: "003",
-            name: "bpkb",
-            description: "BPKB",
-        },
-        {
-            id: "2",
-            group: "003",
-            name: "ban-cadangan",
-            description: "Ban Cadangan",
-        },
-        {
-            id: "3",
-            group: "003",
-            name: "dongkrak",
-            description: "Dongkrak",
-        },
-        {
-            id: "4",
-            group: "003",
-            name: "toolkit",
-            description: "Toolkit",
-        },
-        {
-            id: "5",
-            group: "003",
-            name: "kotak-p3k",
-            description: "Kotak P3K",
-        },
-        {
-            id: "6",
-            group: "003",
-            name: "dash-cam",
-            description: "Dash Cam",
-        }
-    ]
+        { id: "1", name: 'PKB', description: 'PKB', group: 'equipment' },
+        { id: "2", name: 'Ban Cadangan', description: 'Ban Cadangan', group: 'equipment' },
+        { id: "3", name: 'Dongkrak', description: 'Dongkrak', group: 'equipment' },
+        { id: "4", name: 'Toolkit', description: 'Toolkit', group: 'equipment' },
+        { id: "5", name: 'Kotak P3K', description: 'Kotak P3K', group: 'equipment' },
+        { id: "6", name: 'Dash Cam', description: 'Dash Cam', group: 'equipment' },
+    ];
+
 
     const handleDeleteVehicle = () => {
         console.log("Delete Kendaraan button clicked")
@@ -127,24 +53,30 @@ export default function KendaraanDetailPage() {
     // const [latestLocation, setLatestLocation] = useState<VehicleLocation | null>(null);
     const [stnk, setStnk] = useState<Stnk | null>(null);
     const [services, setServices] = useState<Service[]>([]);
+    const [adminitrations, setAdministration] = useState<Administration[]>([]);
+    const [vehicleEquipments, setVehicleEquipments] = useState<string[]>([]);
     const [vehicleImages, setVehicleImages] = useState<AttachmentVehicle[]>([]);
+    const [attachments, setAttachments] = useState<AttachmentVehicle[]>([]);
 
     useEffect(() => {
         const fetchDetail = async () => {
             setLoading(true);
 
             try {
-                const { data, error } = await supabase
+                // 1. Fetch vehicle + 1 latest service + image etc.
+                const { data: detailData, error: detailError } = await supabase
                     .from("vehicle_full_details")
                     .select("*")
                     .eq("vehicleid", id);
 
-                console.log("Data:", data);
-                console.log("Error:", error);
+                if (detailError) {
+                    console.error(detailError);
+                    return;
+                }
 
-                if (error) return console.error(error);
-                if (data && data.length) {
-                    const base = data[0];
+                if (detailData && detailData.length) {
+                    const base = detailData[0];
+
                     setVehicle({
                         id: base.vehicleid,
                         name: base.name,
@@ -153,18 +85,14 @@ export default function KendaraanDetailPage() {
                         color: base.color,
                         category: base.category,
                         licensePlate: base.license_plate,
-                        year: base.year,
+                        year: base.vehicle_year,
                         isSold: base.is_sold,
                         soldDate: base.sold_date,
                         image: base.image_url,
+                        stnkDueDate: base.stnk_due_date,
+                        insuranceDueDate: base.insurance_due_date,
+                        lastServiceDate : base.schedule_date
                     });
-                    // setLatestLocation(base.location_id ? {
-                    //     id: base.location_id,
-                    //     vehicleId: base.id,
-                    //     name: base.location_name,
-                    //     address: base.location_address,
-                    //     createdAt: base.location_created_at,
-                    // } : null);
 
                     setStnk(base.stnk_id ? {
                         id: base.stnk_id,
@@ -186,36 +114,90 @@ export default function KendaraanDetailPage() {
                         type: base.type,
                         category: base.category,
                         color: base.color,
-
+                        model: base.model,
+                        licensePlateColor: base.license_plate_color
                     } : null);
 
-                    setServices(data.map(row => ({
-                        id: base.service_id,
-                        vehicleId: base.vehicleid,
-                        ticketNum: base.ticket_num,
-                        type: base.service_type,
-                        scheduleDate: base.schedule_date,
-                        startDate: base.start_date,
-                        endDate: base.end_date,
-                        status: base.service_status,
-                        location: base.cost,
-                        mileage: base.mileage,
-                        totalCost: base.total_cost,
-                        mechanicName: base.mechanic_name,
-                        task: base.task,
-                        sparepart: base.sparepart,
-                        notes: base.notes
-                    })));
-
-                    // For multiple gallery images, replace the lateral join with a proper service call.
                     setVehicleImages(base.image_url ? [{
                         id: base.av_id,
                         vehicleId: base.id,
                         attachmentType: 'gallery',
-                        // sort: base.image_sort,
                         fileLink: base.image_url
                     }] : []);
+                    setVehicleEquipments(base.equipments || []);
+
                 }
+
+                const { data: serviceData, error: serviceError } = await supabase
+                    .from("vehicle_service_history") // or "services"
+                    .select("*")
+                    .eq("vehicle_id", id)
+                    .order("created_at", { ascending: false });
+
+                if (serviceError) {
+                    console.error(serviceError);
+                } else {
+                    setServices(serviceData.map(svc => ({
+                        id: svc.service_id || svc.id,
+                        ticketNum: svc.ticket_num,
+                        type: svc.service_type || svc.type,
+                        mechanicName: svc.mechanic_name,
+                        status: svc.service_status || svc.status,
+                        mileage: svc.mileage,
+                        totalCost: svc.total_cost,
+                        startDate: svc.start_date,
+                        endDate: svc.end_date,
+                        notes: svc.notes,
+                        task: svc.task,
+                        sparepart: svc.sparepart,
+                        scheduleDate: svc.schedule_date
+                    })));
+                }
+
+                const { data: adminData, error: adminError } = await supabase
+                    .from("vehicle_administration_history") // or "administration"
+                    .select("*")
+                    .eq("vehicle_id", id)
+                    .order("created_at", { ascending: false });
+
+                if (adminError) {
+                    console.error(adminError);
+                } else {
+                    setAdministration(adminData.map(adm => ({
+                        id: adm.administration_id,
+                        ticketNum: adm.ticket_num,
+                        type: adm.type,
+                        status: adm.status,
+                        dueDate: adm.due_date,
+                        newDueDate: adm.new_due_date,
+                        endDate: adm.end_date,
+                        totalCost: adm.total_cost,
+                        notes: adm.notes
+                    })));
+                }
+
+                const { data: attachmentData, error: attachmentError } = await supabase
+                    .from("vehicle_attachments")
+                    .select("*")
+                    .eq("vehicle_id", id)
+                    .order("sort", { ascending: true });
+
+                if (attachmentError) {
+                    console.error(attachmentError);
+                } else {
+                    setAttachments(attachmentData.map(att => ({
+                        id: att.attachment_id,
+                        vehicleId: att.vehicle_id,
+                        attachmentType: att.attachment_type,
+                        fileName: att.file_name,
+                        fileType: att.file_type,
+                        fileSize: att.file_size,
+                        fileLink: att.file_link,
+                        createdAt: att.created_at,
+                        createdBy: att.created_by,
+                    })));
+                }
+
             } catch (err) {
                 console.error("Failed to fetch data:", err);
             } finally {
@@ -226,9 +208,11 @@ export default function KendaraanDetailPage() {
         fetchDetail();
     }, [id]);
 
+
+
     if (!vehicle) return <p>Tidak ada data kendaraan...</p>;
 
-    const vehicleEquipments = vehicle.equipments ? vehicle.equipments.split(",") : [];
+    // const vehicleEquipments = vehicle.equipments ? vehicle.equipments.split(",") : [];
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -462,15 +446,15 @@ export default function KendaraanDetailPage() {
                                 </Link >
                             }
                         >
-                            {listAdministrasi.length > 0 && (
+                            {adminitrations.length > 0 && (
                                 <div className="flex flex-col py-2">
                                     {
-                                        listAdministrasi.map((administrasi, index) => (
+                                        adminitrations.map((administrasi, index) => (
                                             <div key={administrasi.id}>
                                                 <AdministrationActivityItem
                                                     administrasi={administrasi}
                                                 />
-                                                {index < listAdministrasi.length - 1 && (
+                                                {index < adminitrations.length - 1 && (
                                                     <Separator className="my-4" />
                                                 )}
                                             </div>
@@ -505,6 +489,7 @@ export default function KendaraanDetailPage() {
                         )}
                     </SectionCard>
 
+
                     {/* Lampiran Dokumen */}
                     <SectionCard
                         title="Lampiran Dokumen"
@@ -512,15 +497,15 @@ export default function KendaraanDetailPage() {
                             <AddAttachmentVehicleDialog vehicleId={vehicle.id} />
                         }
                     >
-                        {vehicleAttachments.length > 0 && (
+                        {attachments.length > 0 && (
                             <div className="flex flex-col">
                                 {
-                                    vehicleAttachments.map((attachment, index) => (
+                                    attachments.map((attachment, index) => (
                                         <div key={attachment.id}>
                                             <AttachmentItem
                                                 attachment={attachment}
                                             />
-                                            {index < vehicleAttachments.length - 1 && (
+                                            {index < attachments.length - 1 && (
                                                 <Separator className="my-4" />
                                             )}
                                         </div>

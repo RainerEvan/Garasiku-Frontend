@@ -69,45 +69,30 @@ export function EditEquipmentVehicleDialog({ equipmentParam, vehicleEquipments, 
             <FormField
               control={form.control}
               name="items"
-              render={() => (
+              render={({ field }) => (
                 <FormItem className={`grid gap-5 p-2 ${equipmentParam.length > 5 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
                   {equipmentParam.map((item) => (
-                    <FormField
-                      key={item.id}
-                      control={form.control}
-                      name="items"
-                      render={({ field }) => {
-                        return (
-                          <FormItem
-                            key={item.id}
-                            className="flex flex-row items-center space-x-3 space-y-0"
-                          >
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(item.name)}
-                                onCheckedChange={(checked) => {
-                                  return checked
-                                    ? field.onChange([...field.value, item.name])
-                                    : field.onChange(
-                                      field.value?.filter(
-                                        (value) => value !== item.name
-                                      )
-                                    )
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="text-sm font-normal">
-                              {item.description}
-                            </FormLabel>
-                          </FormItem>
-                        )
-                      }}
-                    />
+                    <div key={item.id} className="flex flex-row items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value?.includes(item.name)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              field.onChange([...field.value, item.name]);
+                            } else {
+                              field.onChange(field.value.filter((val) => val !== item.name));
+                            }
+                          }}
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal">{item.description}</FormLabel>
+                    </div>
                   ))}
                   <FormMessage />
                 </FormItem>
               )}
             />
+
 
             <DialogFooter>
               <DialogClose asChild>
