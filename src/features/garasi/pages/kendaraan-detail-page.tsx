@@ -132,9 +132,6 @@ export default function KendaraanDetailPage() {
                 .select("*")
                 .eq("vehicleid", id);
 
-                console.log("Data:", data);
-                console.log("Error:", error);
-
             if (error) return console.error(error);
             if (data && data.length) {
                 const base = data[0];
