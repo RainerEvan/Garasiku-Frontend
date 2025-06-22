@@ -23,15 +23,19 @@ import AdministrationActivityItem from "../components/administration-activity-it
 import { Link, useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
+import { useLoading } from "@/lib/loading-context"
 
 export default function KendaraanDetailPage() {
-  const { id } = useParams<{ id: string }>();
-        console.log(id);
+    const { id } = useParams<{ id: string }>();
+    console.log(id);
+
+    const { setLoading } = useLoading();
+
     const listAdministrasi: Administration[] = [
         {
             id: "1",
             vehicleId: "1",
-            type: "administrasi-stnk-1tahun",
+            type: "administrasi-stnk-1",
             dueDate: "15 Jan 2028",
             endDate: undefined,
             status: "pending",
@@ -71,7 +75,7 @@ export default function KendaraanDetailPage() {
         },
     ]
 
-   
+
 
     const equipmentParam: Param[] = [
         {
@@ -127,91 +131,102 @@ export default function KendaraanDetailPage() {
 
     useEffect(() => {
         const fetchDetail = async () => {
+            setLoading(true);
+
+            try {
                 const { data, error } = await supabase
-                .from("vehicle_full_details")
-                .select("*")
-                .eq("vehicleid", id);
+                    .from("vehicle_full_details")
+                    .select("*")
+                    .eq("vehicleid", id);
 
-            if (error) return console.error(error);
-            if (data && data.length) {
-                const base = data[0];
-                setVehicle({
-                    id: base.vehicleid,
-                    name: base.name,
-                    type: base.type,
-                    brand: base.brand,
-                    color: base.color,
-                    category: base.category,
-                    licensePlate: base.license_plate,
-                    year: base.year,
-                    isSold: base.is_sold,
-                    soldDate: base.sold_date,
-                    image: base.image_url,
-                });
-                // setLatestLocation(base.location_id ? {
-                //     id: base.location_id,
-                //     vehicleId: base.id,
-                //     name: base.location_name,
-                //     address: base.location_address,
-                //     createdAt: base.location_created_at,
-                // } : null);
+                console.log("Data:", data);
+                console.log("Error:", error);
 
-                setStnk(base.stnk_id ? {
-                    id: base.stnk_id,
-                    vehicleId: base.vehicle_id,
-                    stnkNumber: base.stnk_number,
-                    fuelType: base.fuel_type,
-                    licensePlate: base.license_plate_color,
-                    registrationYear: base.registration_year,
-                    manufacturedYear: base.manufactured_year,
-                    bpkbNumber: base.bpkb_number,
-                    cylinderCapacity: base.cylinder_capacity,
-                    registrationNumber: base.registration_number,
-                    chassisNumber: base.chassis_number,
-                    engineNumber: base.engine_number,
-                    validUntil: base.valid_until,
-                    brand: base.brand,
-                    ownerName: base.owner_name,
-                    ownerAddress: base.owner_address,
-                    type: base.type,
-                    category: base.category,
-                    color: base.color,
+                if (error) return console.error(error);
+                if (data && data.length) {
+                    const base = data[0];
+                    setVehicle({
+                        id: base.vehicleid,
+                        name: base.name,
+                        type: base.type,
+                        brand: base.brand,
+                        color: base.color,
+                        category: base.category,
+                        licensePlate: base.license_plate,
+                        year: base.year,
+                        isSold: base.is_sold,
+                        soldDate: base.sold_date,
+                        image: base.image_url,
+                    });
+                    // setLatestLocation(base.location_id ? {
+                    //     id: base.location_id,
+                    //     vehicleId: base.id,
+                    //     name: base.location_name,
+                    //     address: base.location_address,
+                    //     createdAt: base.location_created_at,
+                    // } : null);
 
-                } : null);
+                    setStnk(base.stnk_id ? {
+                        id: base.stnk_id,
+                        vehicleId: base.vehicle_id,
+                        stnkNumber: base.stnk_number,
+                        fuelType: base.fuel_type,
+                        licensePlate: base.license_plate_color,
+                        registrationYear: base.registration_year,
+                        manufacturedYear: base.manufactured_year,
+                        bpkbNumber: base.bpkb_number,
+                        cylinderCapacity: base.cylinder_capacity,
+                        registrationNumber: base.registration_number,
+                        chassisNumber: base.chassis_number,
+                        engineNumber: base.engine_number,
+                        validUntil: base.valid_until,
+                        brand: base.brand,
+                        ownerName: base.owner_name,
+                        ownerAddress: base.owner_address,
+                        type: base.type,
+                        category: base.category,
+                        color: base.color,
 
-                setServices(data.map(row => ({
-                    id: base.service_id,
-                    vehicleId: base.vehicleid,
-                    ticketNum: base.ticket_num,
-                    type: base.service_type,
-                    scheduleDate: base.schedule_date,
-                    startDate: base.start_date,
-                    endDate: base.end_date,
-                    status: base.service_status,
-                    location: base.cost,
-                    mileage: base.mileage,
-                    totalCost: base.total_cost,
-                    mechanicName: base.mechanic_name,
-                    task: base.task,
-                    sparepart: base.sparepart,
-                    notes: base.notes
-                })));
+                    } : null);
 
-                // For multiple gallery images, replace the lateral join with a proper service call.
-                setVehicleImages(base.image_url ? [{
-                    id: base.av_id,
-                    vehicleId: base.id,
-                    attachmentType: 'gallery',
-                    // sort: base.image_sort,
-                    fileLink: base.image_url
-                }] : []);
+                    setServices(data.map(row => ({
+                        id: base.service_id,
+                        vehicleId: base.vehicleid,
+                        ticketNum: base.ticket_num,
+                        type: base.service_type,
+                        scheduleDate: base.schedule_date,
+                        startDate: base.start_date,
+                        endDate: base.end_date,
+                        status: base.service_status,
+                        location: base.cost,
+                        mileage: base.mileage,
+                        totalCost: base.total_cost,
+                        mechanicName: base.mechanic_name,
+                        task: base.task,
+                        sparepart: base.sparepart,
+                        notes: base.notes
+                    })));
+
+                    // For multiple gallery images, replace the lateral join with a proper service call.
+                    setVehicleImages(base.image_url ? [{
+                        id: base.av_id,
+                        vehicleId: base.id,
+                        attachmentType: 'gallery',
+                        // sort: base.image_sort,
+                        fileLink: base.image_url
+                    }] : []);
+                }
+            } catch (err) {
+                console.error("Failed to fetch data:", err);
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchDetail();
     }, [id]);
 
-    if (!vehicle) return <p>Loading...</p>;
+    if (!vehicle) return <p>Tidak ada data kendaraan...</p>;
 
     const vehicleEquipments = vehicle.equipments ? vehicle.equipments.split(",") : [];
 
@@ -318,7 +333,7 @@ export default function KendaraanDetailPage() {
                 <div className="flex flex-col gap-5">
                     {/* Lokasi Bar */}
                     {/* {latestLocation && (
-                        <Link to={`/kendaraan/${vehicle.id}/riwayat-lokasi`}>
+                        <Link to={`/kendaraan/detail/${vehicle.id}/riwayat-lokasi`}>
                             <DataBarCard
                                 variant="button"
                                 type="lokasi"
@@ -342,7 +357,7 @@ export default function KendaraanDetailPage() {
                         {/* STNK Bar */}
                         <DataBarCard
                             variant="default"
-                            type="administrasi-stnk-1tahun"
+                            type="administrasi-stnk-1"
                             label="Jatuh Tempo STNK"
                             description={vehicle.stnkDueDate}
                         />
@@ -411,7 +426,7 @@ export default function KendaraanDetailPage() {
                         <SectionCard
                             title="Aktivitas Servis"
                             headerAction={
-                                <Link to={`/kendaraan/${vehicle.vehicleid}/aktivitas-servis`}>
+                                <Link to={`/kendaraan/detail/${vehicle.id}/aktivitas-servis`}>
                                     <Button variant="ghost" size="sm">
                                         <ChevronRight />
                                     </Button>
@@ -440,7 +455,7 @@ export default function KendaraanDetailPage() {
                         <SectionCard
                             title="Aktivitas Administrasi"
                             headerAction={
-                                <Link to={`/kendaraan/${vehicle.vehicleid}/aktivitas-administrasi`}>
+                                <Link to={`/kendaraan/detail/${vehicle.id}/aktivitas-administrasi`}>
                                     <Button variant="ghost" size="sm">
                                         <ChevronRight />
                                     </Button>
@@ -451,7 +466,7 @@ export default function KendaraanDetailPage() {
                                 <div className="flex flex-col py-2">
                                     {
                                         listAdministrasi.map((administrasi, index) => (
-                                            <div key={administrasi.vehicleid}>
+                                            <div key={administrasi.id}>
                                                 <AdministrationActivityItem
                                                     administrasi={administrasi}
                                                 />

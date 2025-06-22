@@ -31,6 +31,20 @@ const items = [
     {
         title: "Administrasi",
         url: "administrasi",
+        child: [
+            {
+                title: "STNK 1 Tahun",
+                url: "stnk-1",
+            },
+            {
+                title: "STNK 5 Tahun",
+                url: "stnk-5",
+            },
+            {
+                title: "Asuransi",
+                url: "asuransi",
+            }
+        ]
     },
     {
         title: "User",
@@ -104,10 +118,10 @@ export function AppNavbar() {
                                                         <SidebarMenuSubItem key={subItem.title}>
                                                             <SidebarMenuButton
                                                                 asChild
-                                                                isActive={pathname === `/${subItem.url}`}
+                                                                isActive={pathname === `/${item.url}/${subItem.url}`}
                                                                 onClick={handleMenuClick}
                                                             >
-                                                                <Link to={`/${subItem.url}`}>
+                                                                <Link to={`/${item.url}/${subItem.url}`}>
                                                                     {subItem.title}
                                                                 </Link>
                                                             </SidebarMenuButton>

@@ -13,7 +13,7 @@ export function UserCard({
   const isActive = user.isActive ? "active" : "inactive";
 
   return (
-    <Link to={`/user/${user.id}`} className="bg-background border rounded-lg shadow-xs p-4 hover:shadow-md overflow-hidden">
+    <Link to={`/user/detail/${user.id}`} className="bg-background border rounded-lg shadow-xs p-4 hover:shadow-md overflow-hidden">
       {/* User Info */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">

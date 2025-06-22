@@ -9,7 +9,7 @@ export function AuthenticatedLayout() {
             <AppNavbar />
             <SidebarInset>
                 <AppHeader></AppHeader>
-                <main className="bg-[#f5f5f5]">
+                <main className="bg-[#f3f3f3]">
                     {<Outlet />}
                 </main>
             </SidebarInset>

@@ -1,7 +1,7 @@
 import SectionItem from "@/components/shared/section-item"
 import StatusBar from "@/components/shared/status-bar"
 import TaskType from "@/components/shared/task-type-bar"
-import { CANCELLED, COMPLETED, ONGOING, PENDING, Status } from "@/lib/constants"
+import { Status } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import { Service } from "@/models/service"
 import { cva } from "class-variance-authority"
@@ -44,14 +44,14 @@ export function ServiceCard({
   const status = service.status as Status;
 
   return (
-    <Link to={`/servis/${service.id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
+    <Link to={`/servis/detail/${service.id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
       {/* Service Info */}
       <div className={cn(statusVariants({ status }), "w-full p-5 flex flex-col gap-5")}>
         <div className="flex items-start justify-between gap-5">
           <div className="flex flex-col capitalize">
-            <h3 className="font-medium">{service.vehicle?.name}</h3>
-            <p className="text-sm text-medium ">{service.vehicle?.category}</p>
-            <p className="text-xs text-light">{service.vehicle?.licensePlate}</p>
+            <h3 className="text-lg font-medium">{service.ticketNum}</h3>
+            <p className="text-sm text-medium ">{service.vehicle?.name}</p>
+            <p className="text-xs text-light">{service.vehicle?.category} - {service.vehicle?.licensePlate}</p>
           </div>
           <div>
             <StatusBar status={status} />
@@ -63,15 +63,7 @@ export function ServiceCard({
             <TaskType taskType={service.type} />
           </div>
           <div>
-            {service.status == PENDING && (
-              <SectionItem label="Jadwal Servis" value={service.scheduleDate} className="items-end" />
-            )}
-            {service.status == ONGOING && (
-              <SectionItem label="Servis Mulai" value={service.startDate} className="items-end" />
-            )}
-            {(service.status == COMPLETED || service.status == CANCELLED) && (
-              <SectionItem label="Servis Selesai" value={service.endDate} className="items-end" />
-            )}
+            <SectionItem label="Jadwal Servis" value={service.scheduleDate} className="items-end" />
           </div>
         </div>
       </div>

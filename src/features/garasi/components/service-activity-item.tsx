@@ -13,7 +13,7 @@ export default function ServiceActivityItem({
     service
 }: ServiceActivityItemProps) {
     return (
-        <Link to={`/servis/${service.id}`} className="flex flex-col gap-5 hover:bg-accent">
+        <Link to={`/servis/detail/${service.id}`} className="flex flex-col gap-5 hover:bg-accent">
             <div className="flex items-start justify-between">
                 <TaskTypeBar taskType={service.type} />
                 <StatusBar status={service.status as Status} />

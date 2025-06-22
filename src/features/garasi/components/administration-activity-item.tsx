@@ -13,7 +13,7 @@ export default function AdministrationActivityItem({
     administrasi
 }: AdministrationActivityItemProps) {
     return (
-        <Link to={`/administrasi/${administrasi.id}`} className="flex flex-col gap-5 hover:bg-accent">
+        <Link to={`/administrasi/detail/${administrasi.id}`} className="flex flex-col gap-5 hover:bg-accent">
             <div className="flex items-start justify-between">
                 <TaskTypeBar taskType={administrasi.type} />
                 <StatusBar status={administrasi.status as Status} />

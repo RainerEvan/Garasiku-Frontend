@@ -64,24 +64,33 @@ export default function UserPage() {
                     <AddUserDialog />
                 </div>
 
-                {/* Search Bar */}
-                <div className="relative flex w-full items-center space-x-2">
-                    <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
-                    <Input
-                        type="text"
-                        placeholder="Cari nama user"
-                        className="w-full pl-10"
-                        value={searchUser}
-                        onChange={(e) => setSearchUser(e.target.value)}
-                    />
-                </div>
-                <div className="flex flex-col gap-5">
-                    {filteredUsers.map((user) => (
-                        <UserCard
-                            key={user.id}
-                            user={user}
+                <div className="flex flex-col gap-3">
+                    {/* Search Bar */}
+                    <div className="relative flex w-full items-center space-x-2">
+                        <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
+                        <Input
+                            type="text"
+                            placeholder="Cari nama user"
+                            className="w-full pl-10"
+                            value={searchUser}
+                            onChange={(e) => setSearchUser(e.target.value)}
                         />
-                    ))}
+                    </div>
+
+                    <div className="flex items-center">
+                        <p className="text-sm text-muted-foreground">
+                            Total Data: <span className="font-medium">{filteredUsers.length}</span>
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-5">
+                        {filteredUsers.map((user) => (
+                            <UserCard
+                                key={user.id}
+                                user={user}
+                            />
+                        ))}
+                    </div>
                 </div>
             </main>
         </div>

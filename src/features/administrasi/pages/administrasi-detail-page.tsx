@@ -26,7 +26,7 @@ export default function AdministrasiDetailPage() {
             type: "Civic Turbo",
             licensePlate: "D 1234 ABC",
         },
-        type: "administrasi-stnk-1tahun",
+        type: "administrasi-stnk-1",
         dueDate: "15 Jan 2028",
         endDate: "15 Jan 2028",
         status: "pending",
@@ -93,7 +93,7 @@ export default function AdministrasiDetailPage() {
                 {/* Info Bar */}
                 <div className="flex flex-col gap-5">
                     {/* Vehicle Bar */}
-                    <Link to={`/kendaraan/${administration.vehicleId}`}>
+                    <Link to={`/kendaraan/detail/${administration.vehicleId}`}>
                         <DataBarCard
                             variant="button"
                             type="kendaraan"

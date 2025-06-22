@@ -156,7 +156,7 @@ export default function ServisDetailPage() {
                 {/* Info Bar */}
                 <div className="flex flex-col gap-5">
                     {/* Vehicle Bar */}
-                    <Link to={`/kendaraan/${service.vehicleId}`}>
+                    <Link to={`/kendaraan/detail/${service.vehicleId}`}>
                         <DataBarCard
                             variant="button"
                             type="kendaraan"
@@ -167,7 +167,7 @@ export default function ServisDetailPage() {
 
                     {/* Lokasi Bar */}
                     {latestLocation && (
-                        <Link to={`/kendaraan/${service.vehicleId}/riwayat-lokasi`}>
+                        <Link to={`/kendaraan/detail/${service.vehicleId}/riwayat-lokasi`}>
                             <DataBarCard
                                 variant="button"
                                 type="lokasi"

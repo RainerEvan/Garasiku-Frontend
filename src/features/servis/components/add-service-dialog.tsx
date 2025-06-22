@@ -16,7 +16,6 @@ import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
-import { Param } from "@/models/param"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover"
 import { CalendarIcon, Check, ChevronsUpDown, Plus, PlusCircle } from "lucide-react"
 import { Calendar } from "@/components/shadcn/calendar"
@@ -25,6 +24,7 @@ import { format } from "date-fns"
 import { Service } from "@/models/service"
 import { Vehicle } from "@/models/vehicle"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/shadcn/command"
+import { SERVICE_TYPE_PARAM } from "@/lib/constants"
 
 interface AddServiceDialogProps {
   onSave?: (newService: Service) => void
@@ -63,26 +63,7 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
     },
   ]
 
-  const typeServiceParam: Param[] = [
-    {
-      id: "1",
-      group: "006",
-      name: "servis-regular",
-      description: "Servis Regular",
-    },
-    {
-      id: "2",
-      group: "006",
-      name: "servis-berat",
-      description: "Servis Berat",
-    },
-    {
-      id: "3",
-      group: "006",
-      name: "servis-lainnya",
-      description: "Servis Lainnya",
-    },
-  ]
+  const typeServiceParam = SERVICE_TYPE_PARAM;
 
   const { reset } = form;
 

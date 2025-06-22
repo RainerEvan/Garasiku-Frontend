@@ -1,8 +1,15 @@
 import './App.css'
-import AppRoutes from './routes/AppRoutes'
+import { LoadingOverlay } from './components/shared/loading-overlay'
+import { LoadingProvider } from './lib/loading-context'
+import AppRoutes from './routes/app-routes'
 
 function App() {
-  return <AppRoutes />;
+  return (
+    <LoadingProvider>
+      <AppRoutes />
+      <LoadingOverlay />
+    </LoadingProvider>
+  )
 }
 
 export default App
