@@ -36,79 +36,82 @@ export default function ServisDetailPage() {
 
     useEffect(() => {
         const fetchDetail = async () => {
-            // 1. Fetch service details including related vehicle and latest location
             const { data: serviceData, error: serviceError } = await supabase
                 .from("services")
                 .select(`
-          *,
-          vehicles (
-            id,
-            name,
-            category,
-            year,
-            brand,
-            color,
-            type,
-            license_plate
-          ),
-          vehicle_locations (
-            id,
-            name,
-            address
-          )
-        `)
-                .eq("vehicle_id", id)
-                .order("vehicle_locations.created_at", { ascending: false })
-                .limit(1)
-                .single();
+        *,
+        vehicles (
+          id,
+          name,
+          category,
+          year,
+          brand,
+          color,
+          type,
+          license_plate
+        )
+      `)
+                .eq("id", id)
+                .maybeSingle();
 
             if (serviceError) {
                 console.error("Service fetch error:", serviceError);
-            } else if (serviceData) {
-                const svc = serviceData as any;
-                setService({
-                    id: svc.id,
-                    ticketNum: svc.ticket_num,
-                    vehicleId: svc.vehicle_id,
-                    vehicle: {
-                        id: svc.vehicles.id,
-                        name: svc.vehicles.name,
-                        category: svc.vehicles.category,
-                        year: svc.vehicles.year,
-                        brand: svc.vehicles.brand,
-                        color: svc.vehicles.color,
-                        type: svc.vehicles.type,
-                        licensePlate: svc.vehicles.license_plate,
-                    },
-                    type: svc.type,
-                    scheduleDate: svc.schedule_date,
-                    startDate: svc.start_date,
-                    endDate: svc.end_date,
-                    status: svc.status as Status,
-                    mileage: svc.mileage,
-                    totalCost: svc.total_cost,
-                    mechanicName: svc.mechanic_name,
-                    task: svc.task,
-                    sparepart: svc.sparepart,
-                    notes: svc.notes,
-                });
-
-                if (svc.vehicle_locations?.length) {
-                    const loc = svc.vehicle_locations[0];
-                    setLatestLocation({
-                        id: loc.id,
-                        vehicleId: svc.vehicle_id,
-                        name: loc.name,
-                        address: loc.address,
-                    });
-                }
+                return;
             }
 
-            // 2. Fetch attachments
+            console.log(serviceData);
+            const svc = serviceData as any;
+
+            setService({
+                id: svc.id,
+                ticketNum: svc.ticket_num,
+                vehicleId: svc.vehicle_id,
+                vehicle: {
+                    id: svc.vehicles.id,
+                    name: svc.vehicles.name,
+                    category: svc.vehicles.category,
+                    year: svc.vehicles.year,
+                    brand: svc.vehicles.brand,
+                    color: svc.vehicles.color,
+                    type: svc.vehicles.type,
+                    licensePlate: svc.vehicles.license_plate,
+                },
+                type: svc.type,
+                scheduleDate: svc.schedule_date,
+                startDate: svc.start_date,
+                endDate: svc.end_date,
+                status: svc.status as Status,
+                mileage: svc.mileage,
+                totalCost: svc.total_cost,
+                mechanicName: svc.mechanic_name,
+                task: svc.task,
+                sparepart: svc.sparepart,
+                notes: svc.notes,
+            });
+
+            const { data: locationData, error: locationError } = await supabase
+                .from("vehicle_locations")
+                .select("*")
+                .eq("vehicle_id", svc.vehicle_id)
+                .order("created_at", { ascending: false })
+                .limit(1);
+
+            if (locationError) {
+                console.error("Location fetch error:", locationError);
+            } else if (locationData?.length > 0) {
+                const loc = locationData[0];
+                setLatestLocation({
+                    id: loc.id,
+                    vehicleId: svc.vehicle_id,
+                    name: loc.name,
+                    address: loc.address,
+                });
+            }
+
             const { data: attachData, error: attachError } = await supabase
                 .from("attachment_vehicle")
                 .select("*")
-                .eq("vehicle_id", service?.vehicleId)
+                .eq("vehicle_id", svc.vehicle_id)
                 .order("sort", { ascending: true });
 
             if (attachError) {
@@ -134,8 +137,9 @@ export default function ServisDetailPage() {
         }
     }, [id]);
 
+
+
     const handleCancelService = () => {
-        // Cancel logic here
         console.log("Cancel Service button clicked");
     };
 

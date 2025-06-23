@@ -63,7 +63,6 @@ export default function KendaraanDetailPage() {
             setLoading(true);
 
             try {
-                // 1. Fetch vehicle + 1 latest service + image etc.
                 const { data: detailData, error: detailError } = await supabase
                     .from("vehicle_full_details")
                     .select("*")
