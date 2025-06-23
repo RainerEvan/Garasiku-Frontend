@@ -39,7 +39,7 @@ export default function ServisPage() {
         ] = await Promise.all([
           Promise.resolve(SERVICE_TYPE_PARAM),
           supabase
-            .from("services")
+            .from("service")
             .select(`
               id,
               ticket_num,

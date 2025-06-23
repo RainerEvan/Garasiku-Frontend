@@ -37,7 +37,7 @@ export default function ServisDetailPage() {
     useEffect(() => {
         const fetchDetail = async () => {
             const { data: serviceData, error: serviceError } = await supabase
-                .from("services")
+                .from("service")
                 .select(`
         *,
         vehicles (
