@@ -36,7 +36,6 @@ const formSchema = z.object({
   type: z.string().min(1, { message: "Tipe harus terisi" }),
   year: z.string().min(1, { message: "Tahun harus terisi" }),
   color: z.string().min(1, { message: "Warna harus terisi" }),
-  licensePlate: z.string().min(1, { message: "Plat No harus terisi" }),
 })
 
 export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDialogProps) {
@@ -52,7 +51,6 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
       type: vehicle.type,
       year: vehicle.year,
       color: vehicle.color,
-      licensePlate: vehicle.licensePlate,
     },
   })
 
@@ -146,131 +144,109 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
                 />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="grid grid-cols-1 gap-5">
-                  <FormField
-                    control={form.control}
-                    name="category"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Jenis</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Pilih jenis kendaraan" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {vehicleCategoryParam.map((option) => (
-                              <SelectItem key={option.id} value={option.name}>
-                                {option.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="brand"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Merk</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Pilih merk kendaraan" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {vehicleBrandParam.map((option) => (
-                              <SelectItem key={option.id} value={option.name}>
-                                {option.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Tipe</FormLabel>
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="font-medium">Jenis</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <Input
-                            placeholder="Masukkan tipe kendaraan"
-                            {...field}
-                            className="w-full"
-                          />
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Pilih jenis kendaraan" />
+                          </SelectTrigger>
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                        <SelectContent>
+                          {vehicleCategoryParam.map((option) => (
+                            <SelectItem key={option.id} value={option.name}>
+                              {option.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                <div className="grid grid-cols-1 gap-5">
-                  <FormField
-                    control={form.control}
-                    name="year"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Tahun</FormLabel>
+                <FormField
+                  control={form.control}
+                  name="brand"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="font-medium">Merk</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <Input
-                            placeholder="Masukkan tahun kendaraan"
-                            {...field}
-                            className="w-full"
-                          />
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Pilih merk kendaraan" />
+                          </SelectTrigger>
                         </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        <SelectContent>
+                          {vehicleBrandParam.map((option) => (
+                            <SelectItem key={option.id} value={option.name}>
+                              {option.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="color"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Warna</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Masukkan warna kendaraan"
-                            {...field}
-                            className="w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="font-medium">Tipe</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Masukkan tipe kendaraan"
+                          {...field}
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="licensePlate"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Plat No</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Masukkan plat no kendaraan"
-                            {...field}
-                            className="w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="year"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="font-medium">Tahun</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Masukkan tahun kendaraan"
+                          {...field}
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="color"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel className="font-medium">Warna</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Masukkan warna kendaraan"
+                          {...field}
+                          className="w-full"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 
