@@ -18,24 +18,41 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LocationVehicle } from "@/models/location-vehicle"
 import { Param } from "@/models/param"
 import { Textarea } from "@/components/shadcn/textarea"
+import { useLoading } from "@/lib/loading-context"
 
 interface MoveLocationVehicleDialogProps {
   vehicleId?: string
+  currLocationAddress?: string
   onSave?: (newLocationVehicle: LocationVehicle) => void
 }
 
 // Define the form schema with validation
-const formSchema = z.object({
+const formSchema = (currLocationAddress?: string) => z.object({
   vehicleId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
   name: z.string().min(1, { message: "Nama Lokasi harus terisi" }),
   address: z.string().min(1, { message: "Alamat Lokasi harus terisi" })
-})
+}).refine(
+  (data) => {
+    if (!currLocationAddress) return true;
+    const normalize = (str: string) => str.replace(/\s+/g, "").toLowerCase();
 
-export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVehicleDialogProps) {
+    return normalize(data.address) !== normalize(currLocationAddress);
+  },
+  {
+    message: "Lokasi baru tidak boleh sama dengan Lokasi sekarang",
+    path: ["address"],
+  }
+)
+
+export function MoveLocationVehicleDialog({ vehicleId, currLocationAddress, onSave }: MoveLocationVehicleDialogProps) {
+  const { setLoading } = useLoading();
+
   const [open, setOpen] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const [listVehicleLocationParams, setListVehicleLocationParams] = useState<Param[]>([]);
+
+  const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
+    resolver: zodResolver(formSchema(currLocationAddress)),
     defaultValues: {
       vehicleId: vehicleId,
       name: "",
@@ -43,7 +60,7 @@ export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVeh
     },
   })
 
-  const locationVehicleParam: Param[] = [
+  const locationVehicleParam: any[] = [
     {
       id: "1",
       group: "004",
@@ -70,6 +87,41 @@ export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVeh
     }
   ]
 
+  useEffect(() => {
+    const fetchAll = async () => {
+      setLoading(true);
+
+      try {
+        const [
+          vehicleLocationParamsRes,
+        ] = await Promise.all([
+          // simulate fetching params (you might replace this with supabase or API call)
+          Promise.resolve(locationVehicleParam),
+        ]);
+
+        // === VEHICLE LOCATION PARAMS  ===
+        const { data: vehicleLocationParamsData, error: vehicleLocationsError } = { data: vehicleLocationParamsRes, error: null }; // Replace with actual API call if needed
+        if (vehicleLocationsError) {
+          console.error("Failed to fetch vehicle location params:", vehicleLocationsError);
+        } else if (vehicleLocationParamsData) {
+          const mappedVehicleLocationParams = vehicleLocationParamsData.map((v: any) => ({
+            id: v.id,
+            group: v.group,
+            name: v.name,
+            description: v.description
+          }));
+          setListVehicleLocationParams(mappedVehicleLocationParams);
+        }
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAll();
+  }, []);
+
   const { watch, setValue, reset } = form;
 
   const name = watch("name");
@@ -84,9 +136,13 @@ export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVeh
     } else {
       setValue("address", "");
     }
-  }, [name, setValue]);
+    if (name) {
+      form.trigger("address");
+    }
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  }, [name, setValue, form]);
+
+  function onSubmit(values: z.infer<ReturnType<typeof formSchema>>) {
     console.log("Move location kendaraan data: ", values)
     if (onSave) {
       onSave(values);
@@ -132,7 +188,7 @@ export function MoveLocationVehicleDialog({ vehicleId, onSave }: MoveLocationVeh
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {locationVehicleParam.map((option) => (
+                        {listVehicleLocationParams.map((option) => (
                           <SelectItem key={option.id} value={option.name}>
                             {option.name}
                           </SelectItem>

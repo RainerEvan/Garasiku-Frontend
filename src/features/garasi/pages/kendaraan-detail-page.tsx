@@ -24,6 +24,7 @@ import { Link, useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { useLoading } from "@/lib/loading-context"
+import { LicensePlateDialog } from "../components/license-plate-dialog"
 
 export default function KendaraanDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -79,11 +80,11 @@ export default function KendaraanDetailPage() {
                     setVehicle({
                         id: base.vehicleid,
                         name: base.name,
-                        type: base.type,
-                        brand: base.brand,
-                        color: base.color,
-                        category: base.category,
                         licensePlate: base.license_plate,
+                        category: base.vehicle_category,
+                        brand: base.vehicle_brand,
+                        type: base.vehicle_type,
+                        color: base.vehicle_color,
                         year: base.vehicle_year,
                         isSold: base.is_sold,
                         soldDate: base.sold_date,
@@ -98,7 +99,7 @@ export default function KendaraanDetailPage() {
                         vehicleId: base.vehicle_id,
                         stnkNumber: base.stnk_number,
                         fuelType: base.fuel_type,
-                        licensePlate: base.license_plate_color,
+                        licensePlate: base.license_plate,
                         registrationYear: base.registration_year,
                         manufacturedYear: base.manufactured_year,
                         bpkbNumber: base.bpkb_number,
@@ -230,6 +231,9 @@ export default function KendaraanDetailPage() {
                     </div>
 
                     <div className="col-span-1 md:col-span-3 w-full flex flex-col justify-between gap-3 p-5">
+                        {/* License Plate */}
+                        <LicensePlateDialog vehicleId={vehicle.id} currPlateNo={vehicle.licensePlate} />
+
                         {/* Details */}
                         <div className="flex flex-col gap-3">
                             <div className="flex gap-5 items-center justify-between">
@@ -241,11 +245,10 @@ export default function KendaraanDetailPage() {
 
                             <div className="grid grid-cols-2 gap-3 py-1">
                                 <SectionItem label="Jenis" value={vehicle.category} />
-                                <SectionItem label="Tahun" value={vehicle.year} />
                                 <SectionItem label="Merk" value={vehicle.brand} />
-                                <SectionItem label="Warna" value={vehicle.color} />
                                 <SectionItem label="Tipe" value={vehicle.type} />
-                                <SectionItem label="Plat No" value={vehicle.licensePlate} />
+                                <SectionItem label="Tahun" value={vehicle.year} />
+                                <SectionItem label="Warna" value={vehicle.color} />
                             </div>
                         </div>
 
