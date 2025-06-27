@@ -49,6 +49,7 @@ export default function AdministrasiPage() {
           console.error("Failed to fetch administrations:", error);
           return;
         }
+        console.log(type);
 
         console.log(data);
 
