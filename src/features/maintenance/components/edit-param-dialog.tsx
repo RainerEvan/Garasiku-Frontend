@@ -1,6 +1,4 @@
-import { useState } from "react"
-
-import { Button } from "@/components/shadcn/button"
+import { useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -9,32 +7,40 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/components/shadcn/dialog"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/shadcn/form"
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Param } from "@/models/param"
-import { Input } from "@/components/shadcn/input"
-import { DropdownMenuItem } from "@/components/shadcn/dropdown-menu"
-import { Textarea } from "@/components/shadcn/textarea"
+} from "@/components/shadcn/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/shadcn/form";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Param } from "@/models/param";
+import { Input } from "@/components/shadcn/input";
+import { Textarea } from "@/components/shadcn/textarea";
+import { Button } from "@/components/shadcn/button";
+import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
 
 interface EditParamDialogProps {
-  param: Param,
-  onSave?: (updatedParam: Param) => void
+  param: Param;
+  onSave?: (updatedParam: Param) => void;
+  trigger: React.ReactNode;
 }
 
-// Define the form schema with validation
 const formSchema = z.object({
-  id: z.string().min(1, { message: "Id harus terisi" }),
-  group: z.string().min(1, { message: "Group harus terisi" }),
-  name: z.string().min(1, { message: "Nama harus terisi" }),
-  description: z.string().optional()
-})
+  id: z.string().min(1),
+  group: z.string().min(1),
+  name: z.string().min(1, { message: "Nama harus diisi" }),
+  description: z.string().optional(),
+});
 
-export function EditParamDialog({ param, onSave }: EditParamDialogProps) {
-  const [open, setOpen] = useState(false)
+export function EditParamDialog({ param, onSave, trigger }: EditParamDialogProps) {
+  const [open, setOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,92 +50,79 @@ export function EditParamDialog({ param, onSave }: EditParamDialogProps) {
       name: param.name,
       description: param.description || "",
     },
-  })
+  });
 
   const { reset } = form;
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Edit param data: ", values)
-    if (onSave) {
-      onSave(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const { data, error } = await supabase
+      .from("parameter")
+      .update({
+        name: values.name,
+        description: values.description,
+      })
+      .eq("id", values.id)
+      .select()
+      .single();
+
+    if (error) {
+      toast.error("Gagal mengupdate param", { description: error.message });
+      return;
     }
+
+    toast.success("Param berhasil diupdate");
+    if (onSave) onSave(data);
     setOpen(false);
   }
 
-  function handleDialogChange(isOpen: boolean) {
-    setOpen(isOpen);
-    if (!isOpen) {
-      reset();
-    }
-  }
-
   return (
-    <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-          Ubah
-        </DropdownMenuItem>
-      </DialogTrigger>
-      <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+    <Dialog open={open} onOpenChange={(isOpen) => { setOpen(isOpen); if (!isOpen) reset(); }}>
+      <div onClick={() => setOpen(true)}>{trigger}</div>
+
+      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Ubah Param</DialogTitle>
-          <DialogDescription>Ubah param dan klik button simpan.</DialogDescription>
+          <DialogTitle>Edit Param</DialogTitle>
+          <DialogDescription>Ubah dan simpan perubahan param.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Detail Param */}
-            <div className="flex flex-col gap-5">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="font-medium">Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Masukkan nama param"
-                        {...field}
-                        className="w-full"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="font-medium">Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Masukkan deskripsi param"
-                        {...field}
-                        className="w-full"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nama</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Deskripsi</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <DialogFooter>
               <DialogClose asChild>
-                <Button type="button" variant="outline">
-                  Batal
-                </Button>
+                <Button type="button" variant="outline">Batal</Button>
               </DialogClose>
-              <Button type="submit">
-                Simpan
-              </Button>
+              <Button type="submit">Simpan</Button>
             </DialogFooter>
           </form>
         </Form>
-
       </DialogContent>
     </Dialog>
-  )
+  );
 }

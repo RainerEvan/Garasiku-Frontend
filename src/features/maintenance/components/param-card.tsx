@@ -1,39 +1,53 @@
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/shadcn/alert-dialog"
-import { Button } from "@/components/shadcn/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu"
-import SectionItem from "@/components/shared/section-item"
-import { Param } from "@/models/param"
-import { MoreHorizontal } from "lucide-react"
-import { EditParamDialog } from "./edit-param-dialog"
-import { ParamGroup } from "@/models/param-group"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/shadcn/alert-dialog";
+import { Button } from "@/components/shadcn/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/shadcn/dropdown-menu";
+import SectionItem from "@/components/shared/section-item";
+import { Param } from "@/models/param";
+import { MoreHorizontal } from "lucide-react";
+import { ParamGroup } from "@/models/param-group";
+import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
+import { EditParamDialog } from "./edit-param-dialog";
 
 type ParamCardProps = {
-  param: Param
-  paramGroup: ParamGroup
-  index: number
-}
+  param: Param;
+  paramGroup: ParamGroup;
+  index: number;
+  onDeleted?: (id: string) => void;
+  onUpdated?: (updated: Param) => void;
+};
 
 export function ParamCard({
   param,
   paramGroup,
-  index
+  index,
+  onDeleted,
+  onUpdated,
 }: ParamCardProps) {
+  async function handleDelete() {
+    const { error } = await supabase.from("parameter").delete().eq("id", param.id);
 
-  function handleDelete() {
-    console.log(`Deleting param: ${param.name}`);
+    if (error) {
+      toast.error("Gagal menghapus param", { description: error.message });
+      return;
+    }
+
+    toast.success("Param berhasil dihapus");
+    if (onDeleted && param.id) onDeleted(param.id);
   }
 
   return (
     <div className="bg-background border rounded-lg shadow-xs p-4 hover:shadow-md overflow-hidden">
-      {/* Param Group Info */}
       <div className="flex items-center gap-4">
         <div className="bg-[#f5f5f5] flex items-center justify-center w-5 h-5 p-4 rounded-full">
           <p className="font-medium">{index + 1}</p>
         </div>
+
         <div className="w-full grid grid-cols-2 gap-2">
           <SectionItem label="Name" value={param.name} />
           <SectionItem label="Description" value={param.description} />
         </div>
+
         <div className="flex items-center justify-center">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -42,26 +56,38 @@ export function ParamCard({
                 <MoreHorizontal />
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Param</DropdownMenuLabel>
-              <EditParamDialog param={param} />
+
+              {/* Edit trigger */}
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <EditParamDialog
+                  param={param}
+                  onSave={onUpdated}
+                  trigger={<span className="w-full">Ubah</span>} // Pastikan ini elemen biasa
+                />
+              </DropdownMenuItem>
+
+
+              {/* Delete trigger */}
               {!paramGroup.isTotalFixed && (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Hapus</DropdownMenuItem>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      Hapus
+                    </DropdownMenuItem>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Hapus Param?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Apakah Anda yakin ingin menghapus param {param.name}?
+                        Apakah Anda yakin ingin menghapus param "{param.name}"?
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Tidak</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleDelete}
-                      >
+                      <AlertDialogAction onClick={handleDelete}>
                         Hapus
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -73,5 +99,5 @@ export function ParamCard({
         </div>
       </div>
     </div>
-  )
+  );
 }
