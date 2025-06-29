@@ -9,7 +9,7 @@ import { useLoading } from "@/lib/loading-context";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Param } from "@/models/param";
 import { Button } from "@/components/shadcn/button";
-import { SERVICE_TYPE_PARAM } from "@/lib/constants";
+import { PARAM_GROUP_WAKTU_REMINDER, PARAM_WAKTU_REMINDER, SERVICE_TYPE_PARAM } from "@/lib/constants";
 import { supabase } from "@/lib/supabaseClient"
 
 type SelectOption = {
@@ -35,12 +35,25 @@ export default function ServisPage() {
       try {
         const [
           serviceTypeParamsRes,
-          servicesResponse
+          intervalParamRes,
         ] = await Promise.all([
           Promise.resolve(SERVICE_TYPE_PARAM),
           supabase
-            .from("service")
-            .select(`
+            .from("parameter")
+            .select("*")
+            .eq("group", PARAM_GROUP_WAKTU_REMINDER)
+            .eq("name", PARAM_WAKTU_REMINDER)
+            .single()
+        ]);
+
+        const intervalDays = Number(intervalParamRes.data?.description || "30"); // Use `description` as value, default 30
+        const today = new Date();
+        const futureDate = new Date();
+        futureDate.setDate(today.getDate() + intervalDays);
+
+        let serviceQuery = supabase
+          .from("service")
+          .select(`
               id,
               ticket_num,
               vehicle_id,
@@ -58,14 +71,21 @@ export default function ServisPage() {
                 license_plate
               )
             `)
-            .eq("status", activeTab === "todo" ? "pending" :
-                        activeTab === "pending" ? "pending" :
-                        activeTab === "proses" ? "ongoing" : "completed")
-            .order("schedule_date", { ascending: sortOrder === "asc" })
-        ]);
+          .order("schedule_date", { ascending: sortOrder === "asc" })
 
-        const servicesData = servicesResponse.data;
-        const servicesError = servicesResponse.error;
+        if (activeTab === "todo") {
+          serviceQuery = serviceQuery
+            .eq("status", "pending")
+            .lte("schedule_date", futureDate.toISOString());
+        } else if (activeTab === "pending") {
+          serviceQuery = serviceQuery.eq("status", "pending");
+        } else if (activeTab === "proses") {
+          serviceQuery = serviceQuery.eq("status", "ongoing");
+        } else {
+          serviceQuery = serviceQuery.in("status", ["completed", "cancelled"]);
+        }
+
+        const {data: servicesData, error: servicesError} = await serviceQuery;
 
         // === PARAMS ===
         const serviceTypeParamsData: Param[] = serviceTypeParamsRes;
@@ -107,7 +127,7 @@ export default function ServisPage() {
     };
 
     fetchAll();
-  }, [activeTab, sortOrder]);
+  }, [activeTab]);
 
   useEffect(() => {
     setSearchQuery("");
