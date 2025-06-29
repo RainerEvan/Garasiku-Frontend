@@ -8,7 +8,7 @@ import { useLoading } from "@/lib/loading-context";
 import { Button } from "@/components/shadcn/button";
 import { Navigate, useParams } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
-import { PARAM_GROUP_WAKTU_REMINDER, PARAM_WAKTU_REMINDER } from "@/lib/constants";
+import { getCachedReminderDateRange } from "@/lib/reminder-date";
 
 const validTypes = ["stnk-1", "stnk-5", "asuransi"];
 
@@ -31,17 +31,7 @@ export default function AdministrasiPage() {
       setLoading(true);
 
       try {
-        const intervalParamRes = await supabase
-          .from("parameter")
-          .select("*")
-          .eq("group", PARAM_GROUP_WAKTU_REMINDER)
-          .eq("name", PARAM_WAKTU_REMINDER)
-          .single()
-
-        const intervalDays = Number(intervalParamRes.data?.description || "30"); // Use `description` as value, default 30
-        const today = new Date();
-        const futureDate = new Date();
-        futureDate.setDate(today.getDate() + intervalDays);
+        const { futureDate } = await getCachedReminderDateRange();
 
         let administrationQuery = supabase
           .from("administration")
@@ -63,7 +53,7 @@ export default function AdministrasiPage() {
         if (activeTab === "todo") {
           administrationQuery = administrationQuery
             .eq("status", "pending")
-            .lte("schedule_date", futureDate.toISOString());
+            .lte("due_date", futureDate.toISOString());
         } else if (activeTab === "pending") {
           administrationQuery = administrationQuery.eq("status", "pending");
         } else {

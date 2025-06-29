@@ -9,8 +9,9 @@ import { useLoading } from "@/lib/loading-context";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Param } from "@/models/param";
 import { Button } from "@/components/shadcn/button";
-import { PARAM_GROUP_WAKTU_REMINDER, PARAM_WAKTU_REMINDER, SERVICE_TYPE_PARAM } from "@/lib/constants";
+import { SERVICE_TYPE_PARAM } from "@/lib/constants";
 import { supabase } from "@/lib/supabaseClient"
+import { getCachedReminderDateRange } from "@/lib/reminder-date";
 
 type SelectOption = {
   label: string;
@@ -35,21 +36,11 @@ export default function ServisPage() {
       try {
         const [
           serviceTypeParamsRes,
-          intervalParamRes,
         ] = await Promise.all([
           Promise.resolve(SERVICE_TYPE_PARAM),
-          supabase
-            .from("parameter")
-            .select("*")
-            .eq("group", PARAM_GROUP_WAKTU_REMINDER)
-            .eq("name", PARAM_WAKTU_REMINDER)
-            .single()
         ]);
-
-        const intervalDays = Number(intervalParamRes.data?.description || "30"); // Use `description` as value, default 30
-        const today = new Date();
-        const futureDate = new Date();
-        futureDate.setDate(today.getDate() + intervalDays);
+        
+        const { futureDate } = await getCachedReminderDateRange();
 
         let serviceQuery = supabase
           .from("service")

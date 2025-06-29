@@ -3,6 +3,7 @@ import { Notebook, Tag, Truck, Wrench } from "lucide-react";
 import { DashboardCard } from "../components/dashboard-card";
 import { supabase } from "@/lib/supabaseClient";
 import { useLoading } from "@/lib/loading-context";
+import { getCachedReminderDateRange } from "@/lib/reminder-date";
 
 export default function DashboardPage() {
   const { setLoading } = useLoading();
@@ -17,11 +18,13 @@ export default function DashboardPage() {
       setLoading(true);
 
       try {
+        const { futureDate } = await getCachedReminderDateRange();
+
         const [active, sold, service, admin] = await Promise.all([
           supabase.from("vehicles").select("*", { count: "exact", head: true }).eq("is_sold", false),
           supabase.from("vehicles").select("*", { count: "exact", head: true }).eq("is_sold", true),
-          supabase.from("services").select("*", { count: "exact", head: true }).eq("status", "todo"),
-          supabase.from("administration").select("*", { count: "exact", head: true }).eq("status", "todo"),
+          supabase.from("service").select("*", { count: "exact", head: true }).eq("status", "pending").lte("schedule_date", futureDate.toISOString()),
+          supabase.from("administration").select("*", { count: "exact", head: true }).eq("status", "pending").lte("due_date", futureDate.toISOString()),
         ]);
 
         if (active.error) console.error("Error fetching active vehicles:", active.error);
