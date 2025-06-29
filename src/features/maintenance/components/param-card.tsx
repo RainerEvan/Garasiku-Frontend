@@ -8,7 +8,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/shadcn/alert-dialog";
 import {
   DropdownMenu,
@@ -42,7 +41,9 @@ export function ParamCard({
   onDeleted,
   onUpdated,
 }: ParamCardProps) {
-  const [openDialog, setOpenDialog] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   async function handleDelete() {
     const { error } = await supabase.from("parameter").delete().eq("id", param.id);
@@ -54,7 +55,7 @@ export function ParamCard({
 
     toast.success("Param berhasil dihapus");
     if (onDeleted && param.id) onDeleted(param.id);
-   }
+  }
 
   return (
     <div className="bg-background border rounded-lg shadow-xs p-4 hover:shadow-md overflow-hidden">
@@ -69,7 +70,7 @@ export function ParamCard({
         </div>
 
         <div className="flex items-center justify-center">
-          <DropdownMenu>
+          <DropdownMenu open={openDropdown} onOpenChange={setOpenDropdown}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
                 <span className="sr-only">Open menu</span>
@@ -80,36 +81,23 @@ export function ParamCard({
               <DropdownMenuLabel>Param</DropdownMenuLabel>
 
               <DropdownMenuItem
-                onSelect={(e) => {
-                  e.preventDefault();
-                  setOpenDialog(true);
+                onClick={() => {
+                  setOpenDropdown(false)
+                  setOpenEditDialog(true)
                 }}
               >
                 Ubah
               </DropdownMenuItem>
 
               {!paramGroup.isTotalFixed && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                      Hapus
-                    </DropdownMenuItem>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Hapus Param?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Yakin ingin menghapus param "{param.name}"?
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Tidak</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete}>
-                        Hapus
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setOpenDropdown(false)
+                    setOpenDeleteDialog(true)
+                  }}
+                >
+                  Hapus
+                </DropdownMenuItem>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -119,9 +107,26 @@ export function ParamCard({
       <EditParamDialog
         param={param}
         onSave={onUpdated}
-        open={openDialog}
-        onOpenChange={setOpenDialog}
+        open={openEditDialog}
+        onOpenChange={setOpenEditDialog}
       />
+
+      <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hapus Param?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Yakin ingin menghapus param "{param.name}"?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Tidak</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Hapus
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

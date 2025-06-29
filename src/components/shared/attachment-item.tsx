@@ -1,8 +1,9 @@
 import { File, MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../shadcn/dropdown-menu"
 import { Button } from "../shadcn/button"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "../shadcn/alert-dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../shadcn/alert-dialog"
 import { AttachmentVehicle } from "@/models/attachment-vehicle"
+import { useState } from "react"
 
 interface AttachmentItemProps {
     attachment: AttachmentVehicle
@@ -11,6 +12,8 @@ interface AttachmentItemProps {
 export default function AttachmentItem({
     attachment,
 }: AttachmentItemProps) {
+    const [openDropdown, setOpenDropdown] = useState(false);
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
     function handleDelete() {
         console.log(`Deleting file: ${attachment.fileName}`);
@@ -26,7 +29,7 @@ export default function AttachmentItem({
                 <div className="text-xs text-medium">{attachment.fileSize}</div>
             </div>
             <div className="flex items-center justify-center">
-                <DropdownMenu>
+                <DropdownMenu open={openDropdown} onOpenChange={setOpenDropdown}>
                     <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
                             <span className="sr-only">Open menu</span>
@@ -36,30 +39,36 @@ export default function AttachmentItem({
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Dokumen</DropdownMenuLabel>
                         <DropdownMenuItem>Download</DropdownMenuItem>
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Hapus</DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Hapus Dokumen?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                        Apakah Anda yakin ingin menghapus dokumen {attachment.fileName}?
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel>Tidak</AlertDialogCancel>
-                                    <AlertDialogAction
-                                        onClick={handleDelete}
-                                    >
-                                        Hapus
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
+                        <DropdownMenuItem
+                            onClick={() => {
+                                setOpenDropdown(false)
+                                setOpenDeleteDialog(true)
+                            }}
+                        >
+                            Hapus
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
+
+            <AlertDialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus Dokumen?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Apakah Anda yakin ingin menghapus dokumen {attachment.fileName}?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Tidak</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDelete}
+                        >
+                            Hapus
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
