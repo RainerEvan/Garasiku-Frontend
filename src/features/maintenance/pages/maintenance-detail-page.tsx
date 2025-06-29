@@ -87,6 +87,7 @@ export default function MaintenanceDetailPage() {
           <div className="flex flex-col gap-5 overflow-auto">
             {params.map((param, index) => (
               <ParamCard
+                key={param.id}
                 param={param}
                 paramGroup={paramGroup}
                 index={index}

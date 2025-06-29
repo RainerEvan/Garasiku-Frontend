@@ -1,35 +1,38 @@
-import { useState } from "react";
+// components/EditParamDialog.tsx
 import {
   Dialog,
-  DialogClose,
+  DialogTrigger,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
 } from "@/components/shadcn/dialog";
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
+  FormControl,
   FormMessage,
 } from "@/components/shadcn/form";
+import { Input } from "@/components/shadcn/input";
+import { Textarea } from "@/components/shadcn/textarea";
+import { Button } from "@/components/shadcn/button";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Param } from "@/models/param";
-import { Input } from "@/components/shadcn/input";
-import { Textarea } from "@/components/shadcn/textarea";
-import { Button } from "@/components/shadcn/button";
 import { supabase } from "@/lib/supabaseClient";
 import { toast } from "sonner";
 
 interface EditParamDialogProps {
   param: Param;
   onSave?: (updatedParam: Param) => void;
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const formSchema = z.object({
@@ -39,9 +42,13 @@ const formSchema = z.object({
   description: z.string().optional(),
 });
 
-export function EditParamDialog({ param, onSave, trigger }: EditParamDialogProps) {
-  const [open, setOpen] = useState(false);
-
+export function EditParamDialog({
+  param,
+  onSave,
+  trigger,
+  open,
+  onOpenChange,
+}: EditParamDialogProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -62,7 +69,7 @@ export function EditParamDialog({ param, onSave, trigger }: EditParamDialogProps
         description: values.description,
       })
       .eq("id", values.id)
-      .select()
+      .select("*")
       .single();
 
     if (error) {
@@ -72,21 +79,24 @@ export function EditParamDialog({ param, onSave, trigger }: EditParamDialogProps
 
     toast.success("Param berhasil diupdate");
     if (onSave) onSave(data);
-    setOpen(false);
+    onOpenChange?.(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => { setOpen(isOpen); if (!isOpen) reset(); }}>
-      <div onClick={() => setOpen(true)}>{trigger}</div>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      onOpenChange?.(isOpen);
+      if (!isOpen) reset();
+    }}>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
 
-      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DialogContent className="bg-white rounded-lg p-6 max-w-md w-full">
         <DialogHeader>
           <DialogTitle>Edit Param</DialogTitle>
           <DialogDescription>Ubah dan simpan perubahan param.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -113,7 +123,6 @@ export function EditParamDialog({ param, onSave, trigger }: EditParamDialogProps
                 </FormItem>
               )}
             />
-
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="outline">Batal</Button>

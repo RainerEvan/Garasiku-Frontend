@@ -16,16 +16,16 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "@/lib/supabaseClient"
 
-// Define the form schema with validation
+// Form schema
 const formSchema = z.object({
   username: z.string().min(1, { message: "Username harus terisi" }),
   password: z.string().min(1, { message: "Password harus terisi" }),
 })
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
-  
+  const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate()
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -34,48 +34,50 @@ export default function LoginPage() {
     },
   })
 
-  // Handle form submission
-  const onSubmit = async (values: z.infer<typeof formSchema>): Promise<void> => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const { username, password } = values
-  
-    const { data: userProfile, error: userError } = await supabase
-      .from("user_profiles")
-      .select("email, status")
-      .eq("username", username)
-      .single()
-  
-    if (userError || !userProfile?.email) {
+
+    // 🔍 Ambil email & status dari RPC (fungsi Supabase)
+    const { data: result, error: rpcError } = await supabase
+      .rpc("lookup_user_by_username", { uname: username })
+
+    const userRow = result?.[0]
+
+    if (rpcError || !userRow?.email) {
       form.setError("username", {
         message: "Username tidak ditemukan atau tidak memiliki email",
       })
       return
     }
-  
+
+    // 🔐 Login pakai email
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: userProfile.email,
+      email: userRow.email,
       password,
     })
-  
+
     if (error) {
       form.setError("password", { message: "Login gagal: " + error.message })
       return
     }
-  
-    if (userProfile.status !== "active") {
+
+    // ❌ Nonaktif
+    if (userRow.status !== "active") {
       form.setError("username", {
         message: "Akun nonaktif, hubungi admin.",
       })
       await supabase.auth.signOut()
       return
     }
-  
+
+    // ✅ Sukses
     navigate("/")
   }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-5">
       <h1 className="text-5xl font-bold mb-6">Garasiku</h1>
-      
+
       <div className="bg-background w-full max-w-md p-6 md:p-8 rounded-lg border shadow-xs">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -86,9 +88,9 @@ export default function LoginPage() {
                 <FormItem className="space-y-1">
                   <FormLabel className="font-medium">Username</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="Username" 
-                      {...field} 
+                    <Input
+                      placeholder="Username"
+                      {...field}
                       className="w-full"
                     />
                   </FormControl>
@@ -96,7 +98,7 @@ export default function LoginPage() {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="password"
@@ -105,13 +107,16 @@ export default function LoginPage() {
                   <FormLabel className="font-medium">Password</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Input 
+                      <Input
                         type={showPassword ? "text" : "password"}
-                        placeholder="Password" 
-                        {...field} 
+                        placeholder="Password"
+                        {...field}
                         className="w-full"
                       />
-                      <div onClick={() => setShowPassword(!showPassword)} className="absolute top-1/2 -translate-y-1/2 right-3 cursor-pointer">
+                      <div
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute top-1/2 -translate-y-1/2 right-3 cursor-pointer"
+                      >
                         {showPassword ? (
                           <EyeOff className="h-5 w-5 text-medium" />
                         ) : (
@@ -124,8 +129,10 @@ export default function LoginPage() {
                 </FormItem>
               )}
             />
-            
-            <Button type="submit" className="w-full">Masuk</Button>
+
+            <Button type="submit" className="w-full">
+              Masuk
+            </Button>
           </form>
         </Form>
       </div>

@@ -18,6 +18,10 @@ export default function MaintenancePage() {
     const fetchParamGroups = async () => {
       setLoading(true);
       setError(null);
+      const { data: { user } } = await supabase.auth.getUser();
+
+      console.log("User ID:", user?.id);
+      console.log("User role:", user?.user_metadata?.role);
 
       const { data, error } = await supabase
         .from("parameter_group")
@@ -62,7 +66,6 @@ export default function MaintenancePage() {
             />
           </div>
 
-          {/* Info */}
           {loading ? (
             <div className="flex items-center justify-center py-10 text-muted-foreground">
               <Loader2 className="animate-spin w-5 h-5 mr-2" />
