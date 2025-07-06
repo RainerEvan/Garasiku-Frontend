@@ -139,6 +139,7 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
                           <Calendar
                             mode="single"
                             selected={field.value}
+                            captionLayout="dropdown"
                             onSelect={field.onChange}
                             disabled={(date: Date) =>
                               date < new Date("1900-01-01")

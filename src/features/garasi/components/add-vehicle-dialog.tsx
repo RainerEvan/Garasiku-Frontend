@@ -321,6 +321,7 @@ const vehicleCategoryParam = VEHICLE_CATEGORY_PARAM;
                           <Calendar
                             mode="single"
                             selected={field.value}
+                            captionLayout="dropdown"
                             onSelect={field.onChange}
                             disabled={(date: Date) =>
                               date < new Date("1900-01-01")
@@ -362,6 +363,7 @@ const vehicleCategoryParam = VEHICLE_CATEGORY_PARAM;
                           <Calendar
                             mode="single"
                             selected={field.value}
+                            captionLayout="dropdown"
                             onSelect={field.onChange}
                             disabled={(date: Date) =>
                               date < new Date("1900-01-01")

@@ -137,6 +137,7 @@ export function CompleteAdministrationDialog({ administration, dueDate, onSave }
                           <Calendar
                             mode="single"
                             selected={field.value}
+                            captionLayout="dropdown"
                             onSelect={field.onChange}
                             disabled={(date: Date) =>
                               date < new Date("1900-01-01")
@@ -233,6 +234,7 @@ export function CompleteAdministrationDialog({ administration, dueDate, onSave }
                             <Calendar
                               mode="single"
                               selected={field.value}
+                              captionLayout="dropdown"
                               onSelect={field.onChange}
                               disabled={(date: Date) =>
                                 date < new Date("1900-01-01")

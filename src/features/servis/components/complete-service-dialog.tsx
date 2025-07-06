@@ -152,6 +152,7 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
                           <Calendar
                             mode="single"
                             selected={field.value}
+                            captionLayout="dropdown"
                             onSelect={field.onChange}
                             disabled={(date: Date) =>
                               date < new Date("1900-01-01")
@@ -324,6 +325,7 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
                             <Calendar
                               mode="single"
                               selected={field.value}
+                              captionLayout="dropdown"
                               onSelect={field.onChange}
                               disabled={(date: Date) =>
                                 date < new Date("1900-01-01")
