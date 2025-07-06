@@ -143,4 +143,4 @@ const handler = async (req: any, res: any) => {
   }
 }
 
-export { handler as default };
+export default handler;
