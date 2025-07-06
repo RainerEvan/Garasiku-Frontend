@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Edit } from "lucide-react"
+import { toast } from "sonner";
 
 import { Button } from "@/components/shadcn/button"
 import {
@@ -20,21 +21,21 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Vehicle } from "@/models/vehicle"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
 import { Param } from "@/models/param"
-import { VEHICLE_CATEGORY_PARAM } from "@/lib/constants"
+import { VEHICLE_CATEGORY_PARAM, PARAM_GROUP_MERK_KENDARAAN } from "@/lib/constants"
+import { supabase } from "@/lib/supabaseClient"
 
 interface EditDetailVehicleDialogProps {
   vehicle: Vehicle
   onSave?: (updatedVehicle: Vehicle) => void
 }
 
-// Define the form schema with validation
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
   name: z.string().min(1, { message: "Nama harus terisi" }),
   category: z.string().min(1, { message: "Jenis harus terisi" }),
   brand: z.string().min(1, { message: "Merk harus terisi" }),
   type: z.string().min(1, { message: "Tipe harus terisi" }),
-  year: z.string().min(1, { message: "Tahun harus terisi" }),
+  year: z.coerce.number().min(1900, { message: "Tahun tidak valid" }),
   color: z.string().min(1, { message: "Warna harus terisi" }),
 })
 
@@ -49,60 +50,90 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
       category: vehicle.category,
       brand: vehicle.brand,
       type: vehicle.type,
-      year: vehicle.year,
+      year: vehicle.year ? Number(vehicle.year) : new Date().getFullYear(),
       color: vehicle.color,
     },
   })
 
-  const vehicleCategoryParam = VEHICLE_CATEGORY_PARAM;
+  const vehicleCategoryParam = VEHICLE_CATEGORY_PARAM
+  const [vehicleBrandParam, setVehicleBrandParam] = useState<Param[]>([])
 
-  const vehicleBrandParam: Param[] = [
-    {
-      id: "1",
-      group: "002",
-      name: "Honda"
-    },
-    {
-      id: "2",
-      group: "002",
-      name: "Toyota"
-    },
-    {
-      id: "3",
-      group: "002",
-      name: "Suzuki"
-    },
-    {
-      id: "4",
-      group: "002",
-      name: "BMW"
-    },
-    {
-      id: "5",
-      group: "002",
-      name: "Mercedes-Benz"
-    },
-  ]
-
-  const { watch, setValue } = form;
-
-  const brand = watch("brand");
-  const type = watch("type");
-  const color = watch("color");
-  const year = watch("year");
-
-  // Update the nama field dynamically
   useEffect(() => {
-    const updatedName = `${brand} ${type} ${color} ${year}`;
-    setValue("name", updatedName);
-  }, [brand, type, color, year, setValue]);
+    async function fetchVehicleBrands() {
+      const { data, error } = await supabase
+        .from("parameter")
+        .select("*")
+        .eq("group", PARAM_GROUP_MERK_KENDARAAN)
+        .order("name")
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Edit detail kendaraan data: ", values)
-    if (onSave) {
-      onSave(values);
+      if (error) {
+        console.error("Gagal mengambil data merk kendaraan:", error.message)
+        return
+      }
+
+      setVehicleBrandParam(data)
     }
-    setOpen(false);
+
+    fetchVehicleBrands()
+  }, [])
+
+  const { watch, setValue } = form
+
+  const brand = watch("brand")
+  const type = watch("type")
+  const color = watch("color")
+  const year = watch("year")
+
+  useEffect(() => {
+    const updatedName = `${brand} ${type} ${color} ${year}`
+    setValue("name", updatedName)
+  }, [brand, type, color, year, setValue])
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log("Submit form values:", values)
+    if (!values.id) {
+      console.error("ID kendaraan kosong.")
+      toast.error("ID kendaraan tidak valid.")
+      return
+    }
+
+          const { data, error } = await supabase
+        .from("vehicles")
+        .update({
+          name: values.name,
+          category: values.category,
+          brand: values.brand,
+          type: values.type,
+          year: values.year,
+          color: values.color,
+        })
+        .eq("id", values.id)
+        .select("*"); 
+        console.log("Update ke Supabase:", {
+        id: values.id,
+        name: values.name,
+        category: values.category,
+        brand: values.brand,
+        type: values.type,
+        year: values.year,
+        color: values.color,
+      })
+
+    console.log("Update response:", { data, error })
+
+    if (error) {
+      console.error("Gagal update kendaraan:", error.message)
+      toast.error("Gagal update kendaraan: " + error.message)
+      return
+    }
+
+    toast.success("Data kendaraan berhasil diperbarui.")
+
+    if (onSave) {
+      onSave({ ...vehicle, ...values })
+    }
+
+    setOpen(false)
   }
 
   return (
@@ -121,7 +152,6 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Detail Kendaraan */}
             <div className="flex flex-col gap-5">
               <div className="grid grid-cols-1 gap-5">
                 <FormField
@@ -131,12 +161,7 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
                     <FormItem className="space-y-1">
                       <FormLabel className="font-medium">Nama Kendaraan</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Hasil nama kendaraan"
-                          {...field}
-                          className="w-full"
-                          disabled
-                        />
+                        <Input placeholder="Hasil nama kendaraan" {...field} className="w-full" disabled />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -201,11 +226,7 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
                     <FormItem className="space-y-1">
                       <FormLabel className="font-medium">Tipe</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Masukkan tipe kendaraan"
-                          {...field}
-                          className="w-full"
-                        />
+                        <Input placeholder="Masukkan tipe kendaraan" {...field} className="w-full" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -219,11 +240,7 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
                     <FormItem className="space-y-1">
                       <FormLabel className="font-medium">Tahun</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Masukkan tahun kendaraan"
-                          {...field}
-                          className="w-full"
-                        />
+                        <Input placeholder="Masukkan tahun kendaraan" {...field} className="w-full" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -237,11 +254,7 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
                     <FormItem className="space-y-1">
                       <FormLabel className="font-medium">Warna</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Masukkan warna kendaraan"
-                          {...field}
-                          className="w-full"
-                        />
+                        <Input placeholder="Masukkan warna kendaraan" {...field} className="w-full" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -256,13 +269,10 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
                   Batal
                 </Button>
               </DialogClose>
-              <Button type="submit">
-                Simpan
-              </Button>
+              <Button type="submit">Simpan</Button>
             </DialogFooter>
           </form>
         </Form>
-
       </DialogContent>
     </Dialog>
   )

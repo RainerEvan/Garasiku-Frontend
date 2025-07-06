@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { Button } from "@/components/shadcn/button"
+import { useEffect, useState } from "react";
+import { Button } from "@/components/shadcn/button";
 import {
   Dialog,
   DialogClose,
@@ -9,144 +9,170 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/shadcn/dialog"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/shadcn/form"
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
-import { LocationVehicle } from "@/models/location-vehicle"
-import { Param } from "@/models/param"
-import { Textarea } from "@/components/shadcn/textarea"
-import { useLoading } from "@/lib/loading-context"
+} from "@/components/shadcn/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/shadcn/form";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/shadcn/select";
+import { Textarea } from "@/components/shadcn/textarea";
+import { useLoading } from "@/lib/loading-context";
+import { LocationVehicle } from "@/models/location-vehicle";
+import { supabase } from "@/lib/supabaseClient";
+import { PARAM_GROUP_LOKASI_KENDARAAN } from "@/lib/constants"
+import { toast } from "sonner";
 
 interface MoveLocationVehicleDialogProps {
-  vehicleId?: string
-  currLocationAddress?: string
-  onSave?: (newLocationVehicle: LocationVehicle) => void
+  vehicleId?: string;
+  currLocationAddress?: string;
+  onSave?: (newLocationVehicle: LocationVehicle) => void;
 }
 
-// Define the form schema with validation
-const formSchema = (currLocationAddress?: string) => z.object({
-  vehicleId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
-  name: z.string().min(1, { message: "Nama Lokasi harus terisi" }),
-  address: z.string().min(1, { message: "Alamat Lokasi harus terisi" })
-}).refine(
-  (data) => {
-    if (!currLocationAddress) return true;
-    const normalize = (str: string) => str.replace(/\s+/g, "").toLowerCase();
+const formSchema = (currLocationAddress?: string) =>
+  z
+    .object({
+      vehicleId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
+      name: z.string().min(1, { message: "Nama Lokasi harus terisi" }),
+      address: z.string().min(1, { message: "Alamat Lokasi harus terisi" }),
+    })
+    .refine(
+      (data) => {
+        if (!currLocationAddress) return true;
+        const normalize = (str: string) => str.replace(/\s+/g, "").toLowerCase();
+        return normalize(data.address) !== normalize(currLocationAddress);
+      },
+      {
+        message: "Lokasi baru tidak boleh sama dengan lokasi sekarang",
+        path: ["address"],
+      }
+    );
 
-    return normalize(data.address) !== normalize(currLocationAddress);
-  },
-  {
-    message: "Lokasi baru tidak boleh sama dengan Lokasi sekarang",
-    path: ["address"],
-  }
-)
-
-export function MoveLocationVehicleDialog({ vehicleId, currLocationAddress, onSave }: MoveLocationVehicleDialogProps) {
+export function MoveLocationVehicleDialog({
+  vehicleId,
+  currLocationAddress,
+  onSave,
+}: MoveLocationVehicleDialogProps) {
   const { setLoading } = useLoading();
-
-  const [open, setOpen] = useState(false)
-
-  const [listVehicleLocationParams, setListVehicleLocationParams] = useState<Param[]>([]);
+  const [open, setOpen] = useState(false);
+  const [locationParams, setLocationParams] = useState<{ name: string; description: string }[]>([]);
 
   const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
     resolver: zodResolver(formSchema(currLocationAddress)),
     defaultValues: {
-      vehicleId: vehicleId,
+      vehicleId: vehicleId ?? "",
       name: "",
-      address: ""
+      address: "",
     },
-  })
+  });
 
-  const locationVehicleParam: any[] = [
-    {
-      id: "1",
-      group: "004",
-      name: "Rumah Bandung",
-      description: "Jl. Taman Sukajadi Baru Blok A VIII 12 No. 57, Bandung"
-    },
-    {
-      id: "2",
-      group: "004",
-      name: "Apartment Jakarta",
-      description: "Menteng Park Apartment, Jakarta"
-    },
-    {
-      id: "3",
-      group: "004",
-      name: "Bengkel ASCO",
-      description: "Jl. Kolonel Sugiono No. 20, Jakarta"
-    },
-    {
-      id: "4",
-      group: "004",
-      name: "Lain-lain",
-      description: ""
-    }
-  ]
+  const { watch, setValue, reset } = form;
+  const selectedName = watch("name");
+  const isManualAddress = selectedName === "Lain-lain";
 
   useEffect(() => {
-    const fetchAll = async () => {
+    const fetchLocationParams = async () => {
       setLoading(true);
-
       try {
-        const [
-          vehicleLocationParamsRes,
-        ] = await Promise.all([
-          // simulate fetching params (you might replace this with supabase or API call)
-          Promise.resolve(locationVehicleParam),
-        ]);
+        const { data, error } = await supabase
+          .from("parameter")
+          .select("name, description")
+          .eq("group", PARAM_GROUP_LOKASI_KENDARAAN);
 
-        // === VEHICLE LOCATION PARAMS  ===
-        const { data: vehicleLocationParamsData, error: vehicleLocationsError } = { data: vehicleLocationParamsRes, error: null }; // Replace with actual API call if needed
-        if (vehicleLocationsError) {
-          console.error("Failed to fetch vehicle location params:", vehicleLocationsError);
-        } else if (vehicleLocationParamsData) {
-          const mappedVehicleLocationParams = vehicleLocationParamsData.map((v: any) => ({
-            id: v.id,
-            group: v.group,
-            name: v.name,
-            description: v.description
-          }));
-          setListVehicleLocationParams(mappedVehicleLocationParams);
+        if (error) {
+           toast.error("Gagal memuat data parameter");
+          console.error("Failed to fetch parameter locations:", error);
+        } else {
+          setLocationParams(data || []);
         }
       } catch (err) {
-        console.error("Failed to fetch data:", err);
+        console.error("Unexpected error fetching parameter:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAll();
-  }, []);
+    fetchLocationParams();
+  }, [setLoading]);
 
-  const { watch, setValue, reset } = form;
-
-  const name = watch("name");
-
-  const isLocationAddressDisabled = name !== "Lain-lain";
-
-  // Update the nama field dynamically
   useEffect(() => {
-    const location = locationVehicleParam.find((location => location.name == name));
-    if (isLocationAddressDisabled) {
+    const location = locationParams.find((l) => l.name === selectedName);
+    if (!isManualAddress) {
       setValue("address", location?.description || "");
     } else {
       setValue("address", "");
     }
-    if (name) {
+
+    if (selectedName) {
       form.trigger("address");
     }
+  }, [selectedName, isManualAddress, locationParams, setValue, form]);
 
-  }, [name, setValue, form]);
+  async function onSubmit(values: z.infer<ReturnType<typeof formSchema>>) {
+    console.log("Move location kendaraan data: ", values);
 
-  function onSubmit(values: z.infer<ReturnType<typeof formSchema>>) {
-    console.log("Move location kendaraan data: ", values)
-    if (onSave) {
-      onSave(values);
+    const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    toast.error("Gagal mendapatkan user login");
+    console.error("Gagal mendapatkan user login:", userError);
+    alert("Gagal mendapatkan informasi user.");
+    setLoading(false);
+    return;
+  }
+
+  const username = user.user_metadata?.username || user.email || "unknown";
+
+    if (!vehicleId) return;
+
+    setLoading(true);
+
+    const { error } = await supabase
+      .from("vehicle_locations")
+      .insert({
+        vehicle_id: vehicleId,
+        name: values.name,
+        address: values.address,
+        created_by: username, 
+        created_at : new Date().toISOString()
+      });
+
+    setLoading(false);
+
+    if (error) {
+      toast.error("Gagal insert lokasi kendaraan");
+      console.error("Gagal insert lokasi kendaraan:", error);
+      alert("Gagal memindahkan lokasi kendaraan.");
+      return;
     }
+    toast.success("Berhasil Update Lokasi Kendaraan");
+
+    if (onSave) {
+      onSave({
+        id: "", 
+        vehicleId: vehicleId,
+        name: values.name,
+        address: values.address,
+        createdBy: username,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
     setOpen(false);
     reset();
   }
@@ -161,9 +187,7 @@ export function MoveLocationVehicleDialog({ vehicleId, currLocationAddress, onSa
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>
-        <Button>
-          Pindah Lokasi
-        </Button>
+        <Button>Pindah Lokasi</Button>
       </DialogTrigger>
       <DialogContent className="max-h-[95vh] md:max-w-xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
@@ -173,23 +197,22 @@ export function MoveLocationVehicleDialog({ vehicleId, currLocationAddress, onSa
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Detail Kendaraan */}
             <div className="flex flex-col gap-5">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem className="space-y-1">
-                    <FormLabel className="font-medium">Nama Lokasi</FormLabel>
+                    <FormLabel>Nama Lokasi</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger className="w-full">
+                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Pilih nama lokasi kendaraan" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {listVehicleLocationParams.map((option) => (
-                          <SelectItem key={option.id} value={option.name}>
+                        {locationParams.map((option) => (
+                          <SelectItem key={option.name} value={option.name}>
                             {option.name}
                           </SelectItem>
                         ))}
@@ -199,18 +222,18 @@ export function MoveLocationVehicleDialog({ vehicleId, currLocationAddress, onSa
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="address"
                 render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="font-medium">Alamat Lokasi</FormLabel>
+                  <FormItem>
+                    <FormLabel>Alamat Lokasi</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Masukkan alamat lokasi kendaraan"
                         {...field}
-                        className="w-full"
-                        disabled={isLocationAddressDisabled}
+                        placeholder="Masukkan alamat lokasi kendaraan"
+                        disabled={!isManualAddress}
                       />
                     </FormControl>
                     <FormMessage />
@@ -225,14 +248,11 @@ export function MoveLocationVehicleDialog({ vehicleId, currLocationAddress, onSa
                   Batal
                 </Button>
               </DialogClose>
-              <Button type="submit">
-                Simpan
-              </Button>
+              <Button type="submit">Simpan</Button>
             </DialogFooter>
           </form>
         </Form>
-
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,5 +1,4 @@
 import { useState } from "react"
-
 import { Button } from "@/components/shadcn/button"
 import {
   Dialog,
@@ -12,7 +11,14 @@ import {
   DialogTrigger,
 } from "@/components/shadcn/dialog"
 import { Input } from "@/components/shadcn/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/shadcn/form"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/shadcn/form"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -23,18 +29,19 @@ import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/shadcn/calendar"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
+import { supabase } from "@/lib/supabaseClient"
+import { toast } from "sonner"
 
 interface StartServiceDialogProps {
   service: Service
   onSave?: (updatedService: Service) => void
 }
 
-// Define the form schema with validation
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
   startDate: z.date({ required_error: "Tanggal Mulai harus terisi" }),
-  mileage: z.number().min(0, { message: "Kilometer harus terisi" }),
-  totalCost: z.number().optional(),
+  mileage: z.coerce.number().min(0, { message: "Kilometer harus terisi" }),
+  totalCost: z.coerce.number().optional(),
   mechanicName: z.string().optional(),
   task: z.string().min(1, { message: "Jasa harus terisi" }),
   sparepart: z.string().optional(),
@@ -48,35 +55,53 @@ export function StartServiceDialog({ service, onSave }: StartServiceDialogProps)
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: service.id,
+      startDate: service.startDate ? new Date(service.startDate) : undefined,
       mileage: service.mileage,
       totalCost: service.totalCost,
       mechanicName: service.mechanicName,
       task: service.task,
       sparepart: service.sparepart,
-      notes: service.notes
+      notes: service.notes,
     },
   })
 
-  const { reset } = form;
+  const { reset } = form
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     const formattedValues = {
       ...values,
-      startDate: values.startDate ? format(values.startDate, "yyyy-MM-dd") : undefined,
-    };
-
-    console.log("Add service record data: ", formattedValues)
-    if (onSave) {
-      onSave(formattedValues);
+      startDate: format(values.startDate, "yyyy-MM-dd"),
     }
-    setOpen(false);
+
+    const { data, error } = await supabase
+      .from("service") // pastikan ini nama tabel kamu benar
+      .update({
+        start_date: formattedValues.startDate,
+        mileage: formattedValues.mileage,
+        total_cost: formattedValues.totalCost,
+        mechanic_name: formattedValues.mechanicName,
+        task: formattedValues.task,
+        sparepart: formattedValues.sparepart,
+        notes: formattedValues.notes,
+        status :'ongoing'
+      })
+      .eq("id", formattedValues.id)
+      .select("*")
+      .single()
+
+    if (error) {
+      console.error("Gagal update service:", error)
+      toast.error("Gagal menyimpan data servis.")
+    } else {
+      toast.success("Servis berhasil dimulai.")
+      if (onSave) onSave(data)
+      setOpen(false)
+    }
   }
 
   function handleDialogChange(isOpen: boolean) {
-    setOpen(isOpen);
-    if (!isOpen) {
-      reset();
-    }
+    setOpen(isOpen)
+    if (!isOpen) reset()
   }
 
   return (
@@ -263,7 +288,6 @@ export function StartServiceDialog({ service, onSave }: StartServiceDialogProps)
             </DialogFooter>
           </form>
         </Form>
-
       </DialogContent>
     </Dialog>
   )

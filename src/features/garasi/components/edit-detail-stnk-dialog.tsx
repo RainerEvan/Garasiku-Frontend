@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Edit } from "lucide-react"
+import { toast } from "sonner";
 
 import { Button } from "@/components/shadcn/button"
 import {
@@ -13,21 +14,29 @@ import {
   DialogTrigger,
 } from "@/components/shadcn/dialog"
 import { Input } from "@/components/shadcn/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/shadcn/form"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/shadcn/form"
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Stnk } from "@/models/stnk"
+import { supabase } from "@/lib/supabaseClient"
 
 interface EditDetailStnkDialogProps {
-  stnk: Stnk
+  stnk: Stnk | null
   onSave?: (updatedStnk: Stnk) => void
 }
 
-// Define the form schema with validation
+// Form schema
 const formSchema = z.object({
-  id: z.string().min(1, { message: "Id harus terisi" }),
-  vehicleId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
+  id: z.string().min(1),
+  vehicleId: z.string().min(1),
   licensePlate: z.string().optional(),
   stnkNumber: z.string().optional(),
   ownerName: z.string().optional(),
@@ -46,7 +55,7 @@ const formSchema = z.object({
   registrationYear: z.string().optional(),
   bpkbNumber: z.string().optional(),
   registrationNumber: z.string().optional(),
-  validUntil: z.string().optional()
+  validUntil: z.string().optional(),
 })
 
 export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps) {
@@ -55,50 +64,108 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      id: stnk.id,
-      vehicleId: stnk.vehicleId,
-      licensePlate: stnk.licensePlate,
-      stnkNumber: stnk.stnkNumber,
-      ownerName: stnk.ownerName,
-      ownerAddress: stnk.ownerAddress,
-      brand: stnk.brand,
-      type: stnk.type,
-      category: stnk.category,
-      model: stnk.model,
-      manufacturedYear: stnk.manufacturedYear,
-      cylinderCapacity: stnk.cylinderCapacity,
-      chassisNumber: stnk.chassisNumber,
-      engineNumber: stnk.engineNumber,
-      color: stnk.color,
-      fuelType: stnk.fuelType,
-      licensePlateColor: stnk.licensePlateColor,
-      registrationYear: stnk.registrationYear,
-      bpkbNumber: stnk.bpkbNumber,
-      registrationNumber: stnk.registrationNumber,
-      validUntil: stnk.validUntil,
+      id: stnk?.id ?? "",
+      vehicleId: stnk?.vehicleId ?? "",
+      licensePlate: stnk?.licensePlate ?? "",
+      stnkNumber: stnk?.stnkNumber ?? "",
+      ownerName: stnk?.ownerName ?? "",
+      ownerAddress: stnk?.ownerAddress ?? "",
+      brand: stnk?.brand ?? "",
+      type: stnk?.type ?? "",
+      category: stnk?.category ?? "",
+      model: stnk?.model ?? "",
+      manufacturedYear: String(stnk?.manufacturedYear ?? ""),
+      cylinderCapacity: stnk?.cylinderCapacity ?? "",
+      chassisNumber: stnk?.chassisNumber ?? "",
+      engineNumber: stnk?.engineNumber ?? "",
+      color: stnk?.color ?? "",
+      fuelType: stnk?.fuelType ?? "",
+      licensePlateColor: stnk?.licensePlateColor ?? "",
+      registrationYear: String(stnk?.registrationYear ?? ""),
+      bpkbNumber: stnk?.bpkbNumber ?? "",
+      registrationNumber: stnk?.registrationNumber ?? "",
+      validUntil: stnk?.validUntil ?? new Date().toISOString().split("T")[0],
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Edit detail stnk data: ", values)
-    if (onSave) {
-      onSave(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const { data, error } = await supabase
+        .from("stnk")
+        .update({
+          stnk_number: values.stnkNumber,
+          fuel_type: values.fuelType,
+          license_plate_color: values.licensePlateColor,
+          registration_year: values.registrationYear,
+          manufactured_year: values.manufacturedYear,
+          bpkb_number: values.bpkbNumber,
+          cylinder_capacity: values.cylinderCapacity,
+          registration_number: values.registrationNumber,
+          chassis_number: values.chassisNumber,
+          engine_number: values.engineNumber,
+          valid_until: values.validUntil,
+          model: values.model,
+          brand: values.brand,
+          owner_name: values.ownerName,
+          owner_address: values.ownerAddress,
+          type: values.type,
+          category: values.category,
+          color: values.color
+        })
+        .eq("id", values.id)
+        .select("*")
+        .maybeSingle(); 
+
+      if (error) {
+        toast.error("Gagal update STNK")
+
+        console.error("Gagal update STNK:", error.message)
+        return
+      }
+    toast.success("Data STNK berhasil diperbarui.")
+
+    const { error: vehicleError } = await supabase
+      .from("vehicles")
+      .update({
+        stnk_due_date: values.validUntil || null,
+      })
+      .eq("id", values.vehicleId);
+
+    if (vehicleError) {
+      console.error("Gagal update STNK due date kendaraan:", vehicleError.message);
+      toast.error("Gagal update STNK")
+
+      return;
     }
-    setOpen(false);
+
+
+      if (onSave) {
+        onSave(data as Stnk)
+      }
+
+      setOpen(false)
+    } catch (err) {
+      console.error("Unexpected error:", err)
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Edit />
+        <Button variant="outline" size="sm" disabled={!stnk}>
+          <Edit className="mr-2 h-4 w-4" />
           Ubah
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DialogContent
+        className="max-h-[95vh] md:max-w-3xl overflow-y-auto"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Ubah Detail STNK</DialogTitle>
-          <DialogDescription>Atur informasi detail STNK kendaraan dan klik button simpan.</DialogDescription>
+          <DialogDescription>
+            Atur informasi detail STNK kendaraan dan klik button simpan.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -468,7 +535,6 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
             </DialogFooter>
           </form>
         </Form>
-
       </DialogContent>
     </Dialog>
   )

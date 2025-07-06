@@ -25,10 +25,10 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { useLoading } from "@/lib/loading-context"
 import { LicensePlateDialog } from "../components/license-plate-dialog"
+import { LocationVehicle } from "@/models/location-vehicle"
 
 export default function KendaraanDetailPage() {
     const { id } = useParams<{ id: string }>();
-    console.log(id);
 
     const { setLoading } = useLoading();
 
@@ -47,12 +47,40 @@ export default function KendaraanDetailPage() {
         console.log("Delete Kendaraan button clicked")
     }
 
-    const handleSellVehicle = () => {
-        console.log("Sell Kendaraan button clicked")
-    }
-    const [vehicle, setVehicle] = useState<Vehicle>({});
-    // const [latestLocation, setLatestLocation] = useState<VehicleLocation | null>(null);
-    const [stnk, setStnk] = useState<Stnk>({});
+    const handleSellVehicle = async () => {
+        if (!vehicle?.id) return;
+
+        const todayDateOnly = new Date().toISOString().split("T")[0]; // Format: "YYYY-MM-DD"
+        const isSelling = !vehicle.isSold;
+
+        const { error } = await supabase
+            .from("vehicles")
+            .update({
+                is_sold: isSelling,
+                sold_date: isSelling ? todayDateOnly : null,
+            })
+            .eq("id", vehicle.id);
+
+        if (error) {
+            console.error("Gagal memperbarui status kendaraan:", error.message);
+            return;
+        }
+
+        // Update state kendaraan
+        setVehicle(prev =>
+            prev
+                ? {
+                    ...prev,
+                    isSold: isSelling,
+                    soldDate: isSelling ? todayDateOnly : undefined,
+                }
+                : null
+        );
+    };
+
+    const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+    const [latestLocation, setLatestLocation] = useState<LocationVehicle | null>(null);
+    const [stnk, setStnk] = useState<Stnk | null>(null);
     const [services, setServices] = useState<Service[]>([]);
     const [adminitrations, setAdministration] = useState<Administration[]>([]);
     const [vehicleEquipments, setVehicleEquipments] = useState<string[]>([]);
@@ -91,7 +119,7 @@ export default function KendaraanDetailPage() {
                         image: base.image_url,
                         stnkDueDate: base.stnk_due_date,
                         insuranceDueDate: base.insurance_due_date,
-                        lastServiceDate : base.schedule_date
+                        lastServiceDate: base.schedule_date
                     });
 
                     setStnk({
@@ -196,6 +224,25 @@ export default function KendaraanDetailPage() {
                         createdAt: att.created_at,
                         createdBy: att.created_by,
                     })));
+                }
+
+                const { data: locationData, error: locationError } = await supabase
+                    .from("vehicle_locations")
+                    .select("*")
+                    .eq("vehicle_id", id)
+                    .order("created_at", { ascending: false })
+                    .limit(1);
+
+                if (locationError) {
+                    console.error("Location fetch error:", locationError);
+                } else if (locationData && locationData.length > 0) {
+                    const loc = locationData[0];
+                    setLatestLocation({
+                        id: loc.id,
+                        vehicleId: loc.vehicle_id,
+                        name: loc.name,
+                        address: loc.address,
+                    });
                 }
 
             } catch (err) {
@@ -318,7 +365,7 @@ export default function KendaraanDetailPage() {
                 {/* Info Bar */}
                 <div className="flex flex-col gap-5">
                     {/* Lokasi Bar */}
-                    {/* {latestLocation && (
+                    {latestLocation && (
                         <Link to={`/kendaraan/detail/${vehicle.id}/riwayat-lokasi`}>
                             <DataBarCard
                                 variant="button"
@@ -327,7 +374,7 @@ export default function KendaraanDetailPage() {
                                 description={latestLocation.address}
                             />
                         </Link >
-                    )} */}
+                    )}
 
                     {/* Terjual Bar */}
                     {(vehicle.isSold && vehicle.soldDate) && (
@@ -372,7 +419,7 @@ export default function KendaraanDetailPage() {
                     <SectionCard
                         title="Detail STNK"
                         headerAction={
-                            <EditDetailStnkDialog stnk={stnk} />
+                            stnk ? <EditDetailStnkDialog stnk={stnk} /> : null
                         }
                         collapsible
                         defaultCollapsed={true}
