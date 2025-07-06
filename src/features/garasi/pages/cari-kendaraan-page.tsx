@@ -16,25 +16,18 @@ export default function CariKendaraanPage() {
     setLoading(true);
 
     try {
+      const cleanedSearch = search.replace(/\s+/g, "").toUpperCase();
+
       const { data, error } = await supabase
-        .from("vehicle_full_details")
-        .select(`
-          vehicleid,
-          name,
-          vehicle_category,
-          vehicle_year,
-          vehicle_brand,
-          vehicle_color,
-          vehicle_type,
-          license_plate,
-          image_url,
-          location_id,
-          location_name,
-          location_address
-        `)
-        .eq("license_plate", search.toUpperCase().trim())
-        .limit(1)
-        .maybeSingle();
+      .rpc("search_vehicles_by_plates", { cleaned_plate: cleanedSearch });
+
+      console.log(data[0]);
+      if (error) {
+        console.error("Gagal mencari kendaraan:", error.message);
+      } else {
+        console.log("Kendaraan ditemukan:", data);
+      }
+
 
       if (error) {
         console.error("Supabase fetch error:", error.message);
@@ -48,20 +41,20 @@ export default function CariKendaraanPage() {
       }
 
       const mapped: Vehicle = {
-        id: data.vehicleid,
-        name: data.name,
-        category: data.vehicle_category,
-        year: data.vehicle_year?.toString() ?? "",
-        brand: data.vehicle_brand,
-        color: data.vehicle_color,
-        type: data.vehicle_type,
-        licensePlate: data.license_plate,
-        image: data.image_url ?? "/assets/car.jpg",
+        id: data[0].vehicleid,
+        name: data[0].name,
+        category: data[0].vehicle_category,
+        year: data[0].vehicle_year?.toString() ?? "",
+        brand: data[0].vehicle_brand,
+        color: data[0].vehicle_color,
+        type: data[0].vehicle_type,
+        licensePlate: data[0].license_plate,
+        image: data[0].image_url ?? "/assets/car.jpg",
         location: {
-          id: data.location_id ?? "",
-          vehicleId: data.vehicleid ?? "",
-          name: data.location_name ?? "-",
-          address: data.location_address ?? "-",
+          id: data[0].location_id ?? "",
+          vehicleId: data[0].vehicleid ?? "",
+          name: data[0].location_name ?? "-",
+          address: data[0].location_address ?? "-",
         },
       };
 

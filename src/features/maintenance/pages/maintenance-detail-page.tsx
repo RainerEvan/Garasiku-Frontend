@@ -23,7 +23,7 @@ export default function MaintenanceDetailPage() {
     const [{ data: groupData, error: groupError }, { data: paramData, error: paramError }] =
       await Promise.all([
         supabase.from("parameter_group").select("*").eq("group", id).single(),
-        supabase.from("parameter").select("*").eq("group", id),
+        supabase.from("parameter").select("*").eq("group", id).order("name", { ascending: true })
       ]);
 
     if (groupError || paramError) {

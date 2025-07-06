@@ -371,9 +371,9 @@ export default function KendaraanDetailPage() {
                     {/* STNK Details */}
                     <SectionCard
                         title="Detail STNK"
-                        // headerAction={
-                        //     <EditDetailStnkDialog stnk={stnk} />
-                        // }
+                        headerAction={
+                            <EditDetailStnkDialog stnk={stnk} />
+                        }
                         collapsible
                         defaultCollapsed={true}
                         collapsedHeight={140}
