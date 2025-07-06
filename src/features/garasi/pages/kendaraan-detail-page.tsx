@@ -47,9 +47,37 @@ export default function KendaraanDetailPage() {
         console.log("Delete Kendaraan button clicked")
     }
 
-    const handleSellVehicle = () => {
-        console.log("Sell Kendaraan button clicked")
-    }
+    const handleSellVehicle = async () => {
+        if (!vehicle?.id) return;
+
+        const todayDateOnly = new Date().toISOString().split("T")[0]; // Format: "YYYY-MM-DD"
+        const isSelling = !vehicle.isSold;
+
+        const { error } = await supabase
+            .from("vehicles")
+            .update({
+                is_sold: isSelling,
+                sold_date: isSelling ? todayDateOnly : null,
+            })
+            .eq("id", vehicle.id);
+
+        if (error) {
+            console.error("Gagal memperbarui status kendaraan:", error.message);
+            return;
+        }
+
+        // Update state kendaraan
+        setVehicle(prev =>
+            prev
+                ? {
+                    ...prev,
+                    isSold: isSelling,
+                    soldDate: isSelling ? todayDateOnly : undefined,
+                }
+                : null
+        );
+    };
+
     const [vehicle, setVehicle] = useState<Vehicle | null>(null);
     const [latestLocation, setLatestLocation] = useState<LocationVehicle | null>(null);
     const [stnk, setStnk] = useState<Stnk | null>(null);
