@@ -11,6 +11,7 @@ import SectionItem from "@/components/shared/section-item";
 import { Separator } from "@/components/shadcn/separator";
 import { EditUserDialog } from "../components/edit-user-dialog";
 import { ChangePasswordDialog } from "../components/change-password-dialog";
+import { ROLE_PARAM } from "@/lib/constants";
 
 export default function UserDetailPage() {
   const { setLoading } = useLoading();
@@ -18,18 +19,20 @@ export default function UserDetailPage() {
 
   const [user, setUser] = useState<User | null>(null);
 
-  const roleParam: Param[] = [
-    { id: "1", group: "007", name: "owner", description: "Owner" },
-    { id: "2", group: "007", name: "divisi", description: "Divisi" },
-    { id: "3", group: "007", name: "wshead", description: "WS-Head" },
-    { id: "4", group: "007", name: "driver", description: "Driver" },
-    { id: "5", group: "007", name: "admin", description: "Admin" },
-  ];
+  const [roleParam, setRoleParam] = useState<Param[]>([]);
 
   useEffect(() => {
     const fetchUser = async () => {
       setLoading(true);
       try {
+        const [
+          roleParamsRes,
+        ] = await Promise.all([
+          // simulate fetching params (you might replace this with supabase or API call)
+          Promise.resolve(ROLE_PARAM),
+        ]);
+        setRoleParam(roleParamsRes);
+
         const { data, error } = await supabase
           .rpc("get_all_users") // atau from("user_lookup")
           .select("*");
@@ -103,13 +106,11 @@ export default function UserDetailPage() {
 
             <div className="flex flex-col gap-5">
               <div className="flex flex-wrap items-center justify-start gap-2">
-                {user.role.split("|").map((role, index) => (
-                  <div key={index} className="flex gap-2 items-center justify-center border rounded-lg px-3 py-2 ">
-                    <span className="text-xs font-medium">
-                      {roleParam.find((param) => param.name === role)?.description || role}
-                    </span>
-                  </div>
-                ))}
+                <div className="flex gap-2 items-center justify-center border rounded-lg px-3 py-2 ">
+                  <span className="text-xs font-medium">
+                    {roleParam.find((param) => param.name === user.role)?.description || user.role}
+                  </span>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

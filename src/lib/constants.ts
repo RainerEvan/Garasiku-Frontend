@@ -63,12 +63,20 @@ export const STATUS_PARAM = [
   { id: "4", group: "0004", name: "cancelled", description: STATUS_LABEL["cancelled"] },
 ]
 
+export const ROLE_PARAM = [
+  { id: "1", group: "0005", name: "owner", description: "Owner" },
+  { id: "2", group: "0005", name: "divisi", description: "Divisi" },
+  { id: "3", group: "0005", name: "wshead", description: "WS-Head" },
+  { id: "4", group: "0005", name: "driver", description: "Driver" },
+  { id: "5", group: "0005", name: "admin", description: "Admin" },
+]
+
 
 // PARAMETER GROUP
-export const PARAM_GROUP_MERK_KENDARAAN = '001';
-export const PARAM_GROUP_LOKASI_KENDARAAN = '002';
-export const PARAM_GROUP_WAKTU_REMINDER = '003';
-export const PARAM_GROUP_KELENGKAPAN_KENDARAAN = '004';
+export const PARAM_GROUP_MERK_KENDARAAN = '1001';
+export const PARAM_GROUP_LOKASI_KENDARAAN = '1002';
+export const PARAM_GROUP_WAKTU_REMINDER = '1003';
+export const PARAM_GROUP_KELENGKAPAN_KENDARAAN = '1004';
 
 
 // PARAMETER NAME
