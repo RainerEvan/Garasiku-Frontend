@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -85,7 +84,7 @@ function buildReminderEmail(serviceTasks: any[], adminTasks: any[]) {
   `;
 }
 
-const handler = async (req: VercelRequest, res: VercelResponse) => {
+const handler = async (req: any, res: any) => {
   try {
     console.log(req);
 
