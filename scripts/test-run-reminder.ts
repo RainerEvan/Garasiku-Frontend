@@ -5,7 +5,6 @@ console.log("🧪 Starting reminder test...");
 
 import handler from "../api/send-weekly-task-reminder";
 
-const fakeReq = {};
 const fakeRes = {
   status(code: number) {
     return {
@@ -18,7 +17,7 @@ const fakeRes = {
 };
 
 try {
-  await handler(fakeReq, fakeRes);
+  await handler(fakeRes);
   console.log("✅ Handler finished without error");
 } catch (err) {
   console.error("❌ Uncaught error during handler execution:");

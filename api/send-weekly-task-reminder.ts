@@ -86,7 +86,7 @@ function buildReminderEmail(serviceTasks: any[], adminTasks: any[]) {
   `;
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(res: any) {
   const today = new Date();
   const oneMonthLater = new Date();
   oneMonthLater.setMonth(today.getMonth() + 1);
