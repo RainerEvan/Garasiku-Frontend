@@ -28,7 +28,6 @@ import { LicensePlateDialog } from "../components/license-plate-dialog"
 
 export default function KendaraanDetailPage() {
     const { id } = useParams<{ id: string }>();
-    console.log(id);
 
     const { setLoading } = useLoading();
 
@@ -372,7 +371,7 @@ export default function KendaraanDetailPage() {
                     <SectionCard
                         title="Detail STNK"
                         headerAction={
-                            <EditDetailStnkDialog stnk={stnk} />
+                        stnk ? <EditDetailStnkDialog stnk={stnk} /> : null
                         }
                         collapsible
                         defaultCollapsed={true}
