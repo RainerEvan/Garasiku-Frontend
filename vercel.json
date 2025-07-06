@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/send-weekly-task-reminder.ts": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "cron": [
+    {
+      "path": "/api/send-weekly-task-reminder",
+      "schedule": "0 2 * * 1"
+    }
+  ]
+}
