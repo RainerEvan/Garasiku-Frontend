@@ -17,7 +17,7 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
 } from "../shadcn/alert-dialog";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 const items = [
@@ -49,28 +49,33 @@ export function AppNavbar() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (data?.user) {
-        const meta = data.user.user_metadata;
+      const { data } = await supabase.auth.getUser();
+      const user = data?.user;
+      if (user) {
+        const meta = user.user_metadata || {};
         setUserMeta({
-          name: meta?.name || meta?.full_name || "User",
-          username: meta?.username || data.user.email?.split("@")[0],
+          name: meta.name || meta.full_name || "User",
+          username: meta.username || user.email?.split("@")[0] || "user",
         });
       }
     };
+
     fetchUser();
   }, []);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
     navigate("/login");
-  };
+  }, [navigate]);
 
-  const handleMenuClick = () => {
+  const handleMenuClick = useCallback(() => {
     setOpenMobile(false);
-  };
+  }, [setOpenMobile]);
 
-  const avatarLetter = (userMeta?.name || userMeta?.username || "U")[0]?.toUpperCase();
+  const avatarLetter = useMemo(() => {
+    const str = userMeta?.name || userMeta?.username || "U";
+    return str.charAt(0).toUpperCase();
+  }, [userMeta]);
 
   return (
     <Sidebar collapsible="icon">
@@ -86,10 +91,10 @@ export function AppNavbar() {
                 </div>
                 <div>
                   <h2 className="font-medium text-sm">
-                    {userMeta?.name || "Nama Pengguna"}
+                    {userMeta?.name ?? "Nama Pengguna"}
                   </h2>
                   <p className="text-xs text-medium">
-                    {userMeta?.username || "username"}
+                    {userMeta?.username ?? "username"}
                   </p>
                 </div>
               </div>
