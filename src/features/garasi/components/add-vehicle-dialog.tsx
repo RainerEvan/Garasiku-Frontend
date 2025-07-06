@@ -4,387 +4,187 @@ import { CalendarIcon, Plus, PlusCircle } from "lucide-react"
 import { Button } from "@/components/shadcn/button"
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/shadcn/dialog"
-import { Input } from "@/components/shadcn/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/shadcn/form"
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
-import { Param } from "@/models/param"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover"
-import { Calendar } from "@/components/shadcn/calendar"
-import { format } from "date-fns"
-import { cn } from "@/lib/utils"
-import { VEHICLE_CATEGORY_PARAM } from "@/lib/constants"
+} from "@/components/shadcn/dialog";
+import { Input } from "@/components/shadcn/input";
+import { Label } from "@/components/shadcn/label";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import * as z from "zod";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/shadcn/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover";
+import { supabase } from "@/lib/supabaseClient";
 
-interface AddVehicleDialogProps {
-  onSave?: (newVehicle: string) => void
-}
-
-// Define the form schema with validation
 const formSchema = z.object({
-  name: z.string().min(1, { message: "Nama harus terisi" }),
-  category: z.string().min(1, { message: "Jenis harus terisi" }),
-  brand: z.string().min(1, { message: "Merk harus terisi" }),
-  type: z.string().min(1, { message: "Tipe harus terisi" }),
-  year: z.string().min(1, { message: "Tahun harus terisi" }),
-  color: z.string().min(1, { message: "Warna harus terisi" }),
-  licensePlate: z.string().min(1, { message: "Plat No harus terisi" }),
+  name: z.string().min(1, "Nama wajib diisi"),
+  category: z.string().min(1, "Kategori wajib diisi"),
+  brand: z.string().optional(),
+  type: z.string().optional(),
+  year: z.coerce.number().int().min(1900),
+  color: z.string().optional(),
+  licensePlate: z.string().min(1, "Plat nomor wajib diisi"),
   stnkDueDate: z.date(),
   insuranceDueDate: z.date(),
-})
+});
+
+interface AddVehicleDialogProps {
+  onSave?: (vehicleName: string) => void;
+}
 
 export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+    setValue,
+  } = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       category: "",
       brand: "",
       type: "",
-      year: "",
+      year: new Date().getFullYear(),
       color: "",
       licensePlate: "",
+      stnkDueDate: new Date(),
+      insuranceDueDate: new Date(),
     },
-  })
+  });
 
-  const vehicleCategoryParam = VEHICLE_CATEGORY_PARAM;
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const { error } = await supabase.from("vehicles").insert({
+        name: values.name,
+        category: values.category,
+        brand: values.brand,
+        type: values.type,
+        year: values.year,
+        color: values.color,
+        license_plate: values.licensePlate,
+        stnk_due_date: values.stnkDueDate.toISOString(),
+        insurance_due_date: values.insuranceDueDate.toISOString(),
+        is_sold: false,
+        status: "active",
+      });
 
-  const vehicleBrandParam: Param[] = [
-    {
-      id: "1",
-      group: "002",
-      name: "Honda"
-    },
-    {
-      id: "2",
-      group: "002",
-      name: "Toyota"
-    },
-    {
-      id: "3",
-      group: "002",
-      name: "Suzuki"
-    },
-    {
-      id: "4",
-      group: "002",
-      name: "BMW"
-    },
-    {
-      id: "5",
-      group: "002",
-      name: "Mercedes-Benz"
-    },
-  ]
+      if (error) {
+        alert("Gagal menyimpan kendaraan: " + error.message);
+        return;
+      }
 
-  const { watch, setValue, reset } = form;
-
-  // Watch for changes in brand, type, color, and year
-  const brand = watch("brand");
-  const type = watch("type");
-  const color = watch("color");
-  const year = watch("year");
-
-  // Update the name field dynamically
-  useEffect(() => {
-    if (brand || type || color || year) {
-      const updatedName = `${brand} ${type} ${color} ${year}`;
-      setValue("name", updatedName);
-    }
-  }, [brand, type, color, year, setValue]);
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Edit detail kendaraan data: ", values)
-    if (onSave) {
-      onSave(values.name);
-    }
-    setOpen(false);
-    reset();
-  }
-
-  function handleDialogChange(isOpen: boolean) {
-    setOpen(isOpen);
-    if (!isOpen) {
+      if (onSave) onSave(values.name);
+      alert("Kendaraan berhasil ditambahkan");
       reset();
+      setOpen(false);
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("Terjadi kesalahan saat menyimpan.");
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <div>
-          <Button className="hidden sm:flex">
-            <PlusCircle /> Tambah Kendaraan
-          </Button>
-          <Button variant="default" size="icon2" className="fixed z-50 bottom-4 right-4 sm:hidden">
-            <Plus className="size-8" />
-          </Button>
-        </div>
+        <Button variant="outline">
+          <PlusCircle className="w-4 h-4 mr-2" />
+          Tambah Kendaraan
+        </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Tambah Kendaraan</DialogTitle>
-          <DialogDescription>Tambah kendaraan baru dan klik button simpan.</DialogDescription>
+          <DialogDescription>Masukkan informasi kendaraan baru.</DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Detail Kendaraan */}
-            <div className="flex flex-col gap-5">
-              <div className="grid grid-cols-1 gap-5">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Nama Kendaraan</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Hasil nama kendaraan"
-                          {...field}
-                          className="w-full"
-                          disabled
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Jenis</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Pilih jenis kendaraan" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {vehicleCategoryParam.map((option) => (
-                            <SelectItem key={option.id} value={option.name}>
-                              {option.description}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">Nama</Label>
+            <Input id="name" {...register("name")} />
+            {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
+          </div>
 
-                <FormField
-                  control={form.control}
-                  name="brand"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Merk</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Pilih merk kendaraan" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {vehicleBrandParam.map((option) => (
-                            <SelectItem key={option.id} value={option.name}>
-                              {option.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label htmlFor="category">Kategori</Label>
+              <Input id="category" {...register("category")} />
+              {errors.category && <p className="text-sm text-red-500">{errors.category.message}</p>}
+            </div>
+            <div>
+              <Label htmlFor="brand">Merek</Label>
+              <Input id="brand" {...register("brand")} />
+            </div>
+          </div>
 
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Tipe</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Masukkan tipe kendaraan"
-                          {...field}
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label htmlFor="type">Tipe</Label>
+              <Input id="type" {...register("type")} />
+            </div>
+            <div>
+              <Label htmlFor="year">Tahun</Label>
+              <Input type="number" id="year" {...register("year")} />
+              {errors.year && <p className="text-sm text-red-500">{errors.year.message}</p>}
+            </div>
+          </div>
 
-                <FormField
-                  control={form.control}
-                  name="year"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Tahun</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Masukkan tahun kendaraan"
-                          {...field}
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label htmlFor="color">Warna</Label>
+              <Input id="color" {...register("color")} />
+            </div>
+            <div>
+              <Label htmlFor="licensePlate">Plat Nomor</Label>
+              <Input id="licensePlate" {...register("licensePlate")} />
+              {errors.licensePlate && <p className="text-sm text-red-500">{errors.licensePlate.message}</p>}
+            </div>
+          </div>
 
-                <FormField
-                  control={form.control}
-                  name="color"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Warna</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Masukkan warna kendaraan"
-                          {...field}
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="licensePlate"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Plat No</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Masukkan plat no kendaraan"
-                          {...field}
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <FormField
-                  control={form.control}
-                  name="stnkDueDate"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Jatuh Tempo STNK</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd MMM yyyy")
-                              ) : (
-                                <span>Pilih jatuh tempo STNK</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date: Date) =>
-                              date < new Date("1900-01-01")
-                            }
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="insuranceDueDate"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Jatuh Tempo Asuransi</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd MMM yyyy")
-                              ) : (
-                                <span>Pilih jatuh tempo Asuransi</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date: Date) =>
-                              date < new Date("1900-01-01")
-                            }
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="stnkDueDate">STNK Berlaku Sampai</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("justify-start text-left", !watch("stnkDueDate") && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {watch("stnkDueDate") ? format(watch("stnkDueDate"), "PPP") : <span>Pilih tanggal</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar mode="single" selected={watch("stnkDueDate")} onSelect={(date) => setValue("stnkDueDate", date!)} />
+                </PopoverContent>
+              </Popover>
             </div>
 
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline">
-                  Batal
-                </Button>
-              </DialogClose>
-              <Button type="submit">
-                Simpan
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="insuranceDueDate">Asuransi Berlaku Sampai</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("justify-start text-left", !watch("insuranceDueDate") && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {watch("insuranceDueDate") ? format(watch("insuranceDueDate"), "PPP") : <span>Pilih tanggal</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar mode="single" selected={watch("insuranceDueDate")} onSelect={(date) => setValue("insuranceDueDate", date!)} />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
 
+          <Button type="submit" className="mt-4">Simpan</Button>
+        </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

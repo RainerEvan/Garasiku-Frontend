@@ -1,90 +1,81 @@
-import { VehicleCard } from "../components/vehicle-card"
-import { Input } from "@/components/shadcn/input"
-import { Button } from "@/components/shadcn/button"
-import { CarFront, Search } from "lucide-react"
-import { useState } from "react"
-import { Vehicle } from "@/models/vehicle"
-import { useLoading } from "@/lib/loading-context"
+import { VehicleCard } from "../components/vehicle-card";
+import { Input } from "@/components/shadcn/input";
+import { Button } from "@/components/shadcn/button";
+import { CarFront, Search } from "lucide-react";
+import { useState } from "react";
+import { Vehicle } from "@/models/vehicle";
+import { useLoading } from "@/lib/loading-context";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function CariKendaraanPage() {
   const { setLoading } = useLoading();
-
   const [search, setSearch] = useState("");
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
 
-  // Sample data
-  const activeVehicles: Vehicle[] = [
-    {
-      id: "1",
-      name: "Honda Civic Turbo Hitam 2022",
-      category: "Mobil",
-      year: "2022",
-      brand: "Honda",
-      color: "Hitam",
-      type: "Civic Turbo",
-      licensePlate: "D 1234 ABC",
-      location: {
-        id: "1",
-        vehicleId: "1",
-        name: "Rumah Bandung",
-        address: "Jl. Sukajadi No. 57, Bandung",
-      },
-      image: "/assets/car.jpg"
-    },
-    {
-      id: "2",
-      name: "Toyota Innova Putih 2023",
-      category: "Mobil",
-      year: "2023",
-      brand: "Toyota",
-      color: "Putih",
-      type: "Innova",
-      licensePlate: "D 7890 DFE",
-      location: {
-        id: "1",
-        vehicleId: "1",
-        name: "Rumah Jakarta",
-        address: "Jl. Sriwijaya No. 5, Jakarta",
-      },
-      image: "/assets/car.jpg"
-    },
-    {
-      id: "3",
-      name: "Honda Civic Turbo Hitam 2022",
-      category: "Mobil",
-      year: "2022",
-      brand: "Honda",
-      color: "Hitam",
-      type: "Civic Turbo",
-      licensePlate: "D 1234 ABC",
-      location: {
-        id: "1",
-        vehicleId: "1",
-        name: "Rumah Bandung",
-        address: "Jl. Sukajadi No. 57, Bandung",
-      },
-      image: "/assets/car.jpg"
-    },
-  ]
-
-  const fetchVehicle = () => {
+  const fetchVehicle = async () => {
     setLoading(true);
 
-    setTimeout(() => {
-      try {
-        const data = activeVehicles.find((vehicle) => vehicle.licensePlate && vehicle.licensePlate.toLowerCase() === search.toLowerCase());
-        setVehicle(data || null);
-      } catch (error) {
-        console.error("Error fetching vehicles:", error);
-      } finally {
-        setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from("vehicle_full_details")
+        .select(`
+          vehicleid,
+          name,
+          vehicle_category,
+          vehicle_year,
+          vehicle_brand,
+          vehicle_color,
+          vehicle_type,
+          license_plate,
+          image_url,
+          location_id,
+          location_name,
+          location_address
+        `)
+        .eq("license_plate", search.toUpperCase().trim())
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Supabase fetch error:", error.message);
+        setVehicle(null);
+        return;
       }
-    }, 2000);
+
+      if (!data) {
+        setVehicle(null);
+        return;
+      }
+
+      const mapped: Vehicle = {
+        id: data.vehicleid,
+        name: data.name,
+        category: data.vehicle_category,
+        year: data.vehicle_year?.toString() ?? "",
+        brand: data.vehicle_brand,
+        color: data.vehicle_color,
+        type: data.vehicle_type,
+        licensePlate: data.license_plate,
+        image: data.image_url ?? "/assets/car.jpg",
+        location: {
+          id: data.location_id ?? "",
+          vehicleId: data.vehicleid ?? "",
+          name: data.location_name ?? "-",
+          address: data.location_address ?? "-",
+        },
+      };
+
+      setVehicle(mapped);
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setVehicle(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Main content */}
       <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Cari Kendaraan</h1>
@@ -107,12 +98,9 @@ export default function CariKendaraanPage() {
           </Button>
         </div>
 
-        {(vehicle) ? (
+        {vehicle ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-            <VehicleCard
-              key={vehicle.id}
-              vehicle={vehicle}
-            />
+            <VehicleCard key={vehicle.id} vehicle={vehicle} />
           </div>
         ) : (
           <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
@@ -122,5 +110,5 @@ export default function CariKendaraanPage() {
         )}
       </main>
     </div>
-  )
+  );
 }
