@@ -84,16 +84,17 @@ function buildReminderEmail(serviceTasks: any[], adminTasks: any[]) {
   `;
 }
 
-export default async function handler(req: any, res: any) {
-  console.log(req);
+const handler = async (req: any, res: any) => {
+  try {
+    console.log(req);
 
-  const today = new Date();
-  const oneMonthLater = new Date();
-  oneMonthLater.setMonth(today.getMonth() + 1);
+    const today = new Date();
+    const oneMonthLater = new Date();
+    oneMonthLater.setMonth(today.getMonth() + 1);
 
-  const { data: serviceTasks, error: serviceError } = await supabase
-    .from("service")
-    .select(`
+    const { data: serviceTasks, error: serviceError } = await supabase
+      .from("service")
+      .select(`
       id,
       ticket_num,
       type,
@@ -103,13 +104,13 @@ export default async function handler(req: any, res: any) {
         license_plate
       )
     `)
-    // .gte("schedule_date", today.toISOString())
-    // .lte("schedule_date", oneMonthLater.toISOString())
-    .order("schedule_date", { ascending: true });
+      // .gte("schedule_date", today.toISOString())
+      // .lte("schedule_date", oneMonthLater.toISOString())
+      .order("schedule_date", { ascending: true });
 
-  const { data: adminTasks, error: adminError } = await supabase
-    .from("administration")
-    .select(`
+    const { data: adminTasks, error: adminError } = await supabase
+      .from("administration")
+      .select(`
       id,
       ticket_num,
       type,
@@ -119,22 +120,27 @@ export default async function handler(req: any, res: any) {
         license_plate
       )
     `)
-    // .gte("due_date", today.toISOString())
-    // .lte("due_date", oneMonthLater.toISOString())
-    .order("due_date", { ascending: true });
+      // .gte("due_date", today.toISOString())
+      // .lte("due_date", oneMonthLater.toISOString())
+      .order("due_date", { ascending: true });
 
-  if (serviceError || adminError) {
-    return res.status(500).json({ message: "Failed to fetch tasks" });
+    if (serviceError || adminError) {
+      return res.status(500).json({ message: "Failed to fetch tasks" });
+    }
+
+    const html = buildReminderEmail(serviceTasks ?? [], adminTasks ?? []);
+
+    await resend.emails.send({
+      from: "Garasiku Reminder <onboarding@resend.dev>",
+      to: ["rainerevan@gmail.com"],
+      subject: "Weekly Task Reminder - Garasiku",
+      html: html,
+    });
+
+    return res.status(200).json({ message: "Reminder email sent!" });
+  } catch (error) {
+    return res.status(500).json({ error: "Internal Server Error!" });
   }
-
-  const html = buildReminderEmail(serviceTasks ?? [], adminTasks ?? []);
-
-  await resend.emails.send({
-    from: "Garasiku Reminder <onboarding@resend.dev>",
-    to: ["rainerevan@gmail.com"],
-    subject: "Weekly Task Reminder - Garasiku",
-    html: html,
-  });
-
-  return res.status(200).json({ message: "Reminder email sent!" });
 }
+
+export { handler as default };
