@@ -1,12 +1,7 @@
 {
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "crons": [
     {
-      "path": "/api/send-weekly-task-reminder",
+      "path": "/api/cron",
       "schedule": "*/5 * * * *"
     }
   ]

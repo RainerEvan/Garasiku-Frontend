@@ -2,14 +2,14 @@ import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-function buildReminderEmail(serviceTasks: any[], adminTasks: any[]) {
-  const formatServiceTasks = (tasks: any[]) =>
+function buildReminderEmail(serviceTasks = [], adminTasks = []) {
+  const formatServiceTasks = (tasks) =>
     tasks
       .map(
         (task) => `
@@ -22,7 +22,7 @@ function buildReminderEmail(serviceTasks: any[], adminTasks: any[]) {
       )
       .join("");
 
-  const formatAdminTasks = (tasks: any[]) =>
+  const formatAdminTasks = (tasks) =>
     tasks
       .map(
         (task) => `
@@ -84,10 +84,9 @@ function buildReminderEmail(serviceTasks: any[], adminTasks: any[]) {
   `;
 }
 
-const handler = async (req: any, res: any) => {
+// Vercel serverless function export
+export default async function handler(req, res) {
   try {
-    console.log(req);
-
     const today = new Date();
     const oneMonthLater = new Date();
     oneMonthLater.setMonth(today.getMonth() + 1);
@@ -95,33 +94,29 @@ const handler = async (req: any, res: any) => {
     const { data: serviceTasks, error: serviceError } = await supabase
       .from("service")
       .select(`
-      id,
-      ticket_num,
-      type,
-      schedule_date,
-      vehicles (
-        name,
-        license_plate
-      )
-    `)
-      // .gte("schedule_date", today.toISOString())
-      // .lte("schedule_date", oneMonthLater.toISOString())
+        id,
+        ticket_num,
+        type,
+        schedule_date,
+        vehicles (
+          name,
+          license_plate
+        )
+      `)
       .order("schedule_date", { ascending: true });
 
     const { data: adminTasks, error: adminError } = await supabase
       .from("administration")
       .select(`
-      id,
-      ticket_num,
-      type,
-      due_date,
-      vehicles (
-        name,
-        license_plate
-      )
-    `)
-      // .gte("due_date", today.toISOString())
-      // .lte("due_date", oneMonthLater.toISOString())
+        id,
+        ticket_num,
+        type,
+        due_date,
+        vehicles (
+          name,
+          license_plate
+        )
+      `)
       .order("due_date", { ascending: true });
 
     if (serviceError || adminError) {
@@ -139,8 +134,7 @@ const handler = async (req: any, res: any) => {
 
     return res.status(200).json({ message: "Reminder email sent!" });
   } catch (error) {
+    console.error("Send reminder failed:", error);
     return res.status(500).json({ error: "Internal Server Error!" });
   }
 }
-
-export default handler;
