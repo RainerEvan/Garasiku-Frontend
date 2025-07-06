@@ -4,69 +4,33 @@ import { MapPin } from "lucide-react";
 import { LocationCard } from "@/components/shared/location-card";
 import { useLoading } from "@/lib/loading-context";
 import { useEffect, useState } from "react";
-
+import { useParams } from "react-router-dom";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function RiwayatLokasiKendaraanPage() {
+    const { id } = useParams<{ id: string }>();
     const { setLoading } = useLoading();
 
     const [listVehicleLocations, setListVehicleLocations] = useState<LocationVehicle[]>([]);
-
-    const vehicleLocations: any[] = [
-        {
-            id: "1",
-            vehicle_id: "1",
-            name: "Rumah Bandung",
-            address: "Jl. Taman Sukajadi Baru Blok A VIII 12 No. 57, Bandung",
-            created_at: "01 Jan 2025 10:00",
-            created_by: "rainerevan"
-        },
-        {
-            id: "2",
-            vehicle_id: "1",
-            name: "Apartment Jakarta",
-            address: "Menteng Park Apartment, Jakarta",
-            created_at: "31 Des 2024 10:00",
-            created_by: "rainerevan"
-        },
-        {
-            id: "3",
-            vehicle_id: "1",
-            name: "Bengkel ASCO",
-            address: "Jl. Kolonel Sugiono No. 20, Jakarta",
-            created_at: "30 Des 2024 10:00",
-            created_by: "rainerevan"
-        },
-        {
-            id: "4",
-            vehicle_id: "1",
-            name: "Lain-lain",
-            address: "Jl. Sabang No. 8, Bandung",
-            created_at: "11 Nov 2024 10:00",
-            created_by: "rainerevan"
-        }
-    ]
-
-    const vehicleId = "1";
-    const vehicleIsSold: boolean = false;
+    const [vehicleIsSold, setVehicleIsSold] = useState(false);
 
     useEffect(() => {
         const fetchAll = async () => {
             setLoading(true);
-
             try {
-                const [
-                    locationsRes
-                ] = await Promise.all([
-                    // simulate fetching params (you might replace this with supabase or API call)
-                    Promise.resolve(vehicleLocations),
-                ]);
+                if (!id) return;
 
-                // === LICENSE PLATES ===
-                const { data: locationsData, error: locationsError } = { data: locationsRes, error: null }; // Replace with actual API call if needed
-                if (locationsError) {
-                    console.error("Failed to fetch locations:", locationsError);
-                } else if (locationsData) {
-                    const mappedLocations = locationsData.map((v: any) => ({
+                // 1. Ambil data lokasi
+                const { data: locationData, error: locationError } = await supabase
+                    .from("vehicle_locations")
+                    .select("*")
+                    .eq("vehicle_id", id)
+                    .order("created_at", { ascending: false });
+
+                if (locationError) {
+                    console.error("Location fetch error:", locationError);
+                } else if (locationData) {
+                    const mapped = locationData.map((v: any) => ({
                         id: v.id,
                         vehicleId: v.vehicle_id,
                         name: v.name,
@@ -74,7 +38,20 @@ export default function RiwayatLokasiKendaraanPage() {
                         createdAt: v.created_at,
                         createdBy: v.created_by,
                     }));
-                    setListVehicleLocations(mappedLocations);
+                    setListVehicleLocations(mapped);
+                }
+
+                // 2. Ambil status kendaraan (terjual atau tidak)
+                const { data: vehicleData, error: vehicleError } = await supabase
+                    .from("vehicles")
+                    .select("is_sold")
+                    .eq("id", id)
+                    .single();
+
+                if (vehicleError) {
+                    console.error("Vehicle fetch error:", vehicleError);
+                } else {
+                    setVehicleIsSold(vehicleData?.is_sold ?? false);
                 }
             } catch (err) {
                 console.error("Failed to fetch data:", err);
@@ -84,11 +61,10 @@ export default function RiwayatLokasiKendaraanPage() {
         };
 
         fetchAll();
-    }, []);
+    }, [id]);
 
     return (
         <div className="min-h-screen flex flex-col">
-            {/* Main content */}
             <main className="flex-1 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
                 <div className="bg-background border rounded-lg p-5 shadow-xs flex flex-col gap-8">
                     <div className="flex flex-col gap-3 sm:flex-row sm:justify-between">
@@ -98,23 +74,22 @@ export default function RiwayatLokasiKendaraanPage() {
                                 <p className="text-muted-foreground text-sm">Klik button pindah lokasi untuk memindahkan lokasi kendaraan.</p>
                             )}
                         </div>
-                        {!vehicleIsSold && (
-                            <MoveLocationVehicleDialog vehicleId={vehicleId} currLocationAddress={vehicleLocations[0].address} />
+                        {!vehicleIsSold && listVehicleLocations[0] && (
+                            <MoveLocationVehicleDialog
+                                vehicleId={id!}
+                                currLocationAddress={listVehicleLocations[0].address}
+                            />
                         )}
                     </div>
 
                     <div>
                         {listVehicleLocations.length > 0 ? (
                             <div className="relative">
-                                {/* Location Cards */}
                                 {listVehicleLocations.map((location, index) => (
-                                    <div key={index} className="relative flex gap-3">
+                                    <div key={location.id} className="relative flex gap-3">
                                         {/* Timeline Left Side */}
                                         <div className="flex flex-col items-center">
-                                            {/* Dot */}
                                             <div className="w-4 h-4 bg-secondary rounded-full border-2 border-white"></div>
-
-                                            {/* Line - only if not last item */}
                                             {index !== listVehicleLocations.length - 1 && (
                                                 <div className="flex-1 w-px bg-secondary"></div>
                                             )}
@@ -122,7 +97,7 @@ export default function RiwayatLokasiKendaraanPage() {
 
                                         {/* Card */}
                                         <div className="flex-1 flex flex-col gap-2 pb-5">
-                                            {index == 0 && (
+                                            {index === 0 && (
                                                 <p className="text-sm font-medium text-secondary">Lokasi Terakhir</p>
                                             )}
                                             <LocationCard
@@ -146,5 +121,5 @@ export default function RiwayatLokasiKendaraanPage() {
                 </div>
             </main>
         </div>
-    )
+    );
 }
