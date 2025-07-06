@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "api/send-weekly-task-reminder.ts": {
-      "runtime": "vercel-nodejs@18.0.0"
-    }
-  }
-}
