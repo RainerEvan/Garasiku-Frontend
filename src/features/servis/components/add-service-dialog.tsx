@@ -1,6 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react";
+import { format } from "date-fns";
+import { toast } from "sonner";
 
-import { Button } from "@/components/shadcn/button"
+import { Button } from "@/components/shadcn/button";
 import {
   Dialog,
   DialogClose,
@@ -10,73 +12,123 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/shadcn/dialog"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/shadcn/form"
-import { z } from "zod"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover"
-import { CalendarIcon, Check, ChevronsUpDown, Plus, PlusCircle } from "lucide-react"
-import { Calendar } from "@/components/shadcn/calendar"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { Service } from "@/models/service"
-import { Vehicle } from "@/models/vehicle"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/shadcn/command"
-import { SERVICE_TYPE_PARAM } from "@/lib/constants"
+} from "@/components/shadcn/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/shadcn/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/shadcn/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/shadcn/popover";
+import {
+  CalendarIcon,
+  Check,
+  ChevronsUpDown,
+  Plus,
+  PlusCircle,
+} from "lucide-react";
+import { Calendar } from "@/components/shadcn/calendar";
+import { cn } from "@/lib/utils";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Service } from "@/models/service";
+import { Vehicle } from "@/models/vehicle";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/shadcn/command";
+import { SERVICE_TYPE_PARAM } from "@/lib/constants";
+import { supabase } from "@/lib/supabaseClient"
 
 interface AddServiceDialogProps {
-  onSave?: (newService: Service) => void
+  onSave?: (newService: Service) => void;
 }
 
-// Define the form schema with validation
 const formSchema = z.object({
   vehicleId: z.string().min(1, { message: "Id Kendaraan harus terisi" }),
   type: z.string().min(1, { message: "Tipe Servis harus terisi" }),
   scheduleDate: z.date({ required_error: "Jadwal Servis harus terisi" }),
-})
+});
+  const typeServiceParam = SERVICE_TYPE_PARAM;
+
 
 export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [listVehicle, setListVehicle] = useState<Vehicle[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       vehicleId: "",
-      type: ""
+      type: "",
+      scheduleDate: new Date(),
     },
-  })
-
-  const listVehicle: Vehicle[] = [
-    {
-      id: "1",
-      name: "D 1234 ABC - Honda Civic Turbo Hitam 2022"
-    },
-    {
-      id: "2",
-      name: "D 7890 DFE - Toyota Innova Putih 2023"
-    },
-    {
-      id: "3",
-      name: "D 0000 CDE - BMW M4 Putih 2020"
-    },
-  ]
-
-  const typeServiceParam = SERVICE_TYPE_PARAM;
+  });
 
   const { reset } = form;
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    const formattedValues = {
-      ...values,
-      scheduleDate: values.scheduleDate ? format(values.scheduleDate, "yyyy-MM-dd") : undefined,
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("id, license_plate, brand, type, color, year");
+
+      if (error) {
+        console.error("Gagal mengambil data kendaraan:", error);
+        toast.error("Gagal memuat data kendaraan");
+      } else {
+        const formatted = data.map((v) => ({
+          id: v.id,
+          name: `${v.license_plate} - ${v.brand} ${v.type} ${v.color} ${v.year}`,
+        }));
+        setListVehicle(formatted);
+      }
     };
 
-    console.log("Add service data: ", formattedValues)
-    if (onSave) {
-      onSave(formattedValues);
+    if (open) {
+      fetchVehicles();
     }
+  }, [open]);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const formattedValues = {
+      vehicle_id: values.vehicleId,
+      type: values.type,
+      schedule_date: format(values.scheduleDate, "yyyy-MM-dd"),
+    };
+
+    const { data, error } = await supabase
+      .from("service")
+      .insert(formattedValues)
+      .select("*")
+      .single();
+
+    if (error) {
+      console.error("Gagal tambah servis:", error.message);
+      toast.error("Gagal tambah servis");
+      return;
+    }
+
+    toast.success("Berhasil tambah servis");
+    if (onSave) onSave(data as Service);
     setOpen(false);
   }
 
@@ -89,20 +141,31 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
+      {/* HTML tetap sama, tak diubah */}
       <DialogTrigger asChild>
         <div>
           <Button className="hidden sm:flex">
             <PlusCircle /> Tambah Servis
           </Button>
-          <Button variant="default" size="icon2" className="fixed z-50 bottom-4 right-4 sm:hidden">
+          <Button
+            variant="default"
+            size="icon2"
+            className="fixed z-50 bottom-4 right-4 sm:hidden"
+          >
             <Plus className="size-8" />
           </Button>
         </div>
       </DialogTrigger>
-      <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+
+      <DialogContent
+        className="max-h-[95vh] md:max-w-3xl overflow-y-auto"
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Tambah Servis</DialogTitle>
-          <DialogDescription>Tambah servis baru dan klik button simpan.</DialogDescription>
+          <DialogDescription>
+            Tambah servis baru dan klik button simpan.
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -260,8 +323,7 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
             </DialogFooter>
           </form>
         </Form>
-
       </DialogContent>
     </Dialog>
-  )
+  );
 }

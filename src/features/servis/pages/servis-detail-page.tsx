@@ -139,9 +139,25 @@ export default function ServisDetailPage() {
 
 
 
-    const handleCancelService = () => {
-        console.log("Cancel Service button clicked");
+    const handleCancelService = async () => {
+        if (!service) return;
+
+        const { error } = await supabase
+            .from("service")
+            .update({ status: "cancelled" })
+            .eq("id", service.id);
+
+        if (error) {
+            console.error("Gagal membatalkan servis:", error);
+            return;
+        }
+
+        // Refresh service state
+        setService((prev) =>
+            prev ? { ...prev, status: "cancelled" } : prev
+        );
     };
+
 
     if (!service) return <div>Loading...</div>;
 

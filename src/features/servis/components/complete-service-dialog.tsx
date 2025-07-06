@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-
 import { Button } from "@/components/shadcn/button"
 import {
   Dialog,
@@ -25,36 +24,26 @@ import { cn } from "@/lib/utils"
 import { addMonths, format } from "date-fns"
 import { Switch } from "@/components/shadcn/switch"
 import { Separator } from "@/components/shadcn/separator"
+import { toast } from "sonner"
+import { supabase } from "@/lib/supabaseClient"
 
 interface CompleteServiceDialogProps {
   service: Service
   onSave?: (updatedService: Service) => void
 }
 
-// Define the form schema with validation
 const formSchema = z.object({
-  id: z.string().min(1, { message: "Id harus terisi" }),
+  id: z.string().min(1),
   endDate: z.date({ required_error: "Tanggal Selesai harus terisi" }),
-  mileage: z.number().min(0, { message: "Kilometer harus terisi" }),
-  totalCost: z.number().min(0, { message: "Biaya harus terisi" }),
+  mileage: z.coerce.number().min(0),
+  totalCost: z.coerce.number().min(0),
   mechanicName: z.string().optional(),
-  task: z.string().min(1, { message: "Jasa harus terisi" }),
+  task: z.string().min(1),
   sparepart: z.string().optional(),
   notes: z.string().optional(),
   isSetNextReminder: z.boolean(),
-  nextScheduleDate: z.date(),
-}).refine(
-  (data) => {
-    if (data.isSetNextReminder) {
-      return data.nextScheduleDate instanceof Date;
-    }
-    return true;
-  },
-  {
-    path: ["nextScheduleDate"],
-    message: "Jadwal Berikutnya harus terisi",
-  }
-)
+  nextScheduleDate: z.date().optional(),
+})
 
 export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialogProps) {
   const [open, setOpen] = useState(false)
@@ -63,48 +52,79 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: service.id,
-      mileage: service.mileage,
-      totalCost: service.totalCost,
-      mechanicName: service.mechanicName,
-      task: service.task,
-      sparepart: service.sparepart,
-      notes: service.notes,
-      isSetNextReminder: true,
+      endDate: service.endDate ? new Date(service.endDate) : undefined,
+      mileage: service.mileage ?? 0,
+      totalCost: service.totalCost ?? 0,
+      mechanicName: service.mechanicName ?? "",
+      task: service.task ?? "",
+      sparepart: service.sparepart ?? "",
+      notes: service.notes ?? "",
+      isSetNextReminder: true
     },
   })
 
-  const { watch, setValue, reset } = form;
-
-  const endDate = watch("endDate");
-
-  const isSetNextReminder = watch("isSetNextReminder");
+  const { watch, setValue, reset } = form
+  const endDate = watch("endDate")
+  const isSetNextReminder = watch("isSetNextReminder")
 
   useEffect(() => {
     if (isSetNextReminder && endDate) {
-      const nextScheduleDate = addMonths(endDate, 6);
-      setValue("nextScheduleDate", nextScheduleDate);
+      setValue("nextScheduleDate", addMonths(endDate, 6))
     }
-  }, [endDate, setValue]);
+  }, [endDate, isSetNextReminder, setValue])
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    const formattedValues = {
-      ...values,
-      endDate: values.endDate ? format(values.endDate, "yyyy-MM-dd") : undefined,
-      nextScheduleDate: values.nextScheduleDate ? format(values.nextScheduleDate, "yyyy-MM-dd") : undefined,
-    };
-
-    console.log("Add service record data: ", formattedValues)
-    if (onSave) {
-      onSave(formattedValues);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const payload = {
+      end_date: format(values.endDate, "yyyy-MM-dd"),
+      mileage: values.mileage,
+      total_cost: values.totalCost,
+      mechanic_name: values.mechanicName,
+      task: values.task,
+      sparepart: values.sparepart,
+      notes: values.notes,
     }
-    setOpen(false);
+
+    const { data, error } = await supabase
+      .from("service")
+      .update(payload)
+      .eq("id", values.id)
+      .select("*")
+      .single()
+
+    if (error) {
+      console.error("Gagal update service:", error)
+      toast.error("Gagal menyelesaikan servis.")
+      return
+    }
+
+    // insert servis baru kalau isSetNextReminder true
+    if (values.isSetNextReminder && values.nextScheduleDate) {
+      const insertData = {
+        vehicle_id: service.vehicleId,
+        type: service.type,
+        schedule_date: format(values.nextScheduleDate, "yyyy-MM-dd"),
+        status:'pending'
+      }
+
+      const { error: insertError } = await supabase.from("service").insert(insertData)
+
+      if (insertError) {
+        console.error("Gagal insert servis baru:", insertError)
+        toast.error("Servis berhasil diselesaikan, tapi gagal membuat reminder.")
+      } else {
+        toast.success("Servis selesai & reminder servis selanjutnya berhasil dibuat.")
+      }
+    } else {
+      toast.success("Servis berhasil diselesaikan.")
+    }
+
+    if (onSave) onSave(data)
+    setOpen(false)
   }
 
   function handleDialogChange(isOpen: boolean) {
-    setOpen(isOpen);
-    if (!isOpen) {
-      reset();
-    }
+    setOpen(isOpen)
+    if (!isOpen) reset()
   }
 
   return (
@@ -351,7 +371,6 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
             </DialogFooter>
           </form>
         </Form>
-
       </DialogContent>
     </Dialog>
   )
