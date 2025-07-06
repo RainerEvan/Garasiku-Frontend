@@ -8,6 +8,9 @@ let cachedReminderRange:
 export async function getCachedReminderDateRange() {
   if (cachedReminderRange) return cachedReminderRange;
 
+  const today = new Date();
+  let days = 30;
+
   try {
     const { data, error } = await supabase
       .from("parameter")
@@ -16,28 +19,23 @@ export async function getCachedReminderDateRange() {
       .eq("name", PARAM_WAKTU_REMINDER)
       .single();
 
-    const intervalDays = Number(data?.description);
-    const validInterval = !isNaN(intervalDays) && intervalDays > 0;
-
-    const days = validInterval ? intervalDays : 30; // fallback to 30
-
-    const today = new Date();
-    const futureDate = new Date();
-    futureDate.setDate(today.getDate() + days);
-
-    cachedReminderRange = { today, futureDate, intervalDays: days };
-    return cachedReminderRange;
+    if (error) {
+      console.warn("Supabase error:", error.message);
+    } else {
+      const intervalDays = Number(data?.description);
+      if (!isNaN(intervalDays) && intervalDays > 0) {
+        days = intervalDays;
+      }
+    }
   } catch (err) {
-    console.error("Failed to fetch reminder interval param:", err);
-
-    // Fallback
-    const today = new Date();
-    const futureDate = new Date();
-    futureDate.setDate(today.getDate() + 30);
-
-    cachedReminderRange = { today, futureDate, intervalDays: 30 };
-    return cachedReminderRange;
+    console.error("Unexpected failure fetching reminder interval param:", err);
   }
+
+  const futureDate = new Date();
+  futureDate.setDate(today.getDate() + days);
+
+  cachedReminderRange = { today, futureDate, intervalDays: days };
+  return cachedReminderRange;
 }
 
 export function clearReminderCache() {

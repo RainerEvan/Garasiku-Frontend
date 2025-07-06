@@ -71,6 +71,11 @@ export const ROLE_PARAM = [
   { id: "5", group: "0005", name: "admin", description: "Admin" },
 ]
 
+export const OWNER = "owner";
+export const DIVISI = "divisi";
+export const WSHEAD = "wshead";
+export const DRIVER = "driver";
+export const ADMIN = "admin";
 
 // PARAMETER GROUP
 export const PARAM_GROUP_MERK_KENDARAAN = '1001';

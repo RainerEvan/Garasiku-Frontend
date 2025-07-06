@@ -50,9 +50,9 @@ export default function KendaraanDetailPage() {
     const handleSellVehicle = () => {
         console.log("Sell Kendaraan button clicked")
     }
-    const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+    const [vehicle, setVehicle] = useState<Vehicle>({});
     // const [latestLocation, setLatestLocation] = useState<VehicleLocation | null>(null);
-    const [stnk, setStnk] = useState<Stnk | null>(null);
+    const [stnk, setStnk] = useState<Stnk>({});
     const [services, setServices] = useState<Service[]>([]);
     const [adminitrations, setAdministration] = useState<Administration[]>([]);
     const [vehicleEquipments, setVehicleEquipments] = useState<string[]>([]);
@@ -94,7 +94,7 @@ export default function KendaraanDetailPage() {
                         lastServiceDate : base.schedule_date
                     });
 
-                    setStnk(base.stnk_id ? {
+                    setStnk({
                         id: base.stnk_id,
                         vehicleId: base.vehicle_id,
                         stnkNumber: base.stnk_number,
@@ -116,7 +116,7 @@ export default function KendaraanDetailPage() {
                         color: base.color,
                         model: base.model,
                         licensePlateColor: base.license_plate_color
-                    } : null);
+                    });
 
                     setVehicleImages(base.image_url ? [{
                         id: base.av_id,
