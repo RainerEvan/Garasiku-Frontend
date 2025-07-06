@@ -11,6 +11,7 @@ import { Param } from "@/models/param";
 import { Button } from "@/components/shadcn/button";
 import { SERVICE_TYPE_PARAM } from "@/lib/constants";
 import { supabase } from "@/lib/supabaseClient"
+import { getCachedReminderDateRange } from "@/lib/reminder-date";
 
 type SelectOption = {
   label: string;
@@ -35,12 +36,15 @@ export default function ServisPage() {
       try {
         const [
           serviceTypeParamsRes,
-          servicesResponse
         ] = await Promise.all([
           Promise.resolve(SERVICE_TYPE_PARAM),
-          supabase
-            .from("service")
-            .select(`
+        ]);
+        
+        const { futureDate } = await getCachedReminderDateRange();
+
+        let serviceQuery = supabase
+          .from("service")
+          .select(`
               id,
               ticket_num,
               vehicle_id,
@@ -58,14 +62,21 @@ export default function ServisPage() {
                 license_plate
               )
             `)
-            .eq("status", activeTab === "todo" ? "pending" :
-                        activeTab === "pending" ? "pending" :
-                        activeTab === "proses" ? "ongoing" : "completed")
-            .order("schedule_date", { ascending: sortOrder === "asc" })
-        ]);
+          .order("schedule_date", { ascending: sortOrder === "asc" })
 
-        const servicesData = servicesResponse.data;
-        const servicesError = servicesResponse.error;
+        if (activeTab === "todo") {
+          serviceQuery = serviceQuery
+            .eq("status", "pending")
+            .lte("schedule_date", futureDate.toISOString());
+        } else if (activeTab === "pending") {
+          serviceQuery = serviceQuery.eq("status", "pending");
+        } else if (activeTab === "proses") {
+          serviceQuery = serviceQuery.eq("status", "ongoing");
+        } else {
+          serviceQuery = serviceQuery.in("status", ["completed", "cancelled"]);
+        }
+
+        const {data: servicesData, error: servicesError} = await serviceQuery;
 
         // === PARAMS ===
         const serviceTypeParamsData: Param[] = serviceTypeParamsRes;
@@ -107,7 +118,7 @@ export default function ServisPage() {
     };
 
     fetchAll();
-  }, [activeTab, sortOrder]);
+  }, [activeTab]);
 
   useEffect(() => {
     setSearchQuery("");

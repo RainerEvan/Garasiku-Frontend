@@ -7,7 +7,8 @@ import { AdministrationCard } from "../components/administrasi-card";
 import { useLoading } from "@/lib/loading-context";
 import { Button } from "@/components/shadcn/button";
 import { Navigate, useParams } from "react-router-dom";
-import { supabase } from "@/lib/supabaseClient"; 
+import { supabase } from "@/lib/supabaseClient";
+import { getCachedReminderDateRange } from "@/lib/reminder-date";
 
 const validTypes = ["stnk-1", "stnk-5", "asuransi"];
 
@@ -30,7 +31,9 @@ export default function AdministrasiPage() {
       setLoading(true);
 
       try {
-        const { data, error } = await supabase
+        const { futureDate } = await getCachedReminderDateRange();
+
+        let administrationQuery = supabase
           .from("administration")
           .select(
             `
@@ -45,51 +48,41 @@ export default function AdministrasiPage() {
           )
           .eq("type", `administrasi-${type}`);
 
-        if (error) {
-          console.error("Failed to fetch administrations:", error);
-          return;
-        }
         console.log(type);
 
-        console.log(data);
+        if (activeTab === "todo") {
+          administrationQuery = administrationQuery
+            .eq("status", "pending")
+            .lte("due_date", futureDate.toISOString());
+        } else if (activeTab === "pending") {
+          administrationQuery = administrationQuery.eq("status", "pending");
+        } else {
+          administrationQuery = administrationQuery.in("status", ["completed", "cancelled"])
+        }
 
-        const today = new Date();
+        const { data: administrationsData, error: administrationsError } = await administrationQuery;
 
-        const todoAdministrations = data.filter((a: any) => {
-          if (!a.dueDate) return false;
-          const due = new Date(a.dueDate);
-          due.setMonth(due.getMonth() - 1);
-          return a.status === "pending" && today >= due;
-        });
-
-        const pendingAdministrations = data.filter((a: any) => a.status === "pending");
-
-        const historiAdministrations = data.filter((a: any) =>
-          ["completed", "cancelled"].includes(a.status)
-        );
-
-        let filteredByTab: any[] = [];
-        if (activeTab === "todo") filteredByTab = todoAdministrations;
-        else if (activeTab === "pending") filteredByTab = pendingAdministrations;
-        else if (activeTab === "histori") filteredByTab = historiAdministrations;
-
-        const mapped = filteredByTab.map((a: any) => ({
-          id: a.id,
-          ticketNum: a.ticketNum,
-          vehicleId: a.vehicle_id,
-          vehicle: {
-            id: a.vehicles?.id,
-            name: a.vehicles?.name,
-            category: a.vehicles?.category,
-            licensePlate: a.vehicles?.license_plate,
-          },
-          type: a.type,
-          dueDate: a.dueDate,
-          endDate: a.endDate,
-          status: a.status,
-        }));
-
-        setListAdministrations(mapped);
+        // === ADMINISTRATIONS ===
+        if (administrationsError) {
+          console.error("Failed to fetch administrations:", administrationsError);
+        } else if (administrationsData) {
+          const mappedAdministrations = administrationsData.map((a: any) => ({
+            id: a.id,
+            ticketNum: a.ticketNum,
+            vehicleId: a.vehicle_id,
+            vehicle: {
+              id: a.vehicles?.id,
+              name: a.vehicles?.name,
+              category: a.vehicles?.category,
+              licensePlate: a.vehicles?.license_plate,
+            },
+            type: a.type,
+            dueDate: a.dueDate,
+            endDate: a.endDate,
+            status: a.status,
+          }));
+          setListAdministrations(mappedAdministrations);
+        }
       } catch (err) {
         console.error("Unexpected error fetching administration data:", err);
       } finally {
@@ -111,11 +104,9 @@ export default function AdministrasiPage() {
   const filteredAndSortedAdministration = useMemo(() => {
     const filtered = listAdministrations.filter((administration) => {
       const matchesSearch =
-        administration.ticketNum?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        administration.vehicle?.licensePlate
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        administration.vehicle?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+        (administration.ticketNum?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (administration.vehicle?.licensePlate?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (administration.vehicle?.name?.toLowerCase().includes(searchQuery.toLowerCase()));
 
       return matchesSearch;
     });

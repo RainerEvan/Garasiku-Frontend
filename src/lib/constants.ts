@@ -62,3 +62,14 @@ export const STATUS_PARAM = [
   { id: "3", group: "0004", name: "completed", description: STATUS_LABEL["completed"] },
   { id: "4", group: "0004", name: "cancelled", description: STATUS_LABEL["cancelled"] },
 ]
+
+
+// PARAMETER GROUP
+export const PARAM_GROUP_MERK_KENDARAAN = '001';
+export const PARAM_GROUP_LOKASI_KENDARAAN = '002';
+export const PARAM_GROUP_WAKTU_REMINDER = '003';
+export const PARAM_GROUP_KELENGKAPAN_KENDARAAN = '004';
+
+
+// PARAMETER NAME
+export const PARAM_WAKTU_REMINDER = 'waktu-reminder'

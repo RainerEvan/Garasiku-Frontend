@@ -1,7 +1,6 @@
 // components/EditParamDialog.tsx
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -30,7 +29,6 @@ import { toast } from "sonner";
 interface EditParamDialogProps {
   param: Param;
   onSave?: (updatedParam: Param) => void;
-  trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -45,7 +43,6 @@ const formSchema = z.object({
 export function EditParamDialog({
   param,
   onSave,
-  trigger,
   open,
   onOpenChange,
 }: EditParamDialogProps) {
@@ -87,8 +84,6 @@ export function EditParamDialog({
       onOpenChange?.(isOpen);
       if (!isOpen) reset();
     }}>
-      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-
       <DialogContent className="bg-white rounded-lg p-6 max-w-md w-full">
         <DialogHeader>
           <DialogTitle>Edit Param</DialogTitle>
