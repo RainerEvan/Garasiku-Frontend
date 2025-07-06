@@ -15,6 +15,8 @@ import { Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "@/lib/supabaseClient"
+import { useLoading } from "@/lib/loading-context"
+import { toast } from "sonner"
 
 // Form schema
 const formSchema = z.object({
@@ -23,6 +25,8 @@ const formSchema = z.object({
 })
 
 export default function LoginPage() {
+  const { loading, setLoading } = useLoading();
+  
   const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
 
@@ -36,42 +40,50 @@ export default function LoginPage() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const { username, password } = values
+    setLoading(true)
 
-    // 🔍 Ambil email & status dari RPC (fungsi Supabase)
-    const { data: result, error: rpcError } = await supabase
-      .rpc("lookup_user_by_username", { uname: username })
+    try {
+      // 🔍 Call RPC to get user email
+      const { data: result, error: rpcError } = await supabase
+        .rpc("lookup_user_by_username", { uname: username })
 
-    const userRow = result?.[0]
+      const userRow = Array.isArray(result) ? result[0] : null
 
-    if (rpcError || !userRow?.email) {
-      form.setError("username", {
-        message: "Username tidak ditemukan atau tidak memiliki email",
+      if (rpcError || !userRow?.email) {
+        form.setError("username", {
+          message: "Username tidak ditemukan atau tidak memiliki email",
+        })
+        return
+      }
+
+      // 🔐 Attempt login
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: userRow.email,
+        password,
       })
-      return
+
+      if (loginError) {
+        form.setError("password", { message: "Login gagal: " + loginError.message })
+        return
+      }
+
+      // ❌ Check status
+      if (userRow.status !== "active") {
+        await supabase.auth.signOut()
+        form.setError("username", {
+          message: "Akun nonaktif, hubungi admin.",
+        })
+        return
+      }
+
+      // ✅ Navigate on success
+      navigate("/")
+    } catch (err) {
+      toast.error("Terjadi kesalahan saat login.")
+      console.error("Login error:", err)
+    } finally {
+      setLoading(false)
     }
-
-    // 🔐 Login pakai email
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: userRow.email,
-      password,
-    })
-
-    if (error) {
-      form.setError("password", { message: "Login gagal: " + error.message })
-      return
-    }
-
-    // ❌ Nonaktif
-    if (userRow.status !== "active") {
-      form.setError("username", {
-        message: "Akun nonaktif, hubungi admin.",
-      })
-      await supabase.auth.signOut()
-      return
-    }
-
-    // ✅ Sukses
-    navigate("/")
   }
 
   return (
@@ -130,7 +142,7 @@ export default function LoginPage() {
               )}
             />
 
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={loading}>
               Masuk
             </Button>
           </form>

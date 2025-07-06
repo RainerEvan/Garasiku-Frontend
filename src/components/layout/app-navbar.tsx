@@ -17,27 +17,29 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
 } from "../shadcn/alert-dialog";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "@/lib/auth-context";
+import { ADMIN, DIVISI, DRIVER, OWNER, WSHEAD } from "@/lib/constants";
 
 const items = [
-  { title: "Dashboard", url: "dashboard" },
+  { title: "Dashboard", url: "dashboard", roles: [OWNER,DIVISI] },
   {
-    title: "Garasi", url: "garasi", child: [
-      { title: "Daftar Kendaraan", url: "daftar-kendaraan" },
-      { title: "Cari Kendaraan", url: "cari-kendaraan" },
+    title: "Garasi", url: "garasi", roles: [OWNER,DIVISI,WSHEAD], child: [
+      { title: "Daftar Kendaraan", url: "daftar-kendaraan", roles: [OWNER,DIVISI] },
+      { title: "Cari Kendaraan", url: "cari-kendaraan", roles: [OWNER,DIVISI,WSHEAD,DRIVER] },
     ]
   },
-  { title: "Servis", url: "servis" },
+  { title: "Servis", url: "servis", roles: [OWNER,DIVISI,WSHEAD] },
   {
-    title: "Administrasi", url: "administrasi", child: [
-      { title: "STNK 1 Tahun", url: "stnk-1" },
-      { title: "STNK 5 Tahun", url: "stnk-5" },
-      { title: "Asuransi", url: "asuransi" },
+    title: "Administrasi", url: "administrasi", roles: [OWNER,DIVISI], child: [
+      { title: "STNK 1 Tahun", url: "stnk-1", roles: [OWNER,DIVISI] },
+      { title: "STNK 5 Tahun", url: "stnk-5", roles: [OWNER,DIVISI] },
+      { title: "Asuransi", url: "asuransi", roles: [OWNER,DIVISI] },
     ]
   },
-  { title: "User", url: "user" },
-  { title: "Parameter", url: "parameter" },
+  { title: "User", url: "user", roles: [OWNER,DIVISI,ADMIN] },
+  { title: "Parameter", url: "parameter", roles: [OWNER,DIVISI,ADMIN] },
 ];
 
 export function AppNavbar() {
@@ -45,23 +47,16 @@ export function AppNavbar() {
   const { pathname } = useLocation();
   const { setOpenMobile, toggleSidebar } = useSidebar();
 
-  const [userMeta, setUserMeta] = useState<{ name?: string, username?: string } | null>(null);
+  const { user, role } = useAuth();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      const user = data?.user;
-      if (user) {
-        const meta = user.user_metadata || {};
-        setUserMeta({
-          name: meta.name || meta.full_name || "User",
-          username: meta.username || user.email?.split("@")[0] || "user",
-        });
-      }
+  const userMeta = useMemo(() => {
+    if (!user) return null;
+    const meta = user.user_metadata || {};
+    return {
+      name: meta.fullname || "Nama Pengguna",
+      username: meta.username || user.email?.split("@")[0] || "nama pengguna",
     };
-
-    fetchUser();
-  }, []);
+  }, [user]);
 
   const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
@@ -91,10 +86,10 @@ export function AppNavbar() {
                 </div>
                 <div>
                   <h2 className="font-medium text-sm">
-                    {userMeta?.name ?? "Nama Pengguna"}
+                    {userMeta?.name}
                   </h2>
                   <p className="text-xs text-medium">
-                    {userMeta?.username ?? "username"}
+                    {userMeta?.username}
                   </p>
                 </div>
               </div>
@@ -113,7 +108,9 @@ export function AppNavbar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {items
+                .filter(item => !item.roles || item.roles.includes(role || ""))
+                .map((item) => (
                 item.child ? (
                   <SidebarMenuItem key={item.title}>
                     <Collapsible>
@@ -125,7 +122,9 @@ export function AppNavbar() {
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <SidebarMenuSub>
-                          {item.child.map((subItem) => (
+                          {item.child
+                            .filter(subItem => !subItem.roles || subItem.roles.includes(role || ""))
+                            .map((subItem) => (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuButton
                                 asChild

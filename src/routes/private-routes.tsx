@@ -1,7 +1,17 @@
+import { useAuth } from "@/lib/auth-context";
+import { useLoading } from "@/lib/loading-context";
+import { useEffect } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "@/hooks/use-auth";
 
 export default function PrivateRoute() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { setLoading } = useLoading();
+
+  useEffect(() => {
+    setLoading(authLoading);
+  }, [authLoading]);
+
+  if (authLoading) return null;
+
   return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
 }

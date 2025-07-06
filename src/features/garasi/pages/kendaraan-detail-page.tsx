@@ -122,7 +122,7 @@ export default function KendaraanDetailPage() {
                         lastServiceDate: base.schedule_date
                     });
 
-                    setStnk(base.stnk_id ? {
+                    setStnk({
                         id: base.stnk_id,
                         vehicleId: base.vehicle_id,
                         stnkNumber: base.stnk_number,
@@ -144,7 +144,7 @@ export default function KendaraanDetailPage() {
                         color: base.color,
                         model: base.model,
                         licensePlateColor: base.license_plate_color
-                    } : null);
+                    });
 
                     setVehicleImages(base.image_url ? [{
                         id: base.av_id,

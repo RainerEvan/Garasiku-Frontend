@@ -2,6 +2,7 @@ import type React from "react"
 
 import { useRef, useState } from "react"
 import { ImageIcon, ImagePlus, Trash } from "lucide-react"
+import imageCompression from "browser-image-compression"
 
 import { Button } from "@/components/shadcn/button"
 import {
@@ -32,12 +33,36 @@ export function EditImageVehicleDialog({ images = [], onSave }: EditImageVehicle
         }
     };
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
-        if (files && files.length > 0) {
-            const newImages = Array.from(files).map((file) => URL.createObjectURL(file)); // Create object URLs for preview
-            setCarImages([...carImages, ...newImages]);
+        if (!files || files.length === 0) return;
+
+        const compressedImages: string[] = [];
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+
+            try {
+                const options = {
+                    maxSizeMB: 0.5, // Target 500KB
+                    maxWidthOrHeight: 1280, // Resize if larger
+                    useWebWorker: true,
+                    fileType: 'image/webp', // Optional: better compression
+                };
+
+                const compressedFile = await imageCompression(file, options);
+                console.log("No: ", i+1)
+                console.log("File Name: ", compressedFile.name)
+                console.log("File Size: ", (compressedFile.size / 1024).toFixed(2))
+                console.log("File Type: ", compressedFile.type)
+                const compressedUrl = URL.createObjectURL(compressedFile);
+                compressedImages.push(compressedUrl);
+            } catch (error) {
+                console.error("Image compression error:", error);
+            }
         }
+
+        setCarImages((prev) => [...prev, ...compressedImages]);
     };
 
     const handleDeleteImage = (index: number) => {
