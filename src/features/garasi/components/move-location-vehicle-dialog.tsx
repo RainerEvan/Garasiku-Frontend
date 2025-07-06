@@ -149,6 +149,7 @@ export function MoveLocationVehicleDialog({
         name: values.name,
         address: values.address,
         created_by: username, 
+        created_at : new Date().toISOString()
       });
 
     setLoading(false);
@@ -201,11 +202,11 @@ export function MoveLocationVehicleDialog({
                 control={form.control}
                 name="name"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="space-y-1">
                     <FormLabel>Nama Lokasi</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Pilih nama lokasi kendaraan" />
                         </SelectTrigger>
                       </FormControl>
