@@ -84,10 +84,9 @@ function buildReminderEmail(serviceTasks: any[], adminTasks: any[]) {
   `;
 }
 
-const handler = async (req: any, res: any) => {
+export default async function handler(req: any, res: any) {
+  console.log(req);
   try {
-    console.log(req);
-
     const today = new Date();
     const oneMonthLater = new Date();
     oneMonthLater.setMonth(today.getMonth() + 1);
@@ -139,8 +138,7 @@ const handler = async (req: any, res: any) => {
 
     return res.status(200).json({ message: "Reminder email sent!" });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({ error: "Internal Server Error!" });
   }
 }
-
-export { handler as default };
