@@ -1,3 +1,4 @@
+// (Semua import tetap seperti sebelumnya)
 import { useEffect, useState } from "react";
 import { Button } from "@/components/shadcn/button";
 import {
@@ -32,7 +33,7 @@ import { Textarea } from "@/components/shadcn/textarea";
 import { useLoading } from "@/lib/loading-context";
 import { LocationVehicle } from "@/models/location-vehicle";
 import { supabase } from "@/lib/supabaseClient";
-import { PARAM_GROUP_LOKASI_KENDARAAN } from "@/lib/constants"
+import { PARAM_GROUP_LOKASI_KENDARAAN } from "@/lib/constants";
 import { toast } from "sonner";
 
 interface MoveLocationVehicleDialogProps {
@@ -92,7 +93,7 @@ export function MoveLocationVehicleDialog({
           .eq("group", PARAM_GROUP_LOKASI_KENDARAAN);
 
         if (error) {
-           toast.error("Gagal memuat data parameter");
+          toast.error("Gagal memuat data parameter");
           console.error("Failed to fetch parameter locations:", error);
         } else {
           setLocationParams(data || []);
@@ -124,23 +125,25 @@ export function MoveLocationVehicleDialog({
     console.log("Move location kendaraan data: ", values);
 
     const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-  if (userError || !user) {
-    toast.error("Gagal mendapatkan user login");
-    console.error("Gagal mendapatkan user login:", userError);
-    alert("Gagal mendapatkan informasi user.");
-    setLoading(false);
-    return;
-  }
+    if (userError || !user) {
+      toast.error("Gagal mendapatkan user login");
+      console.error("Gagal mendapatkan user login:", userError);
+      alert("Gagal mendapatkan informasi user.");
+      setLoading(false);
+      return;
+    }
 
-  const username = user.user_metadata?.username || user.email || "unknown";
+    const username = user.user_metadata?.username || user.email || "unknown";
 
     if (!vehicleId) return;
 
     setLoading(true);
+
+    const createdAt = new Date().toISOString();
 
     const { error } = await supabase
       .from("vehicle_locations")
@@ -148,8 +151,8 @@ export function MoveLocationVehicleDialog({
         vehicle_id: vehicleId,
         name: values.name,
         address: values.address,
-        created_by: username, 
-        created_at : new Date().toISOString()
+        created_by: username,
+        created_at: createdAt,
       });
 
     setLoading(false);
@@ -160,16 +163,17 @@ export function MoveLocationVehicleDialog({
       alert("Gagal memindahkan lokasi kendaraan.");
       return;
     }
+
     toast.success("Berhasil Update Lokasi Kendaraan");
 
     if (onSave) {
       onSave({
-        id: "", 
+        id: "",
         vehicleId: vehicleId,
         name: values.name,
         address: values.address,
         createdBy: username,
-        createdAt: new Date().toISOString(),
+        createdAt,
       });
     }
 
@@ -206,7 +210,7 @@ export function MoveLocationVehicleDialog({
                     <FormLabel>Nama Lokasi</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                         <SelectTrigger className="w-full">
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Pilih nama lokasi kendaraan" />
                         </SelectTrigger>
                       </FormControl>

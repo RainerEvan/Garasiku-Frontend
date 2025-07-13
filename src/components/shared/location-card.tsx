@@ -9,6 +9,26 @@ interface LocationCardProps {
   disabled?: boolean;
 }
 
+// Fungsi untuk format tanggal + jam
+function formatDateTime(dateString?: string) {
+  if (!dateString) return "-"
+
+  const date = new Date(dateString)
+  const tanggal = new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date)
+
+  const jam = new Intl.DateTimeFormat("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date)
+
+  return `${tanggal} pukul ${jam}`
+}
+
 export function LocationCard({
   name = "Name",
   address = "Address",
@@ -34,7 +54,7 @@ export function LocationCard({
             <p className="text-xs text-medium">{address}</p>
           </div>
           <div className="w-full grid grid-cols-2 gap-5 text-xs text-gray-400">
-            <SectionItem label="Diubah Pada" value={createdAt} />
+            <SectionItem label="Diubah Pada" value={formatDateTime(createdAt)} />
             <SectionItem label="Diubah Oleh" value={createdBy} />
           </div>
         </div>

@@ -18,50 +18,90 @@ import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { AttachmentVehicle } from "@/models/attachment-vehicle"
+import { supabase } from "@/lib/supabaseClient"
+import { toast } from "sonner"
 
 interface AddAttachmentVehicleDialogProps {
   vehicleId?: string
   onSave?: (newAttachment: AttachmentVehicle) => void
 }
 
-// Define the form schema with validation
+// Schema: hanya izinkan file PDF
 const formSchema = z.object({
-  vehicleId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
-  fileName: z.string().min(1, { message: "Dokumen harus terisi" }),
-  fileType: z.string().min(1, { message: "File Type harus terisi" }),
-  fileSize: z.string().min(1, { message: "File Size harus terisi" }),
-  fileLink: z.string().min(1, { message: "File Link harus terisi" }),
+  file: z
+    .instanceof(File)
+    .refine((file) => file.type === "application/pdf", {
+      message: "File harus berupa PDF",
+    }),
 })
+
+type FormData = z.infer<typeof formSchema>
 
 export function AddAttachmentVehicleDialog({ vehicleId, onSave }: AddAttachmentVehicleDialogProps) {
   const [open, setOpen] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      vehicleId: vehicleId,
-      fileName: "",
-      fileType: "",
-      fileSize: "",
-      fileLink: "",
+      file: undefined,
     },
   })
 
-  const { reset } = form;
+  const { reset } = form
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Tambah dokumen kendaran: ", values)
-    if (onSave) {
-      onSave(values);
+  async function onSubmit(values: FormData) {
+    try {
+      if (!vehicleId) throw new Error("ID kendaraan tidak tersedia")
+
+      const file = values.file
+      const fileName = `${Date.now()}-${file.name}`;
+      const filePath = `${vehicleId}/documents/${fileName}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("kendaraan")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        })
+
+      if (uploadError) throw uploadError
+
+      const { data: publicUrl } = supabase.storage.from("attachment").getPublicUrl(filePath)
+
+      const insertPayload = {
+        vehicle_id: vehicleId,
+        file_name: file.name,
+        file_type: file.type,
+        file_size: file.size.toString(),
+        file_link: filePath,
+        attachment_type: "document",
+        created_by: "system",
+
+      }
+
+      const { data: inserted, error: insertError } = await supabase
+        .from("attachment_vehicle")
+        .insert(insertPayload)
+        .select("*")
+        .single()
+
+      if (insertError) throw insertError
+
+      toast.success("Dokumen kendaraan berhasil ditambahkan")
+
+      if (onSave) onSave(inserted)
+      setOpen(false)
+      reset()
+    } catch (err: any) {
+      console.error(err)
+      toast.error("Gagal menambahkan dokumen")
     }
-    setOpen(false);
-    reset();
   }
 
   function handleDialogChange(isOpen: boolean) {
-    setOpen(isOpen);
+    setOpen(isOpen)
     if (!isOpen) {
-      reset();
+      reset()
     }
   }
 
@@ -86,17 +126,17 @@ export function AddAttachmentVehicleDialog({ vehicleId, onSave }: AddAttachmentV
             <div className="flex flex-col gap-5">
               <FormField
                 control={form.control}
-                name="fileName"
+                name="file"
                 render={({ field }) => (
                   <FormItem className="space-y-1">
                     <FormLabel className="font-medium">Dokumen</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Dokumen"
-                        {...field}
+                        onChange={(e) => field.onChange(e.target.files?.[0])}
                         className="w-full"
                         type="file"
-                        accept="application/pdf, image/*"
+                        accept="application/pdf"
                       />
                     </FormControl>
                     <FormMessage />
@@ -117,7 +157,6 @@ export function AddAttachmentVehicleDialog({ vehicleId, onSave }: AddAttachmentV
             </DialogFooter>
           </form>
         </Form>
-
       </DialogContent>
     </Dialog>
   )

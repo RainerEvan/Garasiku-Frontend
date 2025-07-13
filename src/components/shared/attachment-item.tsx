@@ -4,20 +4,59 @@ import { Button } from "../shadcn/button"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../shadcn/alert-dialog"
 import { AttachmentVehicle } from "@/models/attachment-vehicle"
 import { useState } from "react"
+import { supabase } from "@/lib/supabaseClient"
 
 interface AttachmentItemProps {
     attachment: AttachmentVehicle
+    onDelete?: (id: string) => void
 }
 
 export default function AttachmentItem({
     attachment,
+    onDelete,
 }: AttachmentItemProps) {
-    const [openDropdown, setOpenDropdown] = useState(false);
-    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+    const [openDropdown, setOpenDropdown] = useState(false)
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
+    const [loading, setLoading] = useState(false)
 
-    function handleDelete() {
-        console.log(`Deleting file: ${attachment.fileName}`);
+    async function handleDelete() {
+        setLoading(true)
+        try {
+            // Hapus file dari storage
+            const { error: storageError } = await supabase.storage
+                .from("kendaraan")
+                .remove([attachment.fileLink ?? ""]);
+            if (storageError) throw storageError
+
+            // Hapus data dari database
+            const { error: dbError } = await supabase
+                .from("attachment_vehicle")
+                .delete()
+                .eq("id", attachment.id)
+            if (dbError) throw dbError
+
+            if (onDelete && attachment.id) onDelete(attachment.id)
+        } catch (error) {
+            console.error("Gagal menghapus dokumen:", error)
+        } finally {
+            setOpenDeleteDialog(false)
+            setLoading(false)
+        }
     }
+
+    function handleDownload() {
+        const { data } = supabase
+            .storage
+            .from("kendaraan") 
+            .getPublicUrl(attachment.fileLink ?? ""); 
+
+        if (data?.publicUrl) {
+            window.open(data.publicUrl, "_blank");
+        } else {
+            console.error("Gagal mendapatkan public URL untuk file:", attachment.fileLink);
+        }
+    }
+
 
     return (
         <div className="flex flex-row p-2 gap-4">
@@ -38,7 +77,7 @@ export default function AttachmentItem({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Dokumen</DropdownMenuLabel>
-                        <DropdownMenuItem>Download</DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleDownload}>Download</DropdownMenuItem>
                         <DropdownMenuItem
                             onClick={() => {
                                 setOpenDropdown(false)
@@ -60,11 +99,9 @@ export default function AttachmentItem({
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Tidak</AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={handleDelete}
-                        >
-                            Hapus
+                        <AlertDialogCancel disabled={loading}>Tidak</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} disabled={loading}>
+                            {loading ? "Menghapus..." : "Hapus"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
