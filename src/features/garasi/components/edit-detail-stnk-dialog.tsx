@@ -74,14 +74,14 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
       type: stnk?.type ?? "",
       category: stnk?.category ?? "",
       model: stnk?.model ?? "",
-      manufacturedYear: String(stnk?.manufacturedYear ?? ""),
-      cylinderCapacity: stnk?.cylinderCapacity ?? "",
+      manufacturedYear: stnk?.manufacturedYear || undefined,
       chassisNumber: stnk?.chassisNumber ?? "",
       engineNumber: stnk?.engineNumber ?? "",
       color: stnk?.color ?? "",
       fuelType: stnk?.fuelType ?? "",
       licensePlateColor: stnk?.licensePlateColor ?? "",
-      registrationYear: String(stnk?.registrationYear ?? ""),
+      registrationYear: stnk?.registrationYear || undefined,
+      cylinderCapacity: stnk?.cylinderCapacity ?? "",
       bpkbNumber: stnk?.bpkbNumber ?? "",
       registrationNumber: stnk?.registrationNumber ?? "",
       validUntil: stnk?.validUntil ?? new Date().toISOString().split("T")[0],
@@ -114,7 +114,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
         })
         .eq("id", values.id)
         .select("*")
-        .maybeSingle(); 
+        .maybeSingle();
 
       if (error) {
         toast.error("Gagal update STNK")
@@ -122,21 +122,21 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
         console.error("Gagal update STNK:", error.message)
         return
       }
-    toast.success("Data STNK berhasil diperbarui.")
+      toast.success("Data STNK berhasil diperbarui.")
 
-    const { error: vehicleError } = await supabase
-      .from("vehicles")
-      .update({
-        stnk_due_date: values.validUntil || null,
-      })
-      .eq("id", values.vehicleId);
+      const { error: vehicleError } = await supabase
+        .from("vehicles")
+        .update({
+          stnk_due_date: values.validUntil || null,
+        })
+        .eq("id", values.vehicleId);
 
-    if (vehicleError) {
-      console.error("Gagal update STNK due date kendaraan:", vehicleError.message);
-      toast.error("Gagal update STNK")
+      if (vehicleError) {
+        console.error("Gagal update STNK due date kendaraan:", vehicleError.message);
+        toast.error("Gagal update STNK")
 
-      return;
-    }
+        return;
+      }
 
 
       if (onSave) {
@@ -169,7 +169,11 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit(onSubmit)();
+            console.log("Errors:", form.formState.errors);
+          }} className="space-y-6">
             {/* Detail Kendaraan */}
             <div className="flex flex-col gap-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

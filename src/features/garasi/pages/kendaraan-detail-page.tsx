@@ -26,6 +26,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { useLoading } from "@/lib/loading-context"
 import { LicensePlateDialog } from "../components/license-plate-dialog"
 import { LocationVehicle } from "@/models/location-vehicle"
+import { toast } from "sonner"
 
 export default function KendaraanDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -43,9 +44,74 @@ export default function KendaraanDetailPage() {
     ];
 
 
-    const handleDeleteVehicle = () => {
-        console.log("Delete Kendaraan button clicked")
-    }
+    const handleDeleteVehicle = async () => {
+        if (!vehicle?.id) return;
+        const vehicleId = vehicle.id;
+
+        const confirmed = window.confirm(`Apakah Anda yakin ingin menghapus kendaraan ${vehicle.name} beserta seluruh datanya?`);
+        if (!confirmed) return;
+
+        setLoading(true);
+
+        try {
+            // 2. Delete from attachment_vehicles
+            const { error: attachmentVehicleError } = await supabase
+                .from("attachment_vehicle")
+                .delete()
+                .eq("vehicle_id", vehicleId);
+
+            if (attachmentVehicleError) {
+                throw new Error("Gagal menghapus attachment_vehicles: " + attachmentVehicleError.message);
+            }
+
+            // 3. Delete from services
+            const { error: servicesError } = await supabase
+                .from("service")
+                .delete()
+                .eq("vehicle_id", vehicleId);
+
+            if (servicesError) {
+                throw new Error("Gagal menghapus services: " + servicesError.message);
+            }
+
+            // 4. Delete from stnk
+            const { error: stnkError } = await supabase
+                .from("stnk")
+                .delete()
+                .eq("vehicle_id", vehicleId);
+
+            if (stnkError) {
+                throw new Error("Gagal menghapus STNK: " + stnkError.message);
+            }
+
+            // 5. Delete from administration
+            const { error: adminError } = await supabase
+                .from("administration")
+                .delete()
+                .eq("vehicle_id", vehicleId);
+
+            if (adminError) {
+                throw new Error("Gagal menghapus administration: " + adminError.message);
+            }
+
+            // 6. Delete from vehicles (terakhir)
+            const { error: vehicleError } = await supabase
+                .from("vehicles")
+                .delete()
+                .eq("id", vehicleId);
+
+            if (vehicleError) {
+                throw new Error("Gagal menghapus kendaraan: " + vehicleError.message);
+            }
+
+            toast.success(`Kendaraan "${vehicle.name}" berhasil dihapus.`);
+        } catch (error) {
+            console.error(error);
+            toast.error("Gagal menghapus kendaraan: " + error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSellVehicle = async () => {
         if (!vehicle?.id) return;
@@ -146,12 +212,23 @@ export default function KendaraanDetailPage() {
                         licensePlateColor: base.license_plate_color
                     });
 
-                    setVehicleImages(base.image_url ? [{
-                        id: base.av_id,
-                        vehicleId: base.id,
-                        attachmentType: 'gallery',
-                        fileLink: base.image_url
-                    }] : []);
+                    const { data: imageData, error: imageError } = await supabase
+                        .from("attachment_vehicle")
+                        .select("*")
+                        .eq("vehicle_id", id)
+                        .eq("attachment_type", "gallery")
+                        .order("created_at", { ascending: true })
+
+                    if (imageError) {
+                        console.error("Gallery image fetch error:", imageError)
+                    } else {
+                        setVehicleImages(imageData.map(img => ({
+                            id: img.id,
+                            vehicleId: img.vehicle_id,
+                            attachmentType: img.attachment_type,
+                            fileLink: img.file_link,
+                        })))
+                    }
                     setVehicleEquipments(base.equipments || []);
 
                 }
@@ -256,6 +333,21 @@ export default function KendaraanDetailPage() {
     }, [id]);
 
 
+    const fetchDetailEq = async () => {
+        setLoading(true);
+        try {
+            // semua logic yang kamu pakai di useEffect
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchDetailEq();
+    }, [id]);
+
 
     if (!vehicle) return <p>Tidak ada data kendaraan...</p>;
 
@@ -274,7 +366,9 @@ export default function KendaraanDetailPage() {
 
                     {/* Image Carousel */}
                     <div className="col-span-1 md:col-span-4 md:p-5 md:pr-0">
-                        <ImageCarousel images={vehicleImages.map(image => image.fileLink || '')} />
+                        {vehicle?.id && (
+                            <ImageCarousel images={vehicleImages.map(image => image.fileLink || '')} vehicleId={vehicle.id} />
+                        )}
                     </div>
 
                     <div className="col-span-1 md:col-span-3 w-full flex flex-col justify-between gap-3 p-5">
@@ -521,7 +615,24 @@ export default function KendaraanDetailPage() {
                             <EditEquipmentVehicleDialog
                                 equipmentParam={equipmentParam}
                                 vehicleEquipments={vehicleEquipments}
+                                onSave={async (selectedEquipments) => {
+                                    const formattedArray = `{${selectedEquipments.map((item) => `"${item}"`).join(",")}}`;
+
+                                    const { error } = await supabase
+                                        .from("vehicles")
+                                        .update({ equipments: formattedArray })
+                                        .eq("id", vehicle?.id);
+
+                                    if (error) {
+                                        toast.error("Gagal menyimpan kelengkapan kendaraan.");
+                                    } else {
+                                        toast.success("Kelengkapan kendaraan berhasil diperbarui.");
+                                        // Refresh ulang data supaya tampilan update
+                                        fetchDetailEq(); // pastikan `fetchDetail` dideklarasikan di atas
+                                    }
+                                }}
                             />
+
                         }
                     >
                         {equipmentParam.length > 0 && (

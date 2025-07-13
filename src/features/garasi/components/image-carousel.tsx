@@ -12,10 +12,12 @@ import {
 import { EditImageVehicleDialog } from "./edit-image-vehicle-dialog";
 
 interface ImageCarouselProps {
-    images: string[];
+  images: string[];
+  vehicleId: string; // Tambah ini
 }
 
-export function ImageCarousel({ images }: ImageCarouselProps) {
+
+export function ImageCarousel({ images, vehicleId }: ImageCarouselProps) {
     const [api, setApi] = useState<CarouselApi>()
     const [current, setCurrent] = useState(0)
     const [count, setCount] = useState(0)
@@ -39,7 +41,7 @@ export function ImageCarousel({ images }: ImageCarouselProps) {
                 <div className="flex h-full items-center justify-center">
                     <ImageIcon className="h-12 w-12 text-muted-foreground" />
                 </div>
-                <EditImageVehicleDialog images={images} />
+                <EditImageVehicleDialog images={images} vehicleId={vehicleId} />
             </div>
         );
     }
@@ -77,7 +79,7 @@ export function ImageCarousel({ images }: ImageCarouselProps) {
                     <span className="text-foreground text-sm">{current} / {count}</span>
                 </div>
 
-                <EditImageVehicleDialog images={images} />
+                <EditImageVehicleDialog images={images} vehicleId={vehicleId} />
             </Carousel>
         </div>
     );
