@@ -18,20 +18,21 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Checkbox } from "@/components/shadcn/checkbox"
 import { Param } from "@/models/param"
+import { supabase } from "@/lib/supabaseClient"
+import { toast } from "sonner"
 
 interface EditEquipmentVehicleDialogProps {
+  vehicleId?: string
   equipmentParam: Param[]
   vehicleEquipments: string[]
   onSave?: (updatedEquipment: string[]) => void
 }
 
 const formSchema = z.object({
-  items: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: "Minimal checklist salah satu kelengkapan.",
-  }),
+  items: z.array(z.string()),
 })
 
-export function EditEquipmentVehicleDialog({ equipmentParam, vehicleEquipments, onSave }: EditEquipmentVehicleDialogProps) {
+export function EditEquipmentVehicleDialog({ vehicleId, equipmentParam, vehicleEquipments, onSave }: EditEquipmentVehicleDialogProps) {
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -41,16 +42,40 @@ export function EditEquipmentVehicleDialog({ equipmentParam, vehicleEquipments, 
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const { reset } = form;
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log("Edit equipment vehicle data: ", values)
+
+    const formattedArray = values.items.join("|");
+
+    const { error } = await supabase
+      .from("vehicles")
+      .update({ equipments: formattedArray })
+      .eq("id", vehicleId);
+
+    if (error) {
+      toast.error("Gagal menyimpan kelengkapan kendaraan.");
+    } else {
+      toast.success("Kelengkapan kendaraan berhasil diperbarui.");
+    }
+
     if (onSave) {
       onSave(values.items);
     }
+
     setOpen(false);
   }
 
+  function handleDialogChange(isOpen: boolean) {
+    setOpen(isOpen);
+    if (!isOpen) {
+      reset();
+    }
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Edit />
@@ -72,10 +97,10 @@ export function EditEquipmentVehicleDialog({ equipmentParam, vehicleEquipments, 
               render={({ field }) => (
                 <FormItem className={`grid gap-5 p-2 ${equipmentParam.length > 5 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
                   {equipmentParam.map((item) => (
-                    <div key={item.id} className="flex flex-row items-center space-x-3 space-y-0">
+                    <FormItem key={item.id} className="flex flex-row items-center space-x-3 space-y-0">
                       <FormControl>
                         <Checkbox
-                          checked={field.value?.includes(item.name)}
+                          checked={field.value.includes(item.name)}
                           onCheckedChange={(checked) => {
                             if (checked) {
                               field.onChange([...field.value, item.name]);
@@ -86,7 +111,7 @@ export function EditEquipmentVehicleDialog({ equipmentParam, vehicleEquipments, 
                         />
                       </FormControl>
                       <FormLabel className="text-sm font-normal">{item.description}</FormLabel>
-                    </div>
+                    </FormItem>
                   ))}
                   <FormMessage />
                 </FormItem>

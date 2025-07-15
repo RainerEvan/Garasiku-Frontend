@@ -12,28 +12,34 @@ import {
 import { EditImageVehicleDialog } from "./edit-image-vehicle-dialog";
 
 interface ImageCarouselProps {
-  images: string[];
-  vehicleId: string; // Tambah ini
+    images: string[];
+    vehicleId: string;
+    onSave?: () => void;
 }
 
-
-export function ImageCarousel({ images, vehicleId }: ImageCarouselProps) {
+export function ImageCarousel({ images, vehicleId, onSave }: ImageCarouselProps) {
     const [api, setApi] = useState<CarouselApi>()
     const [current, setCurrent] = useState(0)
     const [count, setCount] = useState(0)
 
     useEffect(() => {
-        if (!api) {
-            return
-        }
+        if (!api) return;
 
-        setCount(api.scrollSnapList().length)
-        setCurrent(api.selectedScrollSnap() + 1)
+        // Update count and current on new images or selection
+        setCount(api.scrollSnapList().length);
+        setCurrent(api.selectedScrollSnap() + 1);
 
-        api.on("select", () => {
-            setCurrent(api.selectedScrollSnap() + 1)
-        })
-    }, [api])
+        const handleSelect = () => {
+            setCurrent(api.selectedScrollSnap() + 1);
+        };
+
+        api.on("select", handleSelect);
+
+        // Clean up old listeners to avoid stacking
+        return () => {
+            api.off("select", handleSelect);
+        };
+    }, [api, images.length]);
 
     if (!images || images.length === 0) {
         return (
@@ -41,7 +47,7 @@ export function ImageCarousel({ images, vehicleId }: ImageCarouselProps) {
                 <div className="flex h-full items-center justify-center">
                     <ImageIcon className="h-12 w-12 text-muted-foreground" />
                 </div>
-                <EditImageVehicleDialog images={images} vehicleId={vehicleId} />
+                <EditImageVehicleDialog images={images} vehicleId={vehicleId} onSave={onSave} />
             </div>
         );
     }
@@ -50,6 +56,7 @@ export function ImageCarousel({ images, vehicleId }: ImageCarouselProps) {
         <div className="w-full">
             {/* Main Carousel */}
             <Carousel
+                key={images.length}
                 opts={{
                     loop: true,
                 }}
@@ -79,7 +86,7 @@ export function ImageCarousel({ images, vehicleId }: ImageCarouselProps) {
                     <span className="text-foreground text-sm">{current} / {count}</span>
                 </div>
 
-                <EditImageVehicleDialog images={images} vehicleId={vehicleId} />
+                <EditImageVehicleDialog images={images} vehicleId={vehicleId} onSave={onSave} />
             </Carousel>
         </div>
     );

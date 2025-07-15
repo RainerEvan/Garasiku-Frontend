@@ -23,15 +23,62 @@ import { DataBarCard } from "@/components/shared/data-bar-card";
 import { CompleteAdministrationDialog } from "../components/complete-administrasi-dialog";
 import { supabase } from "@/lib/supabaseClient";
 import { useLoading } from "@/lib/loading-context";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 
 export default function AdministrasiDetailPage() {
-  const { id } = useParams();
   const { setLoading } = useLoading();
 
+  const { id } = useParams<{ id: string }>();
   const [administration, setAdministration] = useState<Administration | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLocalLoading] = useState(true); // local loading
+
+  const fetchAdministrationDetail = async (administrationId: string) => {
+    const { data, error } = await supabase
+      .from("administration")
+      .select(`
+        *,
+        vehicles (
+          id,
+          name,
+          category,
+          year,
+          brand,
+          color,
+          type,
+          license_plate
+        )
+      `)
+      .eq("id", administrationId)
+      .single();
+
+    if (error) {
+      console.error("Administration detail fetch error:", error)
+    }
+
+    if (data) {
+      setAdministration({
+        id: data.id,
+        ticketNum: data.ticket_num,
+        vehicleId: data.vehicle_id,
+        vehicle: {
+          id: data.vehicles?.id,
+          name: data.vehicles?.name,
+          category: data.vehicles?.category,
+          year: data.vehicles?.year,
+          brand: data.vehicles?.brand,
+          color: data.vehicles?.color,
+          type: data.vehicles?.type,
+          licensePlate: data.vehicles?.license_plate,
+        },
+        type: data.type,
+        dueDate: data.due_date,
+        endDate: data.end_date,
+        status: data.status as Status,
+        totalCost: data.total_cost,
+        notes: data.notes,
+        newDueDate: data.new_due_date,
+      });
+    }
+  };
 
   const handleCancelAdministration = () => {
     console.log("Cancel Administration button clicked");
@@ -40,87 +87,27 @@ export default function AdministrasiDetailPage() {
   useEffect(() => {
     const fetchDetail = async () => {
       if (!id) return;
-
       setLoading(true);
-      setLocalLoading(true);
-      setError(null);
 
-      const { data, error } = await supabase
-        .from("administration")
-        .select(
-          `
-          *,
-          vehicles (
-            id,
-            name,
-            category,
-            year,
-            brand,
-            color,
-            type,
-            license_plate
-          )
-        `
-        )
-        .eq("id", id)
-        .single();
-
-      if (error) {
-        console.error("Fetch error:", error);
-        setError("Gagal mengambil data administrasi.");
-        setAdministration(null);
-      } else {
-        setAdministration({
-          id: data.id,
-          ticketNum: data.ticket_num,
-          vehicleId: data.vehicle_id,
-          vehicle: {
-            id: data.vehicles?.id,
-            name: data.vehicles?.name,
-            category: data.vehicles?.category,
-            year: data.vehicles?.year,
-            brand: data.vehicles?.brand,
-            color: data.vehicles?.color,
-            type: data.vehicles?.type,
-            licensePlate: data.vehicles?.license_plate,
-          },
-          type: data.type,
-          dueDate: data.due_date,
-          endDate: data.end_date,
-          status: data.status,
-          totalCost: data.total_cost,
-          notes: data.notes,
-          newDueDate: data.new_due_date,
-        });
+      try {
+        await fetchAdministrationDetail(id);
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
-      setLocalLoading(false);
     };
 
     fetchDetail();
   }, [id]);
 
-  if (loading || !administration) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center text-center px-4">
-        {error ? (
-          <div className="text-destructive flex flex-col items-center gap-2">
-            <AlertTriangle className="w-8 h-8" />
-            <p className="text-sm">{error}</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-            <Loader2 className="animate-spin w-6 h-6" />
-            <p className="text-sm">Memuat data administrasi...</p>
-          </div>
-        )}
-      </div>
-    );
-  }
+  if (!administration) return (
+    <EmptyState title="Administrasi Tidak Ditemukan" description="Administrasi dengan ID tersebut tidak tersedia." />
+  );
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Main content */}
       <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-3 rounded-lg border bg-background p-5">

@@ -27,117 +27,144 @@ import { CompleteServiceDialog } from "../components/complete-service-dialog";
 import { DataBarCard } from "@/components/shared/data-bar-card";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient"
+import { EmptyState } from "@/components/shared/empty-state";
+import { useLoading } from "@/lib/loading-context";
 
 export default function ServisDetailPage() {
+    const { setLoading } = useLoading();
+
     const { id } = useParams<{ id: string }>();
     const [service, setService] = useState<Service | null>(null);
     const [attachments, setAttachments] = useState<AttachmentService[]>([]);
     const [latestLocation, setLatestLocation] = useState<{ id: string; vehicleId: string; name: string; address: string } | null>(null);
 
-    useEffect(() => {
-        const fetchDetail = async () => {
-            const { data: serviceData, error: serviceError } = await supabase
-                .from("service")
-                .select(`
-        *,
-        vehicles (
-          id,
-          name,
-          category,
-          year,
-          brand,
-          color,
-          type,
-          license_plate
-        )
-      `)
-                .eq("id", id)
-                .maybeSingle();
+    const fetchServiceDetail = async (serviceId: string): Promise<string | null> => {
+        const { data, error } = await supabase
+            .from("service")
+            .select(`
+                *,
+                vehicles (
+                    id,
+                    name,
+                    category,
+                    year,
+                    brand,
+                    color,
+                    type,
+                    license_plate
+                )
+            `)
+            .eq("id", serviceId)
+            .single();
 
-            if (serviceError) {
-                console.error("Service fetch error:", serviceError);
-                return;
-            }
+        if (error) {
+            console.error("Service detail fetch error:", error)
+        }
 
-            console.log(serviceData);
-            const svc = serviceData as any;
-
+        if (data) {
             setService({
-                id: svc.id,
-                ticketNum: svc.ticket_num,
-                vehicleId: svc.vehicle_id,
+                id: data.id,
+                ticketNum: data.ticket_num,
+                vehicleId: data.vehicle_id,
                 vehicle: {
-                    id: svc.vehicles.id,
-                    name: svc.vehicles.name,
-                    category: svc.vehicles.category,
-                    year: svc.vehicles.year,
-                    brand: svc.vehicles.brand,
-                    color: svc.vehicles.color,
-                    type: svc.vehicles.type,
-                    licensePlate: svc.vehicles.license_plate,
+                    id: data.vehicles.id,
+                    name: data.vehicles.name,
+                    category: data.vehicles.category,
+                    year: data.vehicles.year,
+                    brand: data.vehicles.brand,
+                    color: data.vehicles.color,
+                    type: data.vehicles.type,
+                    licensePlate: data.vehicles.license_plate,
                 },
-                type: svc.type,
-                scheduleDate: svc.schedule_date,
-                startDate: svc.start_date,
-                endDate: svc.end_date,
-                status: svc.status as Status,
-                mileage: svc.mileage,
-                totalCost: svc.total_cost,
-                mechanicName: svc.mechanic_name,
-                task: svc.task,
-                sparepart: svc.sparepart,
-                notes: svc.notes,
+                type: data.type,
+                scheduleDate: data.schedule_date,
+                startDate: data.start_date,
+                endDate: data.end_date,
+                status: data.status as Status,
+                mileage: data.mileage,
+                totalCost: data.total_cost,
+                mechanicName: data.mechanic_name,
+                task: data.task,
+                sparepart: data.sparepart,
+                notes: data.notes,
             });
 
-            const { data: locationData, error: locationError } = await supabase
-                .from("vehicle_locations")
-                .select("*")
-                .eq("vehicle_id", svc.vehicle_id)
-                .order("created_at", { ascending: false })
-                .limit(1);
+            return data.vehicle_id;
+        }
 
-            if (locationError) {
-                console.error("Location fetch error:", locationError);
-            } else if (locationData?.length > 0) {
-                const loc = locationData[0];
-                setLatestLocation({
-                    id: loc.id,
-                    vehicleId: svc.vehicle_id,
-                    name: loc.name,
-                    address: loc.address,
-                });
-            }
+        return null;
+    };
 
-            const { data: attachData, error: attachError } = await supabase
-                .from("attachment_vehicle")
-                .select("*")
-                .eq("vehicle_id", svc.vehicle_id)
-                .order("sort", { ascending: true });
+    const fetchLatestVehicleLocation = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("vehicle_locations")
+            .select("*")
+            .eq("vehicle_id", vehicleId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
 
-            if (attachError) {
-                console.error("Attachment fetch error:", attachError);
-            } else if (attachData) {
-                setAttachments(
-                    attachData.map((a: any) => ({
-                        id: a.id,
-                        serviceId: a.vehicle_id,
-                        fileName: a.file_name,
-                        fileType: a.file_type,
-                        fileSize: a.file_size,
-                        fileLink: a.file_link,
-                        createdAt: a.created_at,
-                        createdBy: a.created_by,
-                    }))
-                );
+        if (error) {
+            console.error("Latest vehicle location fetch error:", error)
+        }
+
+        if (data) {
+            setLatestLocation({
+                id: data.id,
+                vehicleId: data.vehicle_id,
+                name: data.name,
+                address: data.address,
+            });
+        }
+    };
+
+    const fetchServiceAttachments = async (serviceId: string) => {
+        const { data, error } = await supabase
+            .from("attachment_service")
+            .select("*")
+            .eq("service_id", serviceId)
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            console.error("Service attachments fetch error:", error);
+        }
+
+        if (data) {
+            setAttachments(data.map(att => ({
+                id: att.attachment_id,
+                serviceId: att.vehicle_id,
+                fileName: att.file_name,
+                fileType: att.file_type,
+                fileSize: att.file_size,
+                fileLink: att.file_link,
+                createdAt: att.created_at,
+                createdBy: att.created_by,
+            })));
+        }
+    };
+
+    useEffect(() => {
+        const fetchDetail = async () => {
+            if (!id) return;
+            setLoading(true);
+
+            try {
+                const vehicleId = await fetchServiceDetail(id);
+
+                if (vehicleId) {
+                    await fetchLatestVehicleLocation(vehicleId);
+                }
+
+                await fetchServiceAttachments(id);
+            } catch (err) {
+                console.error("Failed to fetch data:", err);
+            } finally {
+                setLoading(false);
             }
         };
 
-        if (id) {
-            fetchDetail();
-        }
+        fetchDetail();
     }, [id]);
-
-
 
     const handleCancelService = async () => {
         if (!service) return;
@@ -159,7 +186,9 @@ export default function ServisDetailPage() {
     };
 
 
-    if (!service) return <div>Loading...</div>;
+    if (!service) return (
+        <EmptyState title="Servis Tidak Ditemukan" description="Servis dengan ID tersebut tidak tersedia." />
+    );
 
     return (
         <div className="min-h-screen flex flex-col">

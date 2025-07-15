@@ -23,8 +23,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/pop
 import { Calendar } from "@/components/shadcn/calendar"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
-import { VEHICLE_CATEGORY_PARAM,PARAM_GROUP_MERK_KENDARAAN } from "@/lib/constants"
+import { VEHICLE_CATEGORY_PARAM, PARAM_GROUP_MERK_KENDARAAN } from "@/lib/constants"
 import { supabase } from "@/lib/supabaseClient"
+import { toast } from "sonner"
 
 interface AddVehicleDialogProps {
   onSave?: (newVehicle: string) => void
@@ -59,28 +60,29 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
     },
   })
 
-const vehicleCategoryParam = VEHICLE_CATEGORY_PARAM;
-const [vehicleBrandParam, setVehicleBrandParam] = useState<Param[]>([]);
-
+  const vehicleCategoryParam = VEHICLE_CATEGORY_PARAM;
+  const [vehicleBrandParam, setVehicleBrandParam] = useState<Param[]>([]);
 
   useEffect(() => {
-  async function fetchVehicleBrands() {
-    const { data, error } = await supabase
-      .from("parameter")
-      .select("*")
-      .eq("group", PARAM_GROUP_MERK_KENDARAAN)
-      .order("name");
+    if (!open) return;
 
-    if (error) {
-      console.error("Gagal mengambil data merk kendaraan:", error.message);
-      return;
+    async function fetchBrandParams() {
+      const { data, error } = await supabase
+        .from("parameter")
+        .select("*")
+        .eq("group", PARAM_GROUP_MERK_KENDARAAN)
+        .order("name")
+
+      if (error) {
+        console.error("Brand params fetch error:", error)
+        return
+      }
+
+      setVehicleBrandParam(data)
     }
 
-    setVehicleBrandParam(data);
-  }
-
-  fetchVehicleBrands();
-}, []);
+    fetchBrandParams()
+  }, [open])
 
   const { watch, setValue, reset } = form;
 
@@ -99,80 +101,91 @@ const [vehicleBrandParam, setVehicleBrandParam] = useState<Param[]>([]);
   }, [brand, model, color, year, setValue]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-  try {
-    const stnkDate = values.stnkDueDate;
-    const insuranceDate = values.insuranceDueDate;
+    try {
+      const stnkDate = values.stnkDueDate;
+      const insuranceDate = values.insuranceDueDate;
 
-    const { data: vehicle, error: insertError } = await supabase
-      .from("vehicles")
-      .insert({
-        name: values.name,
-        category: values.category,
-        brand: values.brand,
-        type: values.model,
-        year: values.year || new Date().getFullYear(), // fallback kalau null
-        color: values.color,
-        license_plate: values.licensePlate,
-        stnk_due_date: stnkDate.toISOString(),
-        insurance_due_date: insuranceDate.toISOString(),
-      })
-      .select()
-      .single();
+      const { data: vehicle, error: insertError } = await supabase
+        .from("vehicles")
+        .insert({
+          name: values.name,
+          category: values.category,
+          brand: values.brand,
+          type: values.model,
+          year: values.year || new Date().getFullYear(), // fallback kalau null
+          color: values.color,
+          license_plate: values.licensePlate,
+          stnk_due_date: stnkDate.toISOString(),
+          insurance_due_date: insuranceDate.toISOString(),
+        })
+        .select()
+        .single();
 
-    if (insertError) {
-      console.error("Gagal menyimpan kendaraan:", insertError.message);
-      return;
+      if (insertError) {
+        console.error("Gagal menyimpan kendaraan:", insertError.message);
+        return;
+      }
+
+      if (!vehicle) return;
+
+      const { error: stnkError } = await supabase
+        .from("stnk")
+        .insert({
+          vehicle_id: vehicle.id,
+          model: values.model,
+          brand: values.brand,
+          type: values.model,
+          category: values.category,
+          color: values.color,
+        });
+
+      if (stnkError) {
+        console.error("Gagal menyimpan data STNK:", stnkError.message);
+        return;
+      }
+
+      const { error: adminStnkError } = await supabase
+        .from("administration")
+        .insert({
+          vehicle_id: vehicle.id,
+          type: "administrasi-stnk-1",
+          status: "pending",
+          due_date: stnkDate.toISOString(),
+        });
+
+      if (adminStnkError) {
+        console.error("Gagal menambahkan ke administrasi:", adminStnkError.message);
+        return;
+      }
+
+      const { error: adminInsuranceError } = await supabase
+        .from("administration")
+        .insert({
+          vehicle_id: vehicle.id,
+          type: "administrasi-asuransi",
+          status: "pending",
+          due_date: insuranceDate.toISOString(),
+        });
+
+      if (adminInsuranceError) {
+        console.error("Gagal menambahkan ke administrasi:", adminInsuranceError.message);
+        return;
+      }
+
+      console.log("Kendaraan & administrasi berhasil disimpan:", vehicle);
+      toast.success("Data kendaraan baru berhasil ditambahkan.")
+
+      if (onSave) {
+        onSave(vehicle.id);
+      }
+
+      setOpen(false);
+      reset();
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      toast.error("Gagal menambahkan data kendaraan baru");
     }
-
-    if (!vehicle) return;
-
-    const { error: stnkError } = await supabase
-      .from("stnk")
-      .insert({
-        vehicle_id: vehicle.id,
-        model: values.model,
-        brand: values.brand,
-        type: values.model,
-        category: values.category,
-        color: values.color,
-      });
-
-    if (stnkError) {
-      console.error("Gagal menyimpan data STNK:", stnkError.message);
-      return;
-    }
-
-
-    const satuTahunKemudian = new Date(stnkDate);
-    satuTahunKemudian.setFullYear(satuTahunKemudian.getFullYear() + 1);
-
-    const { error: adminError } = await supabase
-      .from("administration")
-      .insert({
-        vehicle_id: vehicle.id,
-        type: "administrasi-stnk-1",
-        status: "pending",
-        due_date: satuTahunKemudian.toISOString(),
-      });
-
-    if (adminError) {
-      console.error("Gagal menambahkan ke administrasi:", adminError.message);
-      return;
-    }
-
-    console.log("Kendaraan & administrasi berhasil disimpan:", vehicle);
-
-    if (onSave) {
-      onSave(vehicle.name);
-    }
-
-    setOpen(false);
-    reset();
-  } catch (err) {
-    console.error("Unexpected error:", err);
   }
-}
-
 
   function handleDialogChange(isOpen: boolean) {
     setOpen(isOpen);
@@ -383,6 +396,8 @@ const [vehicleBrandParam, setVehicleBrandParam] = useState<Param[]>([]);
                             selected={field.value}
                             captionLayout="dropdown"
                             onSelect={field.onChange}
+                            startMonth={new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1)}
+                            endMonth={new Date(new Date().getFullYear() + 5, new Date().getMonth(), 1)}
                             disabled={(date: Date) =>
                               date < new Date("1900-01-01")
                             }
@@ -425,6 +440,8 @@ const [vehicleBrandParam, setVehicleBrandParam] = useState<Param[]>([]);
                             selected={field.value}
                             captionLayout="dropdown"
                             onSelect={field.onChange}
+                            startMonth={new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1)}
+                            endMonth={new Date(new Date().getFullYear() + 5, new Date().getMonth(), 1)}
                             disabled={(date: Date) =>
                               date < new Date("1900-01-01")
                             }

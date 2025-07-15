@@ -5,20 +5,16 @@ import { Param } from "@/models/param";
 import { ParamGroup } from "@/models/param-group";
 import { ParamCard } from "../components/param-card";
 import { AddParamDialog } from "../components/add-param-dialog";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 
 export default function MaintenanceDetailPage() {
   const { id } = useParams();
 
   const [paramGroup, setParamGroup] = useState<ParamGroup | null>(null);
   const [params, setParams] = useState<Param[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
     if (!id) return;
-    setLoading(true);
-    setError(null);
 
     const [{ data: groupData, error: groupError }, { data: paramData, error: paramError }] =
       await Promise.all([
@@ -27,7 +23,6 @@ export default function MaintenanceDetailPage() {
       ]);
 
     if (groupError || paramError) {
-      setError("Gagal memuat data parameter.");
       console.error("Group Error:", groupError);
       console.error("Param Error:", paramError);
     } else {
@@ -41,31 +36,15 @@ export default function MaintenanceDetailPage() {
       });
       setParams(paramData);
     }
-
-    setLoading(false);
   };
 
   useEffect(() => {
     fetchData();
   }, [id]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen text-muted-foreground">
-        <Loader2 className="animate-spin w-6 h-6 mr-2" />
-        Memuat data...
-      </div>
-    );
-  }
-
-  if (error || !paramGroup) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen text-destructive">
-        <AlertTriangle className="w-6 h-6 mb-2" />
-        <p>{error || "Parameter group tidak ditemukan."}</p>
-      </div>
-    );
-  }
+  if (!paramGroup) return (
+    <EmptyState title="Parameter Tidak Ditemukan" description="Parameter dengan ID tersebut tidak tersedia." />
+  );
 
   return (
     <div className="min-h-screen flex flex-col">

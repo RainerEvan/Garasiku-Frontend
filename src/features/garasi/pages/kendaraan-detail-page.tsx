@@ -27,22 +27,293 @@ import { useLoading } from "@/lib/loading-context"
 import { LicensePlateDialog } from "../components/license-plate-dialog"
 import { LocationVehicle } from "@/models/location-vehicle"
 import { toast } from "sonner"
+import { EmptyState } from "@/components/shared/empty-state"
+import { PARAM_GROUP_KELENGKAPAN_KENDARAAN } from "@/lib/constants"
 
 export default function KendaraanDetailPage() {
-    const { id } = useParams<{ id: string }>();
-
     const { setLoading } = useLoading();
 
+    const { id } = useParams<{ id: string }>();
 
-    const equipmentParam: Param[] = [
-        { id: "1", name: 'PKB', description: 'PKB', group: 'equipment' },
-        { id: "2", name: 'Ban Cadangan', description: 'Ban Cadangan', group: 'equipment' },
-        { id: "3", name: 'Dongkrak', description: 'Dongkrak', group: 'equipment' },
-        { id: "4", name: 'Toolkit', description: 'Toolkit', group: 'equipment' },
-        { id: "5", name: 'Kotak P3K', description: 'Kotak P3K', group: 'equipment' },
-        { id: "6", name: 'Dash Cam', description: 'Dash Cam', group: 'equipment' },
-    ];
+    const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+    const [latestLocation, setLatestLocation] = useState<LocationVehicle | null>(null);
+    const [stnk, setStnk] = useState<Stnk | null>(null);
+    const [services, setServices] = useState<Service[]>([]);
+    const [adminitrations, setAdministration] = useState<Administration[]>([]);
+    const [vehicleEquipments, setVehicleEquipments] = useState<string[]>([]);
+    const [vehicleImages, setVehicleImages] = useState<AttachmentVehicle[]>([]);
+    const [attachments, setAttachments] = useState<AttachmentVehicle[]>([]);
+    const [equipmentParam, setEquipmentParam] = useState<Param[]>([])
 
+    const fetchEquipmentParams = async () => {
+        const { data, error } = await supabase
+            .from("parameter")
+            .select("*")
+            .eq("group", PARAM_GROUP_KELENGKAPAN_KENDARAAN)
+            .order("name")
+
+        if (error) {
+            console.error("Equipment params fetch error:", error)
+        }
+
+        if (data) {
+            setEquipmentParam(data);
+        }
+    };
+
+    const fetchVehicleFullDetails = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("vehicle_full_details")
+            .select("*")
+            .eq("vehicleid", vehicleId)
+            .single();
+
+        if (error) {
+            console.error("Vehicle full details fetch error:", error);
+            return;
+        }
+
+        if (data) {
+            const base = data;
+
+            setVehicle({
+                id: base.vehicleid,
+                name: base.name,
+                licensePlate: base.license_plate,
+                category: base.vehicle_category,
+                brand: base.vehicle_brand,
+                type: base.vehicle_type,
+                color: base.vehicle_color,
+                year: base.vehicle_year,
+                isSold: base.is_sold,
+                soldDate: base.sold_date,
+                image: base.image_url,
+                stnkDueDate: base.stnk_due_date,
+                insuranceDueDate: base.insurance_due_date,
+                lastServiceDate: base.schedule_date
+            });
+
+            setLatestLocation({
+                id: base.location_id,
+                vehicleId: base.vehicleid,
+                name: base.location_name,
+                address: base.location_address,
+            });
+
+            setStnk({
+                id: base.stnk_id,
+                vehicleId: base.vehicleid,
+                stnkNumber: base.stnk_number,
+                fuelType: base.fuel_type,
+                licensePlate: base.license_plate,
+                registrationYear: base.registration_year,
+                manufacturedYear: base.manufactured_year,
+                bpkbNumber: base.bpkb_number,
+                cylinderCapacity: base.cylinder_capacity,
+                registrationNumber: base.registration_number,
+                chassisNumber: base.chassis_number,
+                engineNumber: base.engine_number,
+                validUntil: base.valid_until,
+                brand: base.brand,
+                ownerName: base.owner_name,
+                ownerAddress: base.owner_address,
+                type: base.type,
+                category: base.category,
+                color: base.color,
+                model: base.model,
+                licensePlateColor: base.license_plate_color
+            });
+
+            setVehicleEquipments(base.equipments.split("|") || []);
+        }
+    };
+
+    const fetchVehicleGallery = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("attachment_vehicle")
+            .select("*")
+            .eq("vehicle_id", vehicleId)
+            .eq("attachment_type", "gallery")
+            .order("created_at", { ascending: true })
+
+        if (error) {
+            console.error("Vehicle gallery image fetch error:", error)
+        }
+
+        if (data) {
+            setVehicleImages(data.map(img => ({
+                id: img.id,
+                vehicleId: img.vehicle_id,
+                attachmentType: img.attachment_type,
+                fileLink: img.file_link,
+            })))
+        }
+    };
+
+    const fetchVehicleStnk = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("stnk")
+            .select("*")
+            .eq("vehicle_id", vehicleId)
+            .single();
+
+        if (error) {
+            console.error("Vehicle STNK fetch error:", error);
+            return;
+        }
+
+        if (data) {
+            const base = data;
+
+            setStnk({
+                id: base.stnk_id,
+                vehicleId: base.vehicleid,
+                stnkNumber: base.stnk_number,
+                fuelType: base.fuel_type,
+                licensePlate: base.license_plate,
+                registrationYear: base.registration_year,
+                manufacturedYear: base.manufactured_year,
+                bpkbNumber: base.bpkb_number,
+                cylinderCapacity: base.cylinder_capacity,
+                registrationNumber: base.registration_number,
+                chassisNumber: base.chassis_number,
+                engineNumber: base.engine_number,
+                validUntil: base.valid_until,
+                brand: base.brand,
+                ownerName: base.owner_name,
+                ownerAddress: base.owner_address,
+                type: base.type,
+                category: base.category,
+                color: base.color,
+                model: base.model,
+                licensePlateColor: base.license_plate_color
+            });
+        }
+    };
+
+    const fetchVehicleServiceHistory = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("vehicle_service_history")
+            .select("*")
+            .eq("vehicle_id", vehicleId)
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            console.error("Service history fetch error:", error);
+        }
+
+        if (data) {
+            setServices(data.map(svc => ({
+                id: svc.service_id || svc.id,
+                ticketNum: svc.ticket_num,
+                type: svc.service_type || svc.type,
+                mechanicName: svc.mechanic_name,
+                status: svc.service_status || svc.status,
+                mileage: svc.mileage,
+                totalCost: svc.total_cost,
+                startDate: svc.start_date,
+                endDate: svc.end_date,
+                notes: svc.notes,
+                task: svc.task,
+                sparepart: svc.sparepart,
+                scheduleDate: svc.schedule_date
+            })));
+        }
+    };
+
+    const fetchVehicleAdministrationHistory = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("vehicle_administration_history")
+            .select("*")
+            .eq("vehicle_id", vehicleId)
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            console.error("Administration history fetch error:", error);
+        }
+
+        if (data) {
+            setAdministration(data.map(adm => ({
+                id: adm.administration_id,
+                ticketNum: adm.ticket_num,
+                type: adm.type,
+                status: adm.status,
+                dueDate: adm.due_date,
+                newDueDate: adm.new_due_date,
+                endDate: adm.end_date,
+                totalCost: adm.total_cost,
+                notes: adm.notes
+            })));
+        }
+    };
+
+    const fetchVehicleEquipments = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("vehicles")
+            .select("equipments")
+            .eq("id", vehicleId)
+            .single();
+
+        if (error) {
+            console.error("Vehicle equipments fetch error:", error);
+        }
+
+        if (data) {
+            setVehicleEquipments(data.equipments.split("|") || []);
+        }
+    }
+
+    const fetchVehicleAttachments = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("vehicle_attachments")
+            .select("*")
+            .eq("vehicle_id", vehicleId)
+            .eq("attachment_type", "document")
+            .order("sort", { ascending: true });
+
+        if (error) {
+            console.error("Vehicle attachments fetch error:", error);
+        }
+
+        if (data) {
+            setAttachments(data.map(att => ({
+                id: att.attachment_id,
+                vehicleId: att.vehicle_id,
+                attachmentType: att.attachment_type,
+                fileName: att.file_name,
+                fileType: att.file_type,
+                fileSize: att.file_size,
+                fileLink: att.file_link,
+                createdAt: att.created_at,
+                createdBy: att.created_by,
+            })));
+        }
+    };
+
+    useEffect(() => {
+        const fetchDetail = async () => {
+            if (!id) return;
+            setLoading(true);
+
+            try {
+                await fetchEquipmentParams();
+                await fetchVehicleFullDetails(id);
+
+                await Promise.all([
+                    fetchVehicleGallery(id),
+                    fetchVehicleServiceHistory(id),
+                    fetchVehicleAdministrationHistory(id),
+                    fetchVehicleAttachments(id)
+                ]);
+            } catch (err) {
+                console.error("Failed to fetch data:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDetail();
+    }, [id]);
 
     const handleDeleteVehicle = async () => {
         if (!vehicle?.id) return;
@@ -144,213 +415,9 @@ export default function KendaraanDetailPage() {
         );
     };
 
-    const [vehicle, setVehicle] = useState<Vehicle | null>(null);
-    const [latestLocation, setLatestLocation] = useState<LocationVehicle | null>(null);
-    const [stnk, setStnk] = useState<Stnk | null>(null);
-    const [services, setServices] = useState<Service[]>([]);
-    const [adminitrations, setAdministration] = useState<Administration[]>([]);
-    const [vehicleEquipments, setVehicleEquipments] = useState<string[]>([]);
-    const [vehicleImages, setVehicleImages] = useState<AttachmentVehicle[]>([]);
-    const [attachments, setAttachments] = useState<AttachmentVehicle[]>([]);
-
-    useEffect(() => {
-        const fetchDetail = async () => {
-            setLoading(true);
-
-            try {
-                const { data: detailData, error: detailError } = await supabase
-                    .from("vehicle_full_details")
-                    .select("*")
-                    .eq("vehicleid", id);
-
-                if (detailError) {
-                    console.error(detailError);
-                    return;
-                }
-
-                if (detailData && detailData.length) {
-                    const base = detailData[0];
-
-                    setVehicle({
-                        id: base.vehicleid,
-                        name: base.name,
-                        licensePlate: base.license_plate,
-                        category: base.vehicle_category,
-                        brand: base.vehicle_brand,
-                        type: base.vehicle_type,
-                        color: base.vehicle_color,
-                        year: base.vehicle_year,
-                        isSold: base.is_sold,
-                        soldDate: base.sold_date,
-                        image: base.image_url,
-                        stnkDueDate: base.stnk_due_date,
-                        insuranceDueDate: base.insurance_due_date,
-                        lastServiceDate: base.schedule_date
-                    });
-
-                    setStnk({
-                        id: base.stnk_id,
-                        vehicleId: base.vehicle_id,
-                        stnkNumber: base.stnk_number,
-                        fuelType: base.fuel_type,
-                        licensePlate: base.license_plate,
-                        registrationYear: base.registration_year,
-                        manufacturedYear: base.manufactured_year,
-                        bpkbNumber: base.bpkb_number,
-                        cylinderCapacity: base.cylinder_capacity,
-                        registrationNumber: base.registration_number,
-                        chassisNumber: base.chassis_number,
-                        engineNumber: base.engine_number,
-                        validUntil: base.valid_until,
-                        brand: base.brand,
-                        ownerName: base.owner_name,
-                        ownerAddress: base.owner_address,
-                        type: base.type,
-                        category: base.category,
-                        color: base.color,
-                        model: base.model,
-                        licensePlateColor: base.license_plate_color
-                    });
-
-                    const { data: imageData, error: imageError } = await supabase
-                        .from("attachment_vehicle")
-                        .select("*")
-                        .eq("vehicle_id", id)
-                        .eq("attachment_type", "gallery")
-                        .order("created_at", { ascending: true })
-
-                    if (imageError) {
-                        console.error("Gallery image fetch error:", imageError)
-                    } else {
-                        setVehicleImages(imageData.map(img => ({
-                            id: img.id,
-                            vehicleId: img.vehicle_id,
-                            attachmentType: img.attachment_type,
-                            fileLink: img.file_link,
-                        })))
-                    }
-                    setVehicleEquipments(base.equipments || []);
-
-                }
-
-                const { data: serviceData, error: serviceError } = await supabase
-                    .from("vehicle_service_history") // or "services"
-                    .select("*")
-                    .eq("vehicle_id", id)
-                    .order("created_at", { ascending: false });
-
-                if (serviceError) {
-                    console.error(serviceError);
-                } else {
-                    setServices(serviceData.map(svc => ({
-                        id: svc.service_id || svc.id,
-                        ticketNum: svc.ticket_num,
-                        type: svc.service_type || svc.type,
-                        mechanicName: svc.mechanic_name,
-                        status: svc.service_status || svc.status,
-                        mileage: svc.mileage,
-                        totalCost: svc.total_cost,
-                        startDate: svc.start_date,
-                        endDate: svc.end_date,
-                        notes: svc.notes,
-                        task: svc.task,
-                        sparepart: svc.sparepart,
-                        scheduleDate: svc.schedule_date
-                    })));
-                }
-
-                const { data: adminData, error: adminError } = await supabase
-                    .from("vehicle_administration_history") // or "administration"
-                    .select("*")
-                    .eq("vehicle_id", id)
-                    .order("created_at", { ascending: false });
-
-                if (adminError) {
-                    console.error(adminError);
-                } else {
-                    setAdministration(adminData.map(adm => ({
-                        id: adm.administration_id,
-                        ticketNum: adm.ticket_num,
-                        type: adm.type,
-                        status: adm.status,
-                        dueDate: adm.due_date,
-                        newDueDate: adm.new_due_date,
-                        endDate: adm.end_date,
-                        totalCost: adm.total_cost,
-                        notes: adm.notes
-                    })));
-                }
-
-                const { data: attachmentData, error: attachmentError } = await supabase
-                    .from("vehicle_attachments")
-                    .select("*")
-                    .eq("vehicle_id", id)
-                    .eq("attachment_type", "document")
-                    .order("sort", { ascending: true });
-
-                if (attachmentError) {
-                    console.error(attachmentError);
-                } else {
-                    setAttachments(attachmentData.map(att => ({
-                        id: att.attachment_id,
-                        vehicleId: att.vehicle_id,
-                        attachmentType: att.attachment_type,
-                        fileName: att.file_name,
-                        fileType: att.file_type,
-                        fileSize: att.file_size,
-                        fileLink: att.file_link,
-                        createdAt: att.created_at,
-                        createdBy: att.created_by,
-                    })));
-                }
-
-                const { data: locationData, error: locationError } = await supabase
-                    .from("vehicle_locations")
-                    .select("*")
-                    .eq("vehicle_id", id)
-                    .order("created_at", { ascending: false })
-                    .limit(1);
-
-                if (locationError) {
-                    console.error("Location fetch error:", locationError);
-                } else if (locationData && locationData.length > 0) {
-                    const loc = locationData[0];
-                    setLatestLocation({
-                        id: loc.id,
-                        vehicleId: loc.vehicle_id,
-                        name: loc.name,
-                        address: loc.address,
-                    });
-                }
-
-            } catch (err) {
-                console.error("Failed to fetch data:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchDetail();
-    }, [id]);
-
-
-    const fetchDetailEq = async () => {
-        setLoading(true);
-        try {
-            // semua logic yang kamu pakai di useEffect
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchDetailEq();
-    }, [id]);
-
-
-    if (!vehicle) return <p>Tidak ada data kendaraan...</p>;
+    if (!vehicle) return (
+        <EmptyState title="Kendaraan Tidak Ditemukan" description="Kendaraan dengan ID tersebut tidak tersedia." />
+    );
 
     // const vehicleEquipments = vehicle.equipments ? vehicle.equipments.split(",") : [];
 
@@ -368,7 +435,7 @@ export default function KendaraanDetailPage() {
                     {/* Image Carousel */}
                     <div className="col-span-1 md:col-span-4 md:p-5 md:pr-0">
                         {vehicle?.id && (
-                            <ImageCarousel images={vehicleImages.map(image => image.fileLink || '')} vehicleId={vehicle.id} />
+                            <ImageCarousel images={vehicleImages.map(image => image.fileLink || '')} vehicleId={vehicle.id} onSave={() => fetchVehicleGallery(id!)} />
                         )}
                     </div>
 
@@ -460,13 +527,13 @@ export default function KendaraanDetailPage() {
                 {/* Info Bar */}
                 <div className="flex flex-col gap-5">
                     {/* Lokasi Bar */}
-                    {latestLocation && (
+                    {(!vehicle.isSold) && (
                         <Link to={`/kendaraan/detail/${vehicle.id}/riwayat-lokasi`}>
                             <DataBarCard
                                 variant="button"
                                 type="lokasi"
-                                label={latestLocation.name}
-                                description={latestLocation.address}
+                                label={latestLocation?.name || "Belum ada lokasi"}
+                                description={latestLocation?.address || "Belum ada alamat"}
                             />
                         </Link >
                     )}
@@ -514,7 +581,7 @@ export default function KendaraanDetailPage() {
                     <SectionCard
                         title="Detail STNK"
                         headerAction={
-                            stnk ? <EditDetailStnkDialog stnk={stnk} /> : null
+                            stnk ? <EditDetailStnkDialog stnk={stnk} onSave={() => fetchVehicleStnk(id!)} /> : null
                         }
                         collapsible
                         defaultCollapsed={true}
@@ -614,24 +681,10 @@ export default function KendaraanDetailPage() {
                         title="Kelengkapan Kendaraan"
                         headerAction={
                             <EditEquipmentVehicleDialog
+                                vehicleId={id}
                                 equipmentParam={equipmentParam}
                                 vehicleEquipments={vehicleEquipments}
-                                onSave={async (selectedEquipments) => {
-                                    const formattedArray = `{${selectedEquipments.map((item) => `"${item}"`).join(",")}}`;
-
-                                    const { error } = await supabase
-                                        .from("vehicles")
-                                        .update({ equipments: formattedArray })
-                                        .eq("id", vehicle?.id);
-
-                                    if (error) {
-                                        toast.error("Gagal menyimpan kelengkapan kendaraan.");
-                                    } else {
-                                        toast.success("Kelengkapan kendaraan berhasil diperbarui.");
-                                        // Refresh ulang data supaya tampilan update
-                                        fetchDetailEq(); // pastikan `fetchDetail` dideklarasikan di atas
-                                    }
-                                }}
+                                onSave={() => fetchVehicleEquipments(id!)}
                             />
 
                         }

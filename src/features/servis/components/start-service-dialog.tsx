@@ -83,7 +83,7 @@ export function StartServiceDialog({ service, onSave }: StartServiceDialogProps)
         task: formattedValues.task,
         sparepart: formattedValues.sparepart,
         notes: formattedValues.notes,
-        status :'ongoing'
+        status: 'ongoing'
       })
       .eq("id", formattedValues.id)
       .select("*")
@@ -151,7 +151,9 @@ export function StartServiceDialog({ service, onSave }: StartServiceDialogProps)
                             selected={field.value}
                             captionLayout="dropdown"
                             onSelect={field.onChange}
-                            disabled={(date:Date) =>
+                            startMonth={new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1)}
+                            endMonth={new Date(new Date().getFullYear() + 5, new Date().getMonth(), 1)}
+                            disabled={(date: Date) =>
                               date < new Date("1900-01-01")
                             }
                           />

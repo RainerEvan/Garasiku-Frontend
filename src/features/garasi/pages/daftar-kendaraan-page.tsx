@@ -68,8 +68,8 @@ export default function DaftarKendaraanPage() {
             location: {
               id: v.location_id ?? "",
               vehicleId: v.id ?? "",
-              name: v.location_name ?? "-",
-              address: v.location_address ?? "-",
+              name: v.location_name ?? "Belum ada lokasi",
+              address: v.location_address ?? "Belum ada alamat",
             },
             soldDate: v.soldDate ?? undefined,
           }));
