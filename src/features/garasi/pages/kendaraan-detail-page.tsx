@@ -285,6 +285,7 @@ export default function KendaraanDetailPage() {
                     .from("vehicle_attachments")
                     .select("*")
                     .eq("vehicle_id", id)
+                    .eq("attachment_type", "document")
                     .order("sort", { ascending: true });
 
                 if (attachmentError) {
