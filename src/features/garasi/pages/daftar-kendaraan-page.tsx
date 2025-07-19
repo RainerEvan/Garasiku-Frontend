@@ -77,7 +77,7 @@ export default function DaftarKendaraanPage() {
           name: v.location_name ?? "Belum ada lokasi",
           address: v.location_address ?? "Belum ada alamat",
         },
-        soldDate: v.soldDate ?? undefined,
+        soldDate: v.sold_date ?? undefined,
       })));
     }
   };
