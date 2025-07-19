@@ -47,7 +47,7 @@ export function AddAttachmentVehicleDialog({ vehicleId, onSave }: AddAttachmentV
     },
   })
 
-  const { reset } = form
+  const { reset } = form;
 
   async function onSubmit(values: FormData) {
     try {
@@ -57,7 +57,7 @@ export function AddAttachmentVehicleDialog({ vehicleId, onSave }: AddAttachmentV
       const fileName = `${Date.now()}-${file.name}`;
       const filePath = `${vehicleId}/documents/${fileName}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("kendaraan")
         .upload(filePath, file, {
           cacheControl: "3600",
@@ -66,17 +66,20 @@ export function AddAttachmentVehicleDialog({ vehicleId, onSave }: AddAttachmentV
 
       if (uploadError) throw uploadError
 
-      const { data: publicUrl } = supabase.storage.from("attachment").getPublicUrl(filePath)
+      const { data: publicUrlData } = supabase.storage
+        .from("attachment")
+        .getPublicUrl(filePath);
+
+      const publicUrl = publicUrlData.publicUrl;
 
       const insertPayload = {
         vehicle_id: vehicleId,
         file_name: file.name,
         file_type: file.type,
         file_size: file.size.toString(),
-        file_link: filePath,
-        attachment_type: "document",
+        file_link: publicUrl,
         created_by: "system",
-
+        attachment_type: "document",
       }
 
       const { data: inserted, error: insertError } = await supabase
@@ -89,12 +92,15 @@ export function AddAttachmentVehicleDialog({ vehicleId, onSave }: AddAttachmentV
 
       toast.success("Dokumen kendaraan berhasil ditambahkan")
 
-      if (onSave) onSave(inserted)
-      setOpen(false)
-      reset()
+      if (onSave) {
+        onSave(inserted);
+      }
+      
+      setOpen(false);
+      reset();
     } catch (err: any) {
-      console.error(err)
-      toast.error("Gagal menambahkan dokumen")
+      console.error(err);
+      toast.error("Gagal menambahkan dokumen");
     }
   }
 

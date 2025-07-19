@@ -103,7 +103,7 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
         vehicle_id: service.vehicleId,
         type: service.type,
         schedule_date: format(values.nextScheduleDate, "yyyy-MM-dd"),
-        status:'pending'
+        status: 'pending'
       }
 
       const { error: insertError } = await supabase.from("service").insert(insertData)
@@ -174,6 +174,8 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
                             selected={field.value}
                             captionLayout="dropdown"
                             onSelect={field.onChange}
+                            startMonth={new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1)}
+                            endMonth={new Date(new Date().getFullYear() + 5, new Date().getMonth(), 1)}
                             disabled={(date: Date) =>
                               date < new Date("1900-01-01")
                             }
@@ -347,6 +349,8 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
                               selected={field.value}
                               captionLayout="dropdown"
                               onSelect={field.onChange}
+                              startMonth={new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1)}
+                              endMonth={new Date(new Date().getFullYear() + 5, new Date().getMonth(), 1)}
                               disabled={(date: Date) =>
                                 date < new Date("1900-01-01")
                               }

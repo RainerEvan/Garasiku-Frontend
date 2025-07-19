@@ -14,45 +14,53 @@ export default function RiwayatLokasiKendaraanPage() {
     const [listVehicleLocations, setListVehicleLocations] = useState<LocationVehicle[]>([]);
     const [vehicleIsSold, setVehicleIsSold] = useState(false);
 
+    const fetchVehicleLocations = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("vehicle_locations")
+            .select("*")
+            .eq("vehicle_id", vehicleId)
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            console.error("Locations fetch error:", error)
+        }
+
+        if (data) {
+            setListVehicleLocations(data.map(loc => ({
+                id: loc.id,
+                locehicleId: loc.vehicle_id,
+                name: loc.name,
+                address: loc.address,
+                createdAt: loc.created_at,
+                createdBy: loc.created_by,
+            })));
+        }
+    };
+
+    const fetchVehicleIsSold = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("vehicles")
+            .select("is_sold")
+            .eq("id", vehicleId)
+            .single();
+
+        if (error) {
+            console.error("Vehicle status sold fetch error:", error)
+        }
+
+        if (data) {
+            setVehicleIsSold(data?.is_sold ?? false);
+        }
+    };
+
     useEffect(() => {
         const fetchAll = async () => {
+            if (!id) return;
             setLoading(true);
+
             try {
-                if (!id) return;
-
-                // 1. Ambil data lokasi
-                const { data: locationData, error: locationError } = await supabase
-                    .from("vehicle_locations")
-                    .select("*")
-                    .eq("vehicle_id", id)
-                    .order("created_at", { ascending: false });
-
-                if (locationError) {
-                    console.error("Location fetch error:", locationError);
-                } else if (locationData) {
-                    const mapped = locationData.map((v: any) => ({
-                        id: v.id,
-                        vehicleId: v.vehicle_id,
-                        name: v.name,
-                        address: v.address,
-                        createdAt: v.created_at,
-                        createdBy: v.created_by,
-                    }));
-                    setListVehicleLocations(mapped);
-                }
-
-                // 2. Ambil status kendaraan (terjual atau tidak)
-                const { data: vehicleData, error: vehicleError } = await supabase
-                    .from("vehicles")
-                    .select("is_sold")
-                    .eq("id", id)
-                    .single();
-
-                if (vehicleError) {
-                    console.error("Vehicle fetch error:", vehicleError);
-                } else {
-                    setVehicleIsSold(vehicleData?.is_sold ?? false);
-                }
+                await fetchVehicleLocations(id);
+                await fetchVehicleIsSold(id);
             } catch (err) {
                 console.error("Failed to fetch data:", err);
             } finally {
@@ -74,10 +82,11 @@ export default function RiwayatLokasiKendaraanPage() {
                                 <p className="text-muted-foreground text-sm">Klik button pindah lokasi untuk memindahkan lokasi kendaraan.</p>
                             )}
                         </div>
-                        {!vehicleIsSold && listVehicleLocations[0] && (
+                        {!vehicleIsSold && (
                             <MoveLocationVehicleDialog
                                 vehicleId={id!}
-                                currLocationAddress={listVehicleLocations[0].address}
+                                currLocationAddress={listVehicleLocations[0]?.address}
+                                onSave={() => fetchVehicleLocations(id!)}
                             />
                         )}
                     </div>

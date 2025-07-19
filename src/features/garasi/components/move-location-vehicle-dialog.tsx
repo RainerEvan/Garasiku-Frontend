@@ -106,7 +106,7 @@ export function MoveLocationVehicleDialog({
     };
 
     fetchLocationParams();
-  }, [setLoading]);
+  }, []);
 
   useEffect(() => {
     const location = locationParams.find((l) => l.name === selectedName);
@@ -132,7 +132,6 @@ export function MoveLocationVehicleDialog({
     if (userError || !user) {
       toast.error("Gagal mendapatkan user login");
       console.error("Gagal mendapatkan user login:", userError);
-      alert("Gagal mendapatkan informasi user.");
       setLoading(false);
       return;
     }
@@ -160,21 +159,13 @@ export function MoveLocationVehicleDialog({
     if (error) {
       toast.error("Gagal insert lokasi kendaraan");
       console.error("Gagal insert lokasi kendaraan:", error);
-      alert("Gagal memindahkan lokasi kendaraan.");
       return;
     }
 
     toast.success("Berhasil Update Lokasi Kendaraan");
 
     if (onSave) {
-      onSave({
-        id: "",
-        vehicleId: vehicleId,
-        name: values.name,
-        address: values.address,
-        createdBy: username,
-        createdAt,
-      });
+      onSave(values);
     }
 
     setOpen(false);

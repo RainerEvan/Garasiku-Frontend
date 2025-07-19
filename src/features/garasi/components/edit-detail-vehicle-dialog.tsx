@@ -59,7 +59,9 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
   const [vehicleBrandParam, setVehicleBrandParam] = useState<Param[]>([])
 
   useEffect(() => {
-    async function fetchVehicleBrands() {
+    if (!open) return;
+    
+    async function fetchBrandParams() {
       const { data, error } = await supabase
         .from("parameter")
         .select("*")
@@ -67,15 +69,15 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
         .order("name")
 
       if (error) {
-        console.error("Gagal mengambil data merk kendaraan:", error.message)
+        console.error("Brand params fetch error:", error)
         return
       }
 
       setVehicleBrandParam(data)
     }
 
-    fetchVehicleBrands()
-  }, [])
+    fetchBrandParams()
+  }, [open])
 
   const { watch, setValue } = form
 
@@ -97,20 +99,9 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
       return
     }
 
-          const { data, error } = await supabase
-        .from("vehicles")
-        .update({
-          name: values.name,
-          category: values.category,
-          brand: values.brand,
-          type: values.type,
-          year: values.year,
-          color: values.color,
-        })
-        .eq("id", values.id)
-        .select("*"); 
-        console.log("Update ke Supabase:", {
-        id: values.id,
+    const { data, error } = await supabase
+      .from("vehicles")
+      .update({
         name: values.name,
         category: values.category,
         brand: values.brand,
@@ -118,6 +109,18 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
         year: values.year,
         color: values.color,
       })
+      .eq("id", values.id)
+      .select("*");
+
+    console.log("Update ke Supabase:", {
+      id: values.id,
+      name: values.name,
+      category: values.category,
+      brand: values.brand,
+      type: values.type,
+      year: values.year,
+      color: values.color,
+    })
 
     console.log("Update response:", { data, error })
 
@@ -125,15 +128,15 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
       console.error("Gagal update kendaraan:", error.message)
       toast.error("Gagal update kendaraan: " + error.message)
       return
+    } else {
+      toast.success("Data kendaraan berhasil diperbarui.")
     }
-
-    toast.success("Data kendaraan berhasil diperbarui.")
 
     if (onSave) {
-      onSave({ ...vehicle, ...values })
+      onSave(values);
     }
 
-    setOpen(false)
+    setOpen(false);
   }
 
   return (

@@ -17,6 +17,8 @@ import {
     DialogTrigger,
 } from "@/components/shadcn/dialog"
 import { ScrollArea } from "@/components/shadcn/scroll-area"
+import { useLoading } from "@/lib/loading-context"
+import { toast } from "sonner"
 
 interface EditImageVehicleDialogProps {
     images: string[]
@@ -29,6 +31,8 @@ export function EditImageVehicleDialog({
     vehicleId,
     onSave,
 }: EditImageVehicleDialogProps) {
+    const { setLoading } = useLoading();
+
     const [open, setOpen] = useState(false)
     const [carImages, setCarImages] = useState<string[]>([...images])
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -150,29 +154,40 @@ export function EditImageVehicleDialog({
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
 
-        const newBlobs = carImages.filter((img) => img.startsWith("blob:"));
-        const filesToUpload: File[] = [];
+        try {
+            const newBlobs = carImages.filter((img) => img.startsWith("blob:"));
+            const filesToUpload: File[] = [];
 
-        for (const blobUrl of newBlobs) {
-            const blob = await fetch(blobUrl).then((res) => res.blob());
-            const file = new File([blob], `image-${Date.now()}.webp`, { type: 'image/webp' });
-            filesToUpload.push(file);
+            for (const blobUrl of newBlobs) {
+                const blob = await fetch(blobUrl).then((res) => res.blob());
+                const file = new File([blob], `image-${Date.now()}.webp`, { type: 'image/webp' });
+                filesToUpload.push(file);
+            }
+
+            // Upload gambar baru
+            const uploadedUrls = await uploadImagesToStorage(filesToUpload, vehicleId);
+
+            // Gabung yang lama (selain blob) + hasil upload
+            const finalImages = carImages.filter((img) => !img.startsWith("blob:")).concat(uploadedUrls);
+
+            // Hapus gambar yang ditandai
+            if (deletedImages.length > 0) {
+                await deleteImagesFromStorageAndDB(deletedImages);
+            }
+
+            toast.success("Foto kendaraan berhasil diperbarui.");
+            if (onSave) {
+                onSave(finalImages);
+            }
+            setOpen(false);
+        } catch (err) {
+            console.error("Error saving images:", err);
+            toast.error("Gagal menyimpan foto kendaraan.");
+        } finally {
+            setLoading(false);
         }
-
-        // Upload gambar baru
-        const uploadedUrls = await uploadImagesToStorage(filesToUpload, vehicleId);
-
-        // Gabung yang lama (selain blob) + hasil upload
-        const finalImages = carImages.filter((img) => !img.startsWith("blob:")).concat(uploadedUrls);
-
-        // Hapus gambar yang ditandai
-        if (deletedImages.length > 0) {
-            await deleteImagesFromStorageAndDB(deletedImages);
-        }
-
-        onSave?.(finalImages);
-        setOpen(false);
     };
 
 

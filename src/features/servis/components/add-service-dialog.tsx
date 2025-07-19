@@ -67,7 +67,7 @@ const formSchema = z.object({
   type: z.string().min(1, { message: "Tipe Servis harus terisi" }),
   scheduleDate: z.date({ required_error: "Jadwal Servis harus terisi" }),
 });
-  const typeServiceParam = SERVICE_TYPE_PARAM;
+const typeServiceParam = SERVICE_TYPE_PARAM;
 
 
 export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
@@ -204,6 +204,8 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
                             selected={field.value}
                             captionLayout="dropdown"
                             onSelect={field.onChange}
+                            startMonth={new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1)}
+                            endMonth={new Date(new Date().getFullYear() + 5, new Date().getMonth(), 1)}
                             disabled={(date: Date) =>
                               date < new Date("1900-01-01")
                             }

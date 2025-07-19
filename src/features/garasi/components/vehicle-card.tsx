@@ -38,7 +38,7 @@ export function VehicleCard({
         <div className="border rounded-lg p-3 flex items-start gap-2">
           <div className="flex items-center gap-3">
             {Icon && <Icon className="h-5 w-5 text-medium shrink-0" />}
-            {variant === "active" && location && (
+            {variant === "active" && (
               <div>
                 <p className="text-sm font-medium">{vehicle.location?.name}</p>
                 <p className="text-xs text-medium">{vehicle.location?.address}</p>

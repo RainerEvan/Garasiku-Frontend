@@ -3,7 +3,7 @@ dotenv.config({ path: ".env.local" });
 
 console.log("🧪 Starting reminder test...");
 
-import handler from "../api/send-weekly-task-reminder";
+import handler from "../api/cron.js";
 
 const fakeReq = {};
 const fakeRes = {
