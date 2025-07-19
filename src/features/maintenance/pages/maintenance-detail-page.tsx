@@ -6,45 +6,84 @@ import { ParamGroup } from "@/models/param-group";
 import { ParamCard } from "../components/param-card";
 import { AddParamDialog } from "../components/add-param-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
+import { useLoading } from "@/lib/loading-context";
 
 export default function MaintenanceDetailPage() {
-  const { id } = useParams();
+  const { loading, setLoading } = useLoading();
 
+  const { id: groupCode } = useParams();
   const [paramGroup, setParamGroup] = useState<ParamGroup | null>(null);
   const [params, setParams] = useState<Param[]>([]);
 
-  const fetchData = async () => {
-    if (!id) return;
+  const fetchParamGroupDetail = async (group: string): Promise<string | null> => {
+    const { data, error } = await supabase
+      .from("parameter_group")
+      .select("*")
+      .eq("group", group)
+      .single();
 
-    const [{ data: groupData, error: groupError }, { data: paramData, error: paramError }] =
-      await Promise.all([
-        supabase.from("parameter_group").select("*").eq("group", id).single(),
-        supabase.from("parameter").select("*").eq("group", id).order("name", { ascending: true })
-      ]);
+    if (error) {
+      console.error("Parameter Group detail fetch error:", error)
+    }
 
-    if (groupError || paramError) {
-      console.error("Group Error:", groupError);
-      console.error("Param Error:", paramError);
-    } else {
+    if (data) {
       setParamGroup({
-        id: groupData.id,
-        group: groupData.group,
-        name: groupData.name,
-        description: groupData.description,
-        isMaintain: groupData.is_maintain,
-        isTotalFixed: groupData.is_total_fixed,
+        id: data.id,
+        group: data.group,
+        name: data.name,
+        description: data.description,
+        isMaintain: data.is_maintain,
+        isTotalFixed: data.is_total_fixed
       });
-      setParams(paramData);
+
+      return data.id;
+    }
+
+    return null;
+  };
+
+  const fetchParamsByGroup = async (group: string) => {
+    const { data, error } = await supabase
+      .from("parameter")
+      .select("*")
+      .eq("group", group)
+      .order("name", { ascending: true })
+
+    if (error) {
+      console.error("Parameter Group detail fetch error:", error)
+    }
+
+    if (data) {
+      setParams(data);
     }
   };
 
   useEffect(() => {
-    fetchData();
-  }, [id]);
+    const fetchDetail = async () => {
+      if (!groupCode) return;
+      setLoading(true);
 
-  if (!paramGroup) return (
+      try {
+        const groupId = await fetchParamGroupDetail(groupCode);
+
+        if (groupId) {
+          await fetchParamsByGroup(groupCode);
+        }
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetail();
+  }, [groupCode]);
+
+  if (!paramGroup && !loading) return (
     <EmptyState title="Parameter Tidak Ditemukan" description="Parameter dengan ID tersebut tidak tersedia." />
   );
+
+  if (!paramGroup) return null;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -52,7 +91,7 @@ export default function MaintenanceDetailPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">{paramGroup.name}</h1>
           {!paramGroup.isMaintain || !paramGroup.isTotalFixed ? (
-            <AddParamDialog paramGroup={paramGroup} onSave={() => fetchData()} />
+            <AddParamDialog paramGroup={paramGroup} onSave={() => fetchParamsByGroup(groupCode!)} />
           ) : null}
         </div>
 

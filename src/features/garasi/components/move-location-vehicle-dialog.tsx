@@ -35,6 +35,7 @@ import { LocationVehicle } from "@/models/location-vehicle";
 import { supabase } from "@/lib/supabaseClient";
 import { PARAM_GROUP_LOKASI_KENDARAAN } from "@/lib/constants";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth-context";
 
 interface MoveLocationVehicleDialogProps {
   vehicleId?: string;
@@ -69,6 +70,8 @@ export function MoveLocationVehicleDialog({
   const { setLoading } = useLoading();
   const [open, setOpen] = useState(false);
   const [locationParams, setLocationParams] = useState<{ name: string; description: string }[]>([]);
+
+  const { user } = useAuth();
 
   const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
     resolver: zodResolver(formSchema(currLocationAddress)),
@@ -124,14 +127,8 @@ export function MoveLocationVehicleDialog({
   async function onSubmit(values: z.infer<ReturnType<typeof formSchema>>) {
     console.log("Move location kendaraan data: ", values);
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
+    if (!user) {
       toast.error("Gagal mendapatkan user login");
-      console.error("Gagal mendapatkan user login:", userError);
       setLoading(false);
       return;
     }

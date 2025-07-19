@@ -18,9 +18,6 @@ export default function MaintenancePage() {
     const fetchParamGroups = async () => {
       setLoading(true);
       setError(null);
-      const { data: { user } } = await supabase.auth.getUser();
-
-  
 
       const { data, error } = await supabase
         .from("parameter_group")
