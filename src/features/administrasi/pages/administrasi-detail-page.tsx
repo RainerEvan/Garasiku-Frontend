@@ -26,7 +26,7 @@ import { useLoading } from "@/lib/loading-context";
 import { EmptyState } from "@/components/shared/empty-state";
 
 export default function AdministrasiDetailPage() {
-  const { setLoading } = useLoading();
+  const { loading, setLoading } = useLoading();
 
   const { id } = useParams<{ id: string }>();
   const [administration, setAdministration] = useState<Administration | null>(null);
@@ -101,9 +101,12 @@ export default function AdministrasiDetailPage() {
     fetchDetail();
   }, [id]);
 
-  if (!administration) return (
+  
+  if (!administration && !loading) return (
     <EmptyState title="Administrasi Tidak Ditemukan" description="Administrasi dengan ID tersebut tidak tersedia." />
   );
+  
+  if (!administration) return null;
 
   return (
     <div className="min-h-screen flex flex-col">

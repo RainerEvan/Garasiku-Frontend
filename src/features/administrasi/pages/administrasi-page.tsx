@@ -13,78 +13,82 @@ import { getCachedReminderDateRange } from "@/lib/reminder-date";
 const validTypes = ["stnk-1", "stnk-5", "asuransi"];
 
 export default function AdministrasiPage() {
-  const { type } = useParams();
+  const { setLoading } = useLoading();
 
+  const { type } = useParams();
   if (!type || !validTypes.includes(type)) {
     return <Navigate to="/administrasi/stnk-1" replace />;
   }
-
-  const { setLoading } = useLoading();
 
   const [activeTab, setActiveTab] = useState("todo");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [listAdministrations, setListAdministrations] = useState<Administration[]>([]);
 
+  const fetchListAdministrations = async () => {
+    const { futureDate } = await getCachedReminderDateRange();
+
+    let administrationQuery = supabase
+      .from("administration")
+      .select(`
+        *,
+        vehicles (
+          id,
+          name,
+          category,
+          license_plate
+        )
+      `)
+      .eq("type", `administrasi-${type}`);
+
+    console.log("Admin type: ", type);
+
+    if (activeTab === "todo") {
+      administrationQuery = administrationQuery
+        .eq("status", "pending")
+        .lte("due_date", futureDate.toISOString());
+    } else if (activeTab === "pending") {
+      administrationQuery = administrationQuery
+        .eq("status", "pending");
+    } else {
+      administrationQuery = administrationQuery
+        .in("status", ["completed", "cancelled"])
+    }
+
+    const { data, error } = await administrationQuery
+      .order("due_date", { ascending: sortOrder === "asc" });
+
+    if (error) {
+      console.error("List Administrations fetch error:", error)
+    }
+
+    if (data) {
+      setListAdministrations(data.map(a => ({
+        id: a.id,
+        ticketNum: a.ticket_num,
+        vehicleId: a.vehicle_id,
+        vehicle: {
+          id: a.vehicles?.id,
+          name: a.vehicles?.name,
+          category: a.vehicles?.category,
+          licensePlate: a.vehicles?.license_plate,
+        },
+        type: a.type,
+        dueDate: a.due_date,
+        endDate: a.end_date,
+        status: a.status,
+      })));
+    }
+  };
+
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
 
       try {
-        const { futureDate } = await getCachedReminderDateRange();
-
-        let administrationQuery = supabase
-          .from("administration")
-          .select(
-            `
-            *,
-            vehicles (
-              id,
-              name,
-              category,
-              license_plate
-            )
-          `
-          )
-          .eq("type", `administrasi-${type}`);
-
-        console.log(type);
-
-        if (activeTab === "todo") {
-          administrationQuery = administrationQuery
-            .eq("status", "pending")
-            .lte("due_date", futureDate.toISOString());
-        } else if (activeTab === "pending") {
-          administrationQuery = administrationQuery.eq("status", "pending");
-        } else {
-          administrationQuery = administrationQuery.in("status", ["completed", "cancelled"])
-        }
-
-        const { data: administrationsData, error: administrationsError } = await administrationQuery;
-
-        // === ADMINISTRATIONS ===
-        if (administrationsError) {
-          console.error("Failed to fetch administrations:", administrationsError);
-        } else if (administrationsData) {
-          const mappedAdministrations = administrationsData.map((a: any) => ({
-            id: a.id,
-            ticketNum: a.ticketNum,
-            vehicleId: a.vehicle_id,
-            vehicle: {
-              id: a.vehicles?.id,
-              name: a.vehicles?.name,
-              category: a.vehicles?.category,
-              licensePlate: a.vehicles?.license_plate,
-            },
-            type: a.type,
-            dueDate: a.dueDate,
-            endDate: a.endDate,
-            status: a.status,
-          }));
-          setListAdministrations(mappedAdministrations);
-        }
+        await fetchListAdministrations();
       } catch (err) {
-        console.error("Unexpected error fetching administration data:", err);
+        console.error("Failed to fetch data:", err);
       } finally {
         setLoading(false);
       }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom"; // atau next/router jika pakai Next.js
 import { supabase } from "@/lib/supabaseClient";
 import { useLoading } from "@/lib/loading-context";
@@ -12,9 +12,10 @@ import { Separator } from "@/components/shadcn/separator";
 import { EditUserDialog } from "../components/edit-user-dialog";
 import { ChangePasswordDialog } from "../components/change-password-dialog";
 import { ROLE_PARAM } from "@/lib/constants";
+import { EmptyState } from "@/components/shared/empty-state";
 
 export default function UserDetailPage() {
-  const { setLoading } = useLoading();
+  const { loading, setLoading } = useLoading();
   const { id: userId } = useParams(); // ambil dari URL
 
   const [user, setUser] = useState<User | null>(null);
@@ -28,13 +29,13 @@ export default function UserDetailPage() {
         const [
           roleParamsRes,
         ] = await Promise.all([
-          // simulate fetching params (you might replace this with supabase or API call)
+          // Using static role param for now — replace with API call if needed
           Promise.resolve(ROLE_PARAM),
         ]);
         setRoleParam(roleParamsRes);
 
         const { data, error } = await supabase
-          .rpc("get_all_users") // atau from("user_lookup")
+          .rpc("get_all_users")
           .select("*");
 
         if (error) {
@@ -67,16 +68,20 @@ export default function UserDetailPage() {
     fetchUser();
   }, [userId, setLoading]);
 
-  if (!user) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p>Loading...</p>
-      </div>
-    );
-  }
+  if (!user && !loading) return (
+    <EmptyState title="User Tidak Ditemukan" description="User dengan ID tersebut tidak tersedia." />
+  );
 
-  const initial = user.fullname.charAt(0).toUpperCase();
-  const isActive = user.isActive ? "active" : "inactive";
+  if (!user) return null;
+
+  const avatarLetter = useMemo(() => {
+    const str = user?.fullname || user?.username || "U";
+    return str.charAt(0).toUpperCase();
+  }, [user]);
+
+  const isActive = useMemo(() => {
+    return user.isActive ? "active" : "inactive";
+  }, [user]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -90,7 +95,9 @@ export default function UserDetailPage() {
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-9 h-9 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-primary-foreground text-lg">{initial}</span>
+                  <span className="text-primary-foreground text-lg">
+                    {avatarLetter}
+                  </span>
                 </div>
                 <div>
                   <p className="text-sm font-medium">{user.fullname}</p>

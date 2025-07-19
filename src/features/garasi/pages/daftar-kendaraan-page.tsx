@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react"
 import { AddVehicleDialog } from "../components/add-vehicle-dialog"
 import { Vehicle } from "@/models/vehicle"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
-import { Param } from "@/models/param"
 import { useLoading } from "@/lib/loading-context"
 import { supabase } from "@/lib/supabaseClient"
 import { VEHICLE_CATEGORY_PARAM } from "@/lib/constants"
@@ -27,54 +26,70 @@ export default function DaftarKendaraanPage() {
 
   const [listVehicles, setListVehicles] = useState<Vehicle[]>([]);
 
+  const fetchVehicleCategoryParams = async () => {
+    // Using static param for now — replace with API call if needed
+    const { data, error } = await Promise.resolve(
+      {
+        data: VEHICLE_CATEGORY_PARAM,
+        error: null,
+      }
+    );
+
+    if (error) {
+      console.error("Vehicle Category params fetch error:", error)
+    }
+
+    if (data) {
+      const optionsFromParams: SelectOption[] = data.map((param) => ({
+        label: param.description || param.name,
+        value: param.name,
+      }));
+      setSelectCategoryOptions([{ label: "Semua", value: "all" }, ...optionsFromParams]);
+    }
+  };
+
+  const fetchListVehicles = async () => {
+    const { data, error } = await supabase
+      .from("vehicles_with_latest_location")
+      .select("*")
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("List Vehicles fetch error:", error)
+    }
+
+    if (data) {
+      setListVehicles(data.map(v => ({
+        id: v.id,
+        name: v.name,
+        type: v.type,
+        year: v.year,
+        brand: v.brand,
+        color: v.color,
+        category: v.category,
+        licensePlate: v.license_plate,
+        image: v.image_url,
+        isSold: v.is_sold,
+        location: {
+          id: v.location_id ?? "",
+          vehicleId: v.id ?? "",
+          name: v.location_name ?? "Belum ada lokasi",
+          address: v.location_address ?? "Belum ada alamat",
+        },
+        soldDate: v.soldDate ?? undefined,
+      })));
+    }
+  };
+
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
 
       try {
-        const [
-          vehicleCategoryParamsRes,
-          vehiclesRes
-        ] = await Promise.all([
-          // simulate fetching params (you might replace this with supabase or API call)
-          Promise.resolve(VEHICLE_CATEGORY_PARAM),
-          supabase.from("vehicles_with_latest_location").select("*"),
+        await Promise.all([
+          fetchVehicleCategoryParams(),
+          fetchListVehicles(),
         ]);
-
-        // === PARAMS ===
-        const vehicleCategoryParamsData: Param[] = vehicleCategoryParamsRes;
-        const optionsFromParams: SelectOption[] = vehicleCategoryParamsData.map((param) => ({
-          label: param.description || param.name,
-          value: param.name,
-        }));
-        setSelectCategoryOptions([{ label: "Semua", value: "all" }, ...optionsFromParams]);
-
-        // === VEHICLES ===
-        const { data: vehiclesData, error: vehiclesError } = vehiclesRes;
-        if (vehiclesError) {
-          console.error("Failed to fetch vehicles:", vehiclesError.message);
-        } else if (vehiclesData) {
-          const mappedVehicles = vehiclesData.map((v: any) => ({
-            id: v.id,
-            name: v.name,
-            type: v.type,
-            year: v.year,
-            brand: v.brand,
-            color: v.color,
-            category: v.category,
-            licensePlate: v.license_plate,
-            image: v.image_url,
-            isSold: v.is_sold,
-            location: {
-              id: v.location_id ?? "",
-              vehicleId: v.id ?? "",
-              name: v.location_name ?? "Belum ada lokasi",
-              address: v.location_address ?? "Belum ada alamat",
-            },
-            soldDate: v.soldDate ?? undefined,
-          }));
-          setListVehicles(mappedVehicles);
-        }
       } catch (err) {
         console.error("Failed to fetch data:", err);
       } finally {
@@ -106,7 +121,7 @@ export default function DaftarKendaraanPage() {
       <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Daftar Kendaraan</h1>
-          <AddVehicleDialog />
+          <AddVehicleDialog onSave={() => fetchListVehicles()}/>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

@@ -31,19 +31,23 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { PARAM_GROUP_KELENGKAPAN_KENDARAAN } from "@/lib/constants"
 
 export default function KendaraanDetailPage() {
-    const { setLoading } = useLoading();
+    const { loading, setLoading } = useLoading();
 
     const { id } = useParams<{ id: string }>();
 
+    const [equipmentParam, setEquipmentParam] = useState<Param[]>([])
+
     const [vehicle, setVehicle] = useState<Vehicle | null>(null);
-    const [latestLocation, setLatestLocation] = useState<LocationVehicle | null>(null);
-    const [stnk, setStnk] = useState<Stnk | null>(null);
-    const [services, setServices] = useState<Service[]>([]);
-    const [adminitrations, setAdministration] = useState<Administration[]>([]);
+    const [vehicleStnkDueDate, setVehicleStnkDueDate] = useState<string>();
+    const [vehicleInsuranceDueDate, setVehicleInsuranceDueDate] = useState<string>();
+    const [vehicleLastServiceDate, setVehicleLastServiceDate] = useState<string>();
+    const [vehicleLatestLocation, setVehicleLatestLocation] = useState<LocationVehicle | null>(null);
+    const [vehicleStnk, setVehicleStnk] = useState<Stnk | null>(null);
+    const [vehicleServices, setVehicleServices] = useState<Service[]>([]);
+    const [vehicleAdminitrations, setVehicleAdministrations] = useState<Administration[]>([]);
     const [vehicleEquipments, setVehicleEquipments] = useState<string[]>([]);
     const [vehicleImages, setVehicleImages] = useState<AttachmentVehicle[]>([]);
-    const [attachments, setAttachments] = useState<AttachmentVehicle[]>([]);
-    const [equipmentParam, setEquipmentParam] = useState<Param[]>([])
+    const [vehicleAttachments, setVehicleAttachments] = useState<AttachmentVehicle[]>([]);
 
     const fetchEquipmentParams = async () => {
         const { data, error } = await supabase
@@ -93,14 +97,18 @@ export default function KendaraanDetailPage() {
                 lastServiceDate: base.schedule_date
             });
 
-            setLatestLocation({
+            setVehicleStnkDueDate(base.stnk_due_date ?? undefined);
+            setVehicleInsuranceDueDate(base.insurance_due_date ?? undefined);
+            setVehicleLastServiceDate(base.schedule_date ?? undefined);
+
+            setVehicleLatestLocation({
                 id: base.location_id,
                 vehicleId: base.vehicleid,
                 name: base.location_name,
                 address: base.location_address,
             });
 
-            setStnk({
+            setVehicleStnk({
                 id: base.stnk_id,
                 vehicleId: base.vehicleid,
                 stnkNumber: base.stnk_number,
@@ -150,47 +158,6 @@ export default function KendaraanDetailPage() {
         }
     };
 
-    const fetchVehicleStnk = async (vehicleId: string) => {
-        const { data, error } = await supabase
-            .from("stnk")
-            .select("*")
-            .eq("vehicle_id", vehicleId)
-            .single();
-
-        if (error) {
-            console.error("Vehicle STNK fetch error:", error);
-            return;
-        }
-
-        if (data) {
-            const base = data;
-
-            setStnk({
-                id: base.stnk_id,
-                vehicleId: base.vehicleid,
-                stnkNumber: base.stnk_number,
-                fuelType: base.fuel_type,
-                licensePlate: base.license_plate,
-                registrationYear: base.registration_year,
-                manufacturedYear: base.manufactured_year,
-                bpkbNumber: base.bpkb_number,
-                cylinderCapacity: base.cylinder_capacity,
-                registrationNumber: base.registration_number,
-                chassisNumber: base.chassis_number,
-                engineNumber: base.engine_number,
-                validUntil: base.valid_until,
-                brand: base.brand,
-                ownerName: base.owner_name,
-                ownerAddress: base.owner_address,
-                type: base.type,
-                category: base.category,
-                color: base.color,
-                model: base.model,
-                licensePlateColor: base.license_plate_color
-            });
-        }
-    };
-
     const fetchVehicleServiceHistory = async (vehicleId: string) => {
         const { data, error } = await supabase
             .from("vehicle_service_history")
@@ -203,7 +170,7 @@ export default function KendaraanDetailPage() {
         }
 
         if (data) {
-            setServices(data.map(svc => ({
+            setVehicleServices(data.map(svc => ({
                 id: svc.service_id || svc.id,
                 ticketNum: svc.ticket_num,
                 type: svc.service_type || svc.type,
@@ -233,7 +200,7 @@ export default function KendaraanDetailPage() {
         }
 
         if (data) {
-            setAdministration(data.map(adm => ({
+            setVehicleAdministrations(data.map(adm => ({
                 id: adm.administration_id,
                 ticketNum: adm.ticket_num,
                 type: adm.type,
@@ -244,6 +211,104 @@ export default function KendaraanDetailPage() {
                 totalCost: adm.total_cost,
                 notes: adm.notes
             })));
+        }
+    };
+
+    const fetchVehicleAttachments = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("vehicle_attachments")
+            .select("*")
+            .eq("vehicle_id", vehicleId)
+            .eq("attachment_type", "document")
+            .order("sort", { ascending: true });
+
+        if (error) {
+            console.error("Vehicle attachments fetch error:", error);
+        }
+
+        if (data) {
+            setVehicleAttachments(data.map(att => ({
+                id: att.attachment_id,
+                vehicleId: att.vehicle_id,
+                attachmentType: att.attachment_type,
+                fileName: att.file_name,
+                fileType: att.file_type,
+                fileSize: att.file_size,
+                fileLink: att.file_link,
+                createdAt: att.created_at,
+                createdBy: att.created_by,
+            })));
+        }
+    };
+
+    const fetchVehicleDetails = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("vehicles")
+            .select("*")
+            .eq("id", vehicleId)
+            .single();
+
+        if (error) {
+            console.error("Vehicle details fetch error:", error);
+            return;
+        }
+
+        if (data) {
+            const base = data;
+
+            setVehicle({
+                id: base.id,
+                name: base.name,
+                licensePlate: base.license_plate,
+                category: base.category,
+                brand: base.brand,
+                type: base.type,
+                color: base.color,
+                year: base.year,
+                isSold: base.is_sold,
+                soldDate: base.sold_date,
+            });
+        }
+    };
+
+    const fetchVehicleStnk = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("stnk")
+            .select("*")
+            .eq("vehicle_id", vehicleId)
+            .single();
+
+        if (error) {
+            console.error("Vehicle STNK fetch error:", error);
+            return;
+        }
+
+        if (data) {
+            const base = data;
+
+            setVehicleStnk({
+                id: base.stnk_id,
+                vehicleId: base.vehicleid,
+                stnkNumber: base.stnk_number,
+                fuelType: base.fuel_type,
+                licensePlate: base.license_plate,
+                registrationYear: base.registration_year,
+                manufacturedYear: base.manufactured_year,
+                bpkbNumber: base.bpkb_number,
+                cylinderCapacity: base.cylinder_capacity,
+                registrationNumber: base.registration_number,
+                chassisNumber: base.chassis_number,
+                engineNumber: base.engine_number,
+                validUntil: base.valid_until,
+                brand: base.brand,
+                ownerName: base.owner_name,
+                ownerAddress: base.owner_address,
+                type: base.type,
+                category: base.category,
+                color: base.color,
+                model: base.model,
+                licensePlateColor: base.license_plate_color
+            });
         }
     };
 
@@ -262,33 +327,6 @@ export default function KendaraanDetailPage() {
             setVehicleEquipments(data.equipments.split("|") || []);
         }
     }
-
-    const fetchVehicleAttachments = async (vehicleId: string) => {
-        const { data, error } = await supabase
-            .from("vehicle_attachments")
-            .select("*")
-            .eq("vehicle_id", vehicleId)
-            .eq("attachment_type", "document")
-            .order("sort", { ascending: true });
-
-        if (error) {
-            console.error("Vehicle attachments fetch error:", error);
-        }
-
-        if (data) {
-            setAttachments(data.map(att => ({
-                id: att.attachment_id,
-                vehicleId: att.vehicle_id,
-                attachmentType: att.attachment_type,
-                fileName: att.file_name,
-                fileType: att.file_type,
-                fileSize: att.file_size,
-                fileLink: att.file_link,
-                createdAt: att.created_at,
-                createdBy: att.created_by,
-            })));
-        }
-    };
 
     useEffect(() => {
         const fetchDetail = async () => {
@@ -415,11 +453,11 @@ export default function KendaraanDetailPage() {
         );
     };
 
-    if (!vehicle) return (
+    if (!vehicle && !loading) return (
         <EmptyState title="Kendaraan Tidak Ditemukan" description="Kendaraan dengan ID tersebut tidak tersedia." />
     );
 
-    // const vehicleEquipments = vehicle.equipments ? vehicle.equipments.split(",") : [];
+    if (!vehicle) return null;
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -447,7 +485,7 @@ export default function KendaraanDetailPage() {
                         <div className="flex flex-col gap-3">
                             <div className="flex gap-5 items-center justify-between">
                                 <h1 className="font-semibold">Detail Kendaraan</h1>
-                                <EditDetailVehicleDialog vehicle={vehicle} />
+                                <EditDetailVehicleDialog vehicle={vehicle} onSave={() => fetchVehicleDetails(id!)}/>
                             </div>
 
                             <Separator />
@@ -532,8 +570,8 @@ export default function KendaraanDetailPage() {
                             <DataBarCard
                                 variant="button"
                                 type="lokasi"
-                                label={latestLocation?.name || "Belum ada lokasi"}
-                                description={latestLocation?.address || "Belum ada alamat"}
+                                label={vehicleLatestLocation?.name || "Belum ada lokasi"}
+                                description={vehicleLatestLocation?.address || "Belum ada alamat"}
                             />
                         </Link >
                     )}
@@ -554,7 +592,7 @@ export default function KendaraanDetailPage() {
                             variant="default"
                             type="administrasi-stnk-1"
                             label="Jatuh Tempo STNK"
-                            description={vehicle.stnkDueDate}
+                            description={vehicleStnkDueDate}
                         />
 
                         {/* Asuransi Bar */}
@@ -562,7 +600,7 @@ export default function KendaraanDetailPage() {
                             variant="default"
                             type="administrasi-asuransi"
                             label="Jatuh Tempo Asuransi"
-                            description={vehicle.insuranceDueDate}
+                            description={vehicleInsuranceDueDate}
                         />
 
                         {/* Servis Bar */}
@@ -570,7 +608,7 @@ export default function KendaraanDetailPage() {
                             variant="default"
                             type="servis-regular"
                             label="Servis Terakhir"
-                            description={vehicle.lastServiceDate}
+                            description={vehicleLastServiceDate}
                         />
                     </div>
                 </div>
@@ -581,36 +619,36 @@ export default function KendaraanDetailPage() {
                     <SectionCard
                         title="Detail STNK"
                         headerAction={
-                            stnk ? <EditDetailStnkDialog stnk={stnk} onSave={() => fetchVehicleStnk(id!)} /> : null
+                            vehicleStnk ? <EditDetailStnkDialog stnk={vehicleStnk} onSave={() => fetchVehicleStnk(id!)} /> : null
                         }
                         collapsible
                         defaultCollapsed={true}
                         collapsedHeight={140}
                     >
-                        {stnk && (
+                        {vehicleStnk && (
                             <div className="flex flex-col gap-3 py-1">
                                 <div className="grid grid-cols-2 gap-3 mb-5 md:mb-0">
-                                    <SectionItem label="No Polisi" value={stnk.licensePlate} />
-                                    <SectionItem label="No STNK" value={stnk.stnkNumber} />
-                                    <SectionItem className="col-span-2 md:col-span-1" label="Nama Pemilik" value={stnk.ownerName} />
-                                    <SectionItem className="col-span-2 md:col-span-1" label="Alamat" value={stnk.ownerAddress} />
+                                    <SectionItem label="No Polisi" value={vehicleStnk.licensePlate} />
+                                    <SectionItem label="No STNK" value={vehicleStnk.stnkNumber} />
+                                    <SectionItem className="col-span-2 md:col-span-1" label="Nama Pemilik" value={vehicleStnk.ownerName} />
+                                    <SectionItem className="col-span-2 md:col-span-1" label="Alamat" value={vehicleStnk.ownerAddress} />
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
-                                    <SectionItem label="Merk" value={stnk.brand} />
-                                    <SectionItem label="Warna" value={stnk.color} />
-                                    <SectionItem label="Tipe" value={stnk.type} />
-                                    <SectionItem label="Bahan Bakar" value={stnk.fuelType} />
-                                    <SectionItem label="Jenis" value={stnk.category} />
-                                    <SectionItem label="Warna TNKB" value={stnk.licensePlateColor} />
-                                    <SectionItem label="Model" value={stnk.model} />
-                                    <SectionItem label="Tahun Registrasi" value={stnk.registrationYear} />
-                                    <SectionItem label="Tahun Pembuatan" value={stnk.manufacturedYear} />
-                                    <SectionItem label="No BPKB" value={stnk.bpkbNumber} />
-                                    <SectionItem label="Isi Silinder" value={stnk.cylinderCapacity} />
-                                    <SectionItem label="No Pendaftaran" value={stnk.registrationNumber} />
-                                    <SectionItem label="No Rangka" value={stnk.chassisNumber} />
-                                    <SectionItem label="Berlaku Sampai" value={stnk.validUntil} />
-                                    <SectionItem label="No Mesin" value={stnk.engineNumber} />
+                                    <SectionItem label="Merk" value={vehicleStnk.brand} />
+                                    <SectionItem label="Warna" value={vehicleStnk.color} />
+                                    <SectionItem label="Tipe" value={vehicleStnk.type} />
+                                    <SectionItem label="Bahan Bakar" value={vehicleStnk.fuelType} />
+                                    <SectionItem label="Jenis" value={vehicleStnk.category} />
+                                    <SectionItem label="Warna TNKB" value={vehicleStnk.licensePlateColor} />
+                                    <SectionItem label="Model" value={vehicleStnk.model} />
+                                    <SectionItem label="Tahun Registrasi" value={vehicleStnk.registrationYear} />
+                                    <SectionItem label="Tahun Pembuatan" value={vehicleStnk.manufacturedYear} />
+                                    <SectionItem label="No BPKB" value={vehicleStnk.bpkbNumber} />
+                                    <SectionItem label="Isi Silinder" value={vehicleStnk.cylinderCapacity} />
+                                    <SectionItem label="No Pendaftaran" value={vehicleStnk.registrationNumber} />
+                                    <SectionItem label="No Rangka" value={vehicleStnk.chassisNumber} />
+                                    <SectionItem label="Berlaku Sampai" value={vehicleStnk.validUntil} />
+                                    <SectionItem label="No Mesin" value={vehicleStnk.engineNumber} />
                                 </div>
                             </div>
                         )}
@@ -628,15 +666,15 @@ export default function KendaraanDetailPage() {
                                 </Link >
                             }
                         >
-                            {services.length > 0 && (
+                            {vehicleServices.length > 0 && (
                                 <div className="flex flex-col py-2">
                                     {
-                                        services.map((servis, index) => (
+                                        vehicleServices.map((servis, index) => (
                                             <div key={servis.id}>
                                                 <ServiceActivityItem
                                                     service={servis}
                                                 />
-                                                {index < services.length - 1 && (
+                                                {index < vehicleServices.length - 1 && (
                                                     <Separator className="my-4" />
                                                 )}
                                             </div>
@@ -657,15 +695,15 @@ export default function KendaraanDetailPage() {
                                 </Link >
                             }
                         >
-                            {adminitrations.length > 0 && (
+                            {vehicleAdminitrations.length > 0 && (
                                 <div className="flex flex-col py-2">
                                     {
-                                        adminitrations.map((administrasi, index) => (
+                                        vehicleAdminitrations.map((administrasi, index) => (
                                             <div key={administrasi.id}>
                                                 <AdministrationActivityItem
                                                     administrasi={administrasi}
                                                 />
-                                                {index < adminitrations.length - 1 && (
+                                                {index < vehicleAdminitrations.length - 1 && (
                                                     <Separator className="my-4" />
                                                 )}
                                             </div>
@@ -711,15 +749,15 @@ export default function KendaraanDetailPage() {
                             <AddAttachmentVehicleDialog vehicleId={vehicle.id} />
                         }
                     >
-                        {attachments.length > 0 && (
+                        {vehicleAttachments.length > 0 && (
                             <div className="flex flex-col">
                                 {
-                                    attachments.map((attachment, index) => (
+                                    vehicleAttachments.map((attachment, index) => (
                                         <div key={attachment.id}>
                                             <AttachmentItem
                                                 attachment={attachment}
                                             />
-                                            {index < attachments.length - 1 && (
+                                            {index < vehicleAttachments.length - 1 && (
                                                 <Separator className="my-4" />
                                             )}
                                         </div>

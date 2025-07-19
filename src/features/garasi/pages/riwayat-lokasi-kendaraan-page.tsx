@@ -59,8 +59,10 @@ export default function RiwayatLokasiKendaraanPage() {
             setLoading(true);
 
             try {
-                await fetchVehicleLocations(id);
-                await fetchVehicleIsSold(id);
+                await Promise.all([
+                    fetchVehicleIsSold(id),
+                    fetchVehicleLocations(id)
+                ]);
             } catch (err) {
                 console.error("Failed to fetch data:", err);
             } finally {

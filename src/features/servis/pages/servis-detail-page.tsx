@@ -31,7 +31,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { useLoading } from "@/lib/loading-context";
 
 export default function ServisDetailPage() {
-    const { setLoading } = useLoading();
+    const { loading, setLoading } = useLoading();
 
     const { id } = useParams<{ id: string }>();
     const [service, setService] = useState<Service | null>(null);
@@ -185,10 +185,11 @@ export default function ServisDetailPage() {
         );
     };
 
-
-    if (!service) return (
+    if (!service && !loading) return (
         <EmptyState title="Servis Tidak Ditemukan" description="Servis dengan ID tersebut tidak tersedia." />
     );
+
+    if (!service) return null;
 
     return (
         <div className="min-h-screen flex flex-col">

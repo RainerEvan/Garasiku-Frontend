@@ -7,7 +7,6 @@ import { Service } from "@/models/service";
 import { AddServiceDialog } from "../components/add-service-dialog";
 import { useLoading } from "@/lib/loading-context";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
-import { Param } from "@/models/param";
 import { Button } from "@/components/shadcn/button";
 import { SERVICE_TYPE_PARAM } from "@/lib/constants";
 import { supabase } from "@/lib/supabaseClient"
@@ -29,87 +28,94 @@ export default function ServisPage() {
   const [selectTypeOptions, setSelectTypeOptions] = useState<SelectOption[]>([]);
   const [listServices, setListServices] = useState<Service[]>([]);
 
+  const fetchServiceTypeParams = async () => {
+    // Using static param for now — replace with API call if needed
+    const { data, error } = await Promise.resolve(
+      {
+        data: SERVICE_TYPE_PARAM,
+        error: null,
+      }
+    );
+
+    if (error) {
+      console.error("Service Type params fetch error:", error)
+    }
+
+    if (data) {
+      const optionsFromParams: SelectOption[] = data.map((param) => ({
+        label: param.description || param.name,
+        value: param.name,
+      }));
+      setSelectTypeOptions([{ label: "Semua", value: "all" }, ...optionsFromParams]);
+    }
+  };
+
+  const fetchListServices = async () => {
+    const { futureDate } = await getCachedReminderDateRange();
+
+    let serviceQuery = supabase
+      .from("service")
+      .select(`
+        *,
+        vehicles (
+          id,
+          name,
+          category,
+          license_plate
+        )
+      `);
+
+    if (activeTab === "todo") {
+      serviceQuery = serviceQuery
+        .eq("status", "pending")
+        .lte("schedule_date", futureDate.toISOString());
+    } else if (activeTab === "pending") {
+      serviceQuery = serviceQuery
+        .eq("status", "pending");
+    } else if (activeTab === "proses") {
+      serviceQuery = serviceQuery
+        .eq("status", "ongoing");
+    } else {
+      serviceQuery = serviceQuery
+        .in("status", ["completed", "cancelled"]);
+    }
+
+    const { data, error } = await serviceQuery
+      .order("schedule_date", { ascending: sortOrder === "asc" });
+
+    if (error) {
+      console.error("List Services fetch error:", error)
+    }
+
+    if (data) {
+      setListServices(data.map(s => ({
+        id: s.id,
+        ticketNum: s.ticket_num,
+        vehicleId: s.vehicle_id,
+        vehicle: {
+          id: s.vehicles?.id,
+          name: s.vehicles?.name,
+          category: s.vehicles?.category,
+          licensePlate: s.vehicles?.license_plate,
+        },
+        type: s.type,
+        scheduleDate: s.schedule_date,
+        status: s.status,
+        task: s.task,
+        sparepart: s.sparepart,
+      })));
+    }
+  };
+
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
 
       try {
-        const [
-          serviceTypeParamsRes,
-        ] = await Promise.all([
-          Promise.resolve(SERVICE_TYPE_PARAM),
+        await Promise.all([
+          fetchServiceTypeParams(),
+          fetchListServices(),
         ]);
-        
-        const { futureDate } = await getCachedReminderDateRange();
-
-        let serviceQuery = supabase
-          .from("service")
-          .select(`
-              id,
-              ticket_num,
-              vehicle_id,
-              type,
-              schedule_date,
-              start_date,
-              end_date,
-              status,
-              task,
-              sparepart,
-              vehicles (
-                id,
-                name,
-                category,
-                license_plate
-              )
-            `)
-          .order("schedule_date", { ascending: sortOrder === "asc" })
-
-        if (activeTab === "todo") {
-          serviceQuery = serviceQuery
-            .eq("status", "pending")
-            .lte("schedule_date", futureDate.toISOString());
-        } else if (activeTab === "pending") {
-          serviceQuery = serviceQuery.eq("status", "pending");
-        } else if (activeTab === "proses") {
-          serviceQuery = serviceQuery.eq("status", "ongoing");
-        } else {
-          serviceQuery = serviceQuery.in("status", ["completed", "cancelled"]);
-        }
-
-        const {data: servicesData, error: servicesError} = await serviceQuery;
-
-        // === PARAMS ===
-        const serviceTypeParamsData: Param[] = serviceTypeParamsRes;
-        const optionsFromParams: SelectOption[] = serviceTypeParamsData.map((param) => ({
-          label: param.description || param.name,
-          value: param.name,
-        }));
-        setSelectTypeOptions([{ label: "Semua", value: "all" }, ...optionsFromParams]);
-
-        // === SERVICES ===
-        if (servicesError) {
-          console.error("Failed to fetch services:", servicesError);
-        } else if (servicesData) {
-          const mappedServices = servicesData.map((s: any) => ({
-            id: s.id,
-            ticketNum: s.ticket_num,
-            vehicleId: s.vehicle_id,
-            vehicle: {
-              id: s.vehicles?.id,
-              name: s.vehicles?.name,
-              category: s.vehicles?.category,
-              licensePlate: s.vehicles?.license_plate,
-            },
-            type: s.type,
-            scheduleDate: s.schedule_date,
-            startDate: s.start_date,
-            endDate: s.end_date,
-            status: s.status,
-            task: s.task,
-            sparepart: s.sparepart,
-          }));
-          setListServices(mappedServices);
-        }
       } catch (err) {
         console.error("Failed to fetch data:", err);
       } finally {
