@@ -101,22 +101,25 @@ export default function ServisDetailPage() {
             .select("*")
             .eq("vehicle_id", vehicleId)
             .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
+            .limit(1); 
 
         if (error) {
-            console.error("Latest vehicle location fetch error:", error)
+            console.error("Latest vehicle location fetch error:", error);
         }
 
-        if (data) {
+        if (data && data.length > 0) {
+            const latest = data[0];
             setLatestLocation({
-                id: data.id,
-                vehicleId: data.vehicle_id,
-                name: data.name,
-                address: data.address,
+                id: latest.id,
+                vehicleId: latest.vehicle_id,
+                name: latest.name,
+                address: latest.address,
             });
+        } else {
+            setLatestLocation(null); // fallback kalau tidak ada lokasi
         }
     };
+
 
     const fetchServiceAttachments = async (serviceId: string) => {
         const { data, error } = await supabase
@@ -331,7 +334,7 @@ export default function ServisDetailPage() {
                                         <div key={attachment.id}>
                                             <AttachmentItem
                                                 attachment={attachment}
-                                                  type="service"
+                                                type="service"
 
                                             />
                                             {index < attachments.length - 1 && (

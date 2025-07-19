@@ -19,6 +19,8 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Service } from "@/models/service"
 import { Textarea } from "@/components/shadcn/textarea"
+import { supabase } from "@/lib/supabaseClient"
+import { toast } from "sonner"
 
 interface EditServiceRecordDialogProps {
   service: Service
@@ -28,13 +30,13 @@ interface EditServiceRecordDialogProps {
 // Define the form schema with validation
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
-  mileage: z.number().min(0, { message: "Kilometer harus terisi" }),
-  totalCost: z.number().optional(),
+  mileage: z.coerce.number().min(0, { message: "Kilometer harus terisi" }),
+  totalCost: z.coerce.number().optional(),
   mechanicName: z.string().optional(),
   task: z.string().min(1, { message: "Jasa harus terisi" }),
   sparepart: z.string().optional(),
   notes: z.string().optional(),
-})
+});
 
 export function EditServiceRecordDialog({ service, onSave }: EditServiceRecordDialogProps) {
   const [open, setOpen] = useState(false)
@@ -52,13 +54,42 @@ export function EditServiceRecordDialog({ service, onSave }: EditServiceRecordDi
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Edit detail service record data: ", values)
-    if (onSave) {
-      onSave(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const { data, error } = await supabase
+        .from("service")
+        .update({
+          mileage: values.mileage,
+          total_cost: values.totalCost,
+          mechanic_name: values.mechanicName,
+          task: values.task,
+          sparepart: values.sparepart,
+          notes: values.notes,
+        })
+        .eq("id", values.id)
+        .select()
+        .single();
+
+      if (error) {
+        toast.error("Gagal update servis.")
+
+        console.error("Gagal update service:", error.message);
+        return;
+      }
+
+      toast.success("Servis berhasil diupdate.")
+
+      if (onSave) {
+        onSave(data); // kirim service yang sudah diupdate ke parent
+      }
+
+      setOpen(false);
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("Terjadi kesalahan tak terduga.");
     }
-    setOpen(false);
   }
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -87,9 +118,9 @@ export function EditServiceRecordDialog({ service, onSave }: EditServiceRecordDi
                       <FormLabel className="font-medium">Kilometer</FormLabel>
                       <FormControl>
                         <Input
+                          type="number"
                           placeholder="Masukkan kilometer kendaraan"
                           {...field}
-                          className="w-full"
                         />
                       </FormControl>
                       <FormMessage />
