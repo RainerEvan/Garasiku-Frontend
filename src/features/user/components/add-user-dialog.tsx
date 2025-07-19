@@ -136,14 +136,16 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>
-        <div>
-          <Button className="hidden sm:flex">
-            <PlusCircle /> Tambah User
-          </Button>
-          <Button variant="default" size="icon2" className="fixed z-50 bottom-4 right-4 sm:hidden">
-            <Plus className="size-8" />
-          </Button>
-        </div>
+        {isAdmin && (
+          <div>
+            <Button className="hidden sm:flex">
+              <PlusCircle /> Tambah User
+            </Button>
+            <Button variant="default" size="icon2" className="fixed z-50 bottom-4 right-4 sm:hidden">
+              <Plus className="size-8" />
+            </Button>
+          </div>
+        )}
       </DialogTrigger>
       <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
