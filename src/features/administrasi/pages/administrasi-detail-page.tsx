@@ -24,6 +24,7 @@ import { CompleteAdministrationDialog } from "../components/complete-administras
 import { supabase } from "@/lib/supabaseClient";
 import { useLoading } from "@/lib/loading-context";
 import { EmptyState } from "@/components/shared/empty-state";
+import { toast } from "sonner"
 
 export default function AdministrasiDetailPage() {
   const { setLoading } = useLoading();
@@ -80,9 +81,28 @@ export default function AdministrasiDetailPage() {
     }
   };
 
-  const handleCancelAdministration = () => {
-    console.log("Cancel Administration button clicked");
+  const handleCancelAdministration = async () => {
+    if (!id) return;
+
+    const confirmed = window.confirm("Apakah Anda yakin ingin membatalkan administrasi ini?");
+    if (!confirmed) return;
+
+    setLoading(true);
+
+    const { error } = await supabase
+      .from("administration")
+      .update({ status: "cancelled" })
+      .eq("id", id);
+
+    setLoading(false);
+
+    if (error) {
+      toast.error("Gagal membatalkan administrasi " + error.message);
+    }
+    toast.success("Berhasil membatalkan administrasi.");
+    
   };
+
 
   useEffect(() => {
     const fetchDetail = async () => {

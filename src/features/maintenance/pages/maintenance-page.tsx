@@ -20,8 +20,7 @@ export default function MaintenancePage() {
       setError(null);
       const { data: { user } } = await supabase.auth.getUser();
 
-      console.log("User ID:", user?.id);
-      console.log("User role:", user?.user_metadata?.role);
+  
 
       const { data, error } = await supabase
         .from("parameter_group")

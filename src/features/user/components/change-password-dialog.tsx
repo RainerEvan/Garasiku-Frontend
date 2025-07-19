@@ -45,7 +45,6 @@ export function ChangePasswordDialog({ user, onSave }: ChangePasswordDialogProps
   const { reset } = form;
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Add user data: ", values)
     if (onSave) {
       onSave(values.id);
     }

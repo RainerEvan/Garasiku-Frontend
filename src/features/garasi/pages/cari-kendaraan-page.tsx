@@ -21,7 +21,6 @@ export default function CariKendaraanPage() {
       const { data, error } = await supabase
       .rpc("search_vehicles_by_plates", { cleaned_plate: cleanedSearch });
 
-      console.log(data[0]);
       if (error) {
         console.error("Gagal mencari kendaraan:", error.message);
       } else {

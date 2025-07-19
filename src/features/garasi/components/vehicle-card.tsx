@@ -11,8 +11,7 @@ export function VehicleCard({
 }: VehicleCardProps) {
   const variant = vehicle.isSold ? "sold" : "active";
   const Icon = vehicle.isSold ? TASK_TYPE_ICONS["terjual"] : TASK_TYPE_ICONS["lokasi"]
-  console.log(vehicle);
-  console.log("masuk");
+ 
   return (
     <Link to={`/kendaraan/detail/${vehicle.id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
       {/* Image Placeholder */}
