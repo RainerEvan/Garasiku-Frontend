@@ -133,12 +133,14 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
         console.error("Gagal mendapatkan user login:", userError);
         return;
       }
+      const updatedAt = new Date().toISOString();
       const { error: plateHistoryError } = await supabase
         .from("vehicle_plate_history")
         .insert({
           vehicle_id: vehicle.id,
-          plate_no: values.licensePlate,
-          created_by: user.user_metadata?.username || user.email || "system",
+          plat_no: values.licensePlate,
+          updated_by: user.user_metadata?.username || user.email || "system",
+          updated_at : updatedAt
         });
 
       if (plateHistoryError) {
@@ -162,6 +164,12 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
         return;
       }
 
+      const { data: ticketData, error: ticketError } = await supabase.rpc("generate_ticket_number", {
+        task_type_input: "ADM",
+      });
+      if (ticketError || !ticketData) {
+        throw ticketError || new Error("Gagal generate nomor tiket");
+      }
       const { error: adminStnkError } = await supabase
         .from("administration")
         .insert({
@@ -169,6 +177,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
           type: "administrasi-stnk-1",
           status: "pending",
           due_date: stnkDate.toISOString(),
+          ticket_num: ticketData
         });
 
       if (adminStnkError) {
@@ -176,6 +185,12 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
         return;
       }
 
+      const { data: ticketDataAs, error: ticketErrorAs } = await supabase.rpc("generate_ticket_number", {
+        task_type_input: "ADM",
+      });
+      if (ticketErrorAs || !ticketDataAs) {
+        throw ticketErrorAs || new Error("Gagal generate nomor tiket");
+      }
       const { error: adminInsuranceError } = await supabase
         .from("administration")
         .insert({
@@ -183,6 +198,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
           type: "administrasi-asuransi",
           status: "pending",
           due_date: insuranceDate.toISOString(),
+          ticket_num: ticketDataAs
         });
 
       if (adminInsuranceError) {

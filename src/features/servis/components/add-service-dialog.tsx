@@ -109,10 +109,17 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
   }, [open]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+     const { data: ticketData, error: ticketError } = await supabase.rpc("generate_ticket_number", {
+      task_type_input : "SRV",
+    });
+      if (ticketError || !ticketData) {
+      throw ticketError || new Error("Gagal generate nomor tiket");
+    }
     const formattedValues = {
       vehicle_id: values.vehicleId,
       type: values.type,
       schedule_date: format(values.scheduleDate, "yyyy-MM-dd"),
+      ticket_num:ticketData, 
     };
 
     const { data, error } = await supabase
