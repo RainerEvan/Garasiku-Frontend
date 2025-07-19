@@ -18,6 +18,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { User } from "@/models/user"
 import { Input } from "@/components/shadcn/input"
 import { Switch } from "@/components/shadcn/switch"
+import { toast } from "sonner"
+import { supabase } from "@/lib/supabaseClient"
 
 interface EditUserDialogProps {
   user: User,
@@ -30,7 +32,7 @@ const formSchema = z.object({
   username: z.string().min(1, { message: "Username harus terisi" }),
   fullname: z.string().min(1, { message: "Nama Lengkap harus terisi" }),
   email: z.string().optional(),
-  phoneNo: z.string().optional(),
+  phone: z.string().optional(),
   role: z.string().min(1, { message: "Role harus terisi" }),
   isActive: z.boolean()
 })
@@ -45,7 +47,7 @@ export function EditUserDialog({ user, onSave }: EditUserDialogProps) {
       username: user.username,
       fullname: user.fullname,
       email: user.email,
-      phoneNo: user.phoneNo,
+      phone: user.phone,
       role: user.role,
       isActive: user.isActive
     },
@@ -53,12 +55,64 @@ export function EditUserDialog({ user, onSave }: EditUserDialogProps) {
 
   const { reset } = form;
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Edit user data: ", values)
-    if (onSave) {
-      onSave(values);
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const accessToken = sessionData?.session?.access_token || ""
+
+      const formattedPhone =
+        values.phone?.startsWith("+") || !values.phone
+          ? values.phone
+          : "+62" + values.phone.replace(/^0+/, "")
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/user-admin`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            id: values.id,
+            username: values.username,
+            fullname: values.fullname,
+            email: values.email,
+            phone: formattedPhone,
+            role: values.role,
+            status: values.isActive ? "active" : "inactive",
+          }),
+        }
+      )
+
+      const result = await res.json()
+      if (!res.ok) {
+        const errorMessage = result.error || result.message || "Gagal mengubah user"
+        throw new Error(errorMessage)
+      }
+
+      toast.success("User berhasil diubah!")
+
+      if (onSave) {
+        onSave({
+          id: values.id,
+          username: values.username,
+          fullname: values.fullname,
+          email: values.email,
+          phone: values.phone,
+          role: values.role,
+          isActive: values.isActive,
+        })
+      }
+
+      setOpen(false)
+    } catch (err) {
+      if (err instanceof Error) {
+        toast.error(err.message)
+      } else {
+        toast.error("Terjadi kesalahan tak dikenal")
+      }
     }
-    setOpen(false);
   }
 
   function handleDialogChange(isOpen: boolean) {
@@ -141,7 +195,7 @@ export function EditUserDialog({ user, onSave }: EditUserDialogProps) {
 
                 <FormField
                   control={form.control}
-                  name="phoneNo"
+                  name="phone"
                   render={({ field }) => (
                     <FormItem className="space-y-1">
                       <FormLabel className="font-medium">No Telepon</FormLabel>

@@ -8,6 +8,8 @@ import { useLoading } from "@/lib/loading-context";
 import { useEffect, useMemo, useState } from "react";
 import { SERVICE_TYPE_PARAM, STATUS_PARAM } from "@/lib/constants";
 import { Param } from "@/models/param";
+import { useParams } from "react-router-dom";
+import { supabase } from "@/lib/supabaseClient"
 
 type SelectOption = {
     label: string
@@ -16,6 +18,7 @@ type SelectOption = {
 
 export default function AktivitasServisKendaraanPage() {
     const { setLoading } = useLoading();
+    const { id: vehicleId } = useParams();
 
     const [searchQuery, setSearchQuery] = useState("");
     const [selectType, setSelectType] = useState("all");
@@ -27,186 +30,69 @@ export default function AktivitasServisKendaraanPage() {
 
     const [listServices, setListServices] = useState<Service[]>([]);
 
-    // Sample Data
-    const serviceActivities: any[] = [
-        {
-            id: "1",
-            ticket_num: "SRV25-00001",
-            vehicle_id: "1",
-            vehicle: {
-                id: "1",
-                name: "Honda Civic Turbo Hitam 2022",
-                category: "mobil",
-                license_plate: "D 1234 ABC",
-            },
-            type: "servis-regular",
-            schedule_date: "2025-07-15",
-            startDate: undefined,
-            end_date: undefined,
-            status: "pending",
-            task: undefined,
-            sparepart: undefined,
-        },
-        {
-            id: "2",
-            ticket_num: "SRV25-00002",
-            vehicle_id: "1",
-            vehicle: {
-                id: "1",
-                name: "Honda Civic Turbo Hitam 2022",
-                category: "mobil",
-                license_plate: "D 1234 ABC",
-            },
-            type: "servis-berat",
-            schedule_date: "2028-02-17",
-            start_date: undefined,
-            end_date: undefined,
-            status: "pending",
-            task: undefined,
-            sparepart: undefined,
-        },
-        {
-            id: "3",
-            ticket_num: "SRV25-00003",
-            vehicle_id: "1",
-            vehicle: {
-                id: "1",
-                name: "Honda Civic Turbo Hitam 2022",
-                category: "mobil",
-                license_plate: "D 1234 ABC",
-            },
-            type: "servis-berat",
-            schedule_date: "2028-05-01",
-            start_date: "2028-08-01",
-            end_date: undefined,
-            status: "ongoing",
-            task: undefined,
-            sparepart: undefined,
-        },
-        {
-            id: "4",
-            ticket_num: "SRV25-00004",
-            vehicle_id: "1",
-            vehicle: {
-                id: "1",
-                name: "Honda Civic Turbo Hitam 2022",
-                category: "mobil",
-                license_plate: "D 1234 ABC",
-            },
-            type: "servis-berat",
-            schedule_date: "2028-09-15",
-            start_date: "2028-01-15",
-            end_date: undefined,
-            status: "ongoing",
-            task: "Ganti Ban",
-            sparepart: "Ban Bridgestone Potenza RE050A",
-        },
-        {
-            id: "5",
-            ticket_num: "SRV25-00005",
-            vehicle_id: "1",
-            vehicle: {
-                id: "1",
-                name: "Honda Civic Turbo Hitam 2022",
-                category: "mobil",
-                license_plate: "D 1234 ABC",
-            },
-            type: "servis-regular",
-            schedule_date: "2028-10-01",
-            start_date: "2028-01-15",
-            end_date: "2028-01-15",
-            status: "completed",
-            task: "Ganti Aki",
-            sparepart: "Aki Yuasa NS40ZL",
-        },
-        {
-            id: "6",
-            ticket_num: "SRV25-00006",
-            vehicle_id: "1",
-            vehicle: {
-                id: "1",
-                name: "Honda Civic Turbo Hitam 2022",
-                category: "mobil",
-                license_plate: "D 1234 ABC",
-            },
-            type: "servis-regular",
-            schedule_date: "2028-12-30",
-            start_date: "2028-01-15",
-            end_date: "2028-01-15",
-            status: "cancelled",
-            task: "Ganti Oli Mesin",
-            sparepart: "Oli Mesin 5W-30",
-        },
-    ]
 
     useEffect(() => {
-        const fetchAll = async () => {
-            setLoading(true);
+    const fetchAll = async () => {
+        setLoading(true);
 
-            try {
-                await new Promise((resolve) => setTimeout(resolve, 2000));
+        try {
 
-                const [
-                    serviceTypeParamsRes,
-                    serviceStatusParamsRes,
-                    servicesRes
-                ] = await Promise.all([
-                    // simulate fetching params (you might replace this with supabase or API call)
-                    Promise.resolve(SERVICE_TYPE_PARAM),
-                    Promise.resolve(STATUS_PARAM),
-                    Promise.resolve(serviceActivities),
-                ]);
+            const [typeParams, statusParams] = await Promise.all([
+                Promise.resolve(SERVICE_TYPE_PARAM),
+                Promise.resolve(STATUS_PARAM),
+            ]);
 
-                // === PARAMS ===
-                const serviceTypeParamsData: Param[] = serviceTypeParamsRes;
-                const optionsTypeFromParams: SelectOption[] = serviceTypeParamsData.map((param) => ({
-                    label: param.description || param.name,
-                    value: param.name,
+            // Ambil data service + relasi kendaraan
+            const { data: servicesData, error: servicesError } = await supabase
+                .from("service")
+                .select(`
+                    id, ticket_num, vehicle_id, type, schedule_date, start_date, end_date,
+                    status, task, sparepart,
+                    vehicles:vehicle_id(id, name, category, license_plate)
+                `)
+                .eq("vehicle_id", vehicleId)
+                .order("schedule_date", { ascending: false });
+
+            if (servicesError) {
+                console.error("Failed to fetch services:", servicesError);
+            } else if (servicesData) {
+                const mappedServices = servicesData.map((s: any) => ({
+                    id: s.id,
+                    ticketNum: s.ticket_num,
+                    vehicleId: s.vehicle_id,
+                    vehicle: {
+                        id: s.vehicles?.id,
+                        name: s.vehicles?.name,
+                        category: s.vehicles?.category,
+                        licensePlate: s.vehicles?.license_plate,
+                    },
+                    type: s.type,
+                    scheduleDate: s.schedule_date,
+                    startDate: s.start_date,
+                    endDate: s.end_date,
+                    status: s.status,
+                    task: s.task,
+                    sparepart: s.sparepart,
                 }));
-                setSelectTypeOptions([{ label: "Semua", value: "all" }, ...optionsTypeFromParams]);
-
-                const serviceStatusParamsData: Param[] = serviceStatusParamsRes;
-                const optionsStatusFromParams: SelectOption[] = serviceStatusParamsData.map((param) => ({
-                    label: param.description || param.name,
-                    value: param.name,
-                }));
-                setSelectStatusOptions([{ label: "Semua", value: "all" }, ...optionsStatusFromParams]);
-
-
-                // === SERVICES ===
-                const { data: servicesData, error: servicesError } = { data: servicesRes, error: null }; // Replace with actual API call if needed
-                if (servicesError) {
-                    console.error("Failed to fetch services:", servicesError);
-                } else if (servicesData) {
-                    const mappedServices = servicesData.map((s: any) => ({
-                        id: s.id,
-                        ticketNum: s.ticket_num,
-                        vehicleId: s.vehicle_id,
-                        vehicle: {
-                            id: s.vehicle.id,
-                            name: s.vehicle.name,
-                            category: s.vehicle.category,
-                            licensePlate: s.vehicle.license_plate,
-                        },
-                        type: s.type,
-                        scheduleDate: s.schedule_date,
-                        startDate: s.start_date,
-                        endDate: s.end_date,
-                        status: s.status,
-                        task: s.task,
-                        sparepart: s.sparepart,
-                    }));
-                    setListServices(mappedServices);
-                }
-            } catch (err) {
-                console.error("Failed to fetch data:", err);
-            } finally {
-                setLoading(false);
+                setListServices(mappedServices);
             }
-        };
 
-        fetchAll();
-    }, []);
+            // set options
+            const optionsType = typeParams.map(p => ({ label: p.description || p.name, value: p.name }));
+            setSelectTypeOptions([{ label: "Semua", value: "all" }, ...optionsType]);
+
+            const optionsStatus = statusParams.map(p => ({ label: p.description || p.name, value: p.name }));
+            setSelectStatusOptions([{ label: "Semua", value: "all" }, ...optionsStatus]);
+        } catch (err) {
+            console.error("Failed to fetch data:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    fetchAll();
+}, []);
+
 
     const filteredAndSortedService = useMemo(() => {
         const filtered = listServices.filter((service) => {

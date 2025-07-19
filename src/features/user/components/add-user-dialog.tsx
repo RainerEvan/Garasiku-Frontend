@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/shadcn/button"
 import {
@@ -19,25 +19,34 @@ import { User } from "@/models/user"
 import { Eye, EyeOff, Plus, PlusCircle } from "lucide-react"
 import { Input } from "@/components/shadcn/input"
 import { Switch } from "@/components/shadcn/switch"
+import { useUser } from "@supabase/auth-helpers-react"
+import { supabase } from "@/lib/supabaseClient"
+import { toast } from "sonner"
 
 interface AddUserDialogProps {
   onSave?: (newUser: User) => void
 }
 
-// Define the form schema with validation
 const formSchema = z.object({
   username: z.string().min(1, { message: "Username harus terisi" }),
   password: z.string().min(1, { message: "Password harus terisi" }),
   fullname: z.string().min(1, { message: "Nama Lengkap harus terisi" }),
   email: z.string().optional(),
-  phoneNo: z.string().optional(),
+  phone: z.string().optional(),
   role: z.string().min(1, { message: "Role harus terisi" }),
   isActive: z.boolean()
 })
 
 export function AddUserDialog({ onSave }: AddUserDialogProps) {
   const [open, setOpen] = useState(false)
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false)
+  const user = useUser()
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const role = user?.user_metadata?.role
+    setIsAdmin(role === "admin")
+  }, [user])
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,28 +55,87 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
       password: "",
       fullname: "",
       email: "",
-      phoneNo: "",
+      phone: "",
       role: "",
       isActive: true
     },
   })
 
-  const { reset } = form;
+  const { reset } = form
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Add user data: ", values)
-    if (onSave) {
-      onSave(values);
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const accessToken = sessionData?.session?.access_token || ""
+
+      // Format phone number ke E.164 jika belum
+      const formattedPhone =
+        values.phone?.startsWith("+") || !values.phone
+          ? values.phone
+          : "+62" + values.phone.replace(/^0+/, "")
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/user-admin`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            email: values.email,
+            password: values.password,
+            username: values.username,
+            role: values.role,
+            fullname: values.fullname,
+            status: values.isActive ? "active" : "inactive",
+            phone: formattedPhone,
+          }),
+        }
+      )
+
+      const result = await res.json()
+      if (!res.ok) {
+        const errorMessage = result.error || result.message || "Gagal menambahkan user"
+        throw new Error(errorMessage)
+      }
+
+      toast.success("User berhasil ditambahkan!")
+
+      if (onSave) {
+        onSave({
+          id: result.user.id,
+          email: values.email,
+          username: values.username,
+          role: values.role,
+          fullname: values.fullname,
+          phone: values.phone,
+          isActive: values.isActive,
+        })
+      }
+      setOpen(false)
+    } catch (err) {
+      if (err instanceof Error) {
+        toast.error(err.message)
+      } else {
+        toast.error("Terjadi kesalahan tak dikenal")
+      }
     }
-    setOpen(false);
   }
+
+
+
+
 
   function handleDialogChange(isOpen: boolean) {
-    setOpen(isOpen);
+    setOpen(isOpen)
     if (!isOpen) {
-      reset();
+      reset()
     }
   }
+
+  // if (!isAdmin) return null
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
@@ -89,7 +157,6 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Detail User */}
             <div className="flex flex-col gap-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <FormField
@@ -149,7 +216,7 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
 
                 <FormField
                   control={form.control}
-                  name="phoneNo"
+                  name="phone"
                   render={({ field }) => (
                     <FormItem className="space-y-1">
                       <FormLabel className="font-medium">No Telepon</FormLabel>

@@ -16,6 +16,8 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { LicensePlateVehicle } from "@/models/license-plate-vehicle"
 import { Input } from "@/components/shadcn/input"
+import { supabase } from "@/lib/supabaseClient"
+import { toast } from "sonner"
 
 interface ChangeLicensePlateDialogProps {
   vehicleId?: string
@@ -44,6 +46,7 @@ const formSchema = (currPlateNo?: string) => z.object({
 export function ChangeLicensePlateDialog({ vehicleId, currPlateNo, onSave }: ChangeLicensePlateDialogProps) {
   const [open, setOpen] = useState(false)
 
+
   const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
     resolver: zodResolver(formSchema(currPlateNo)),
     defaultValues: {
@@ -54,14 +57,65 @@ export function ChangeLicensePlateDialog({ vehicleId, currPlateNo, onSave }: Cha
 
   const { reset } = form;
 
-  function onSubmit(values: z.infer<ReturnType<typeof formSchema>>) {
-    console.log("Change license plate vehicle data: ", values)
-    if (onSave) {
-      onSave(values);
+  async function onSubmit(values: z.infer<ReturnType<typeof formSchema>>) {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) {
+      toast.error("Gagal mendapatkan user login");
+      console.error("Gagal mendapatkan user login:", userError);
+      return;
     }
+    if (!vehicleId) return;
+
+    const updatedAt = new Date().toISOString();
+
+    const newPlate = {
+      vehicle_id: vehicleId,
+      plat_no: values.plateNo,
+      updated_by: user.user_metadata?.username || user.email || "unknown",
+      updated_at : updatedAt
+    };
+
+    const { data: inserted, error: insertError } = await supabase
+      .from("vehicle_plate_history")
+      .insert(newPlate)
+      .select("*")
+      .single();
+
+    if (insertError) {
+      toast.error("Gagal menyimpan plat nomor: " + insertError.message);
+      console.error("Gagal menyimpan plat nomor:", insertError);
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from("vehicles")
+      .update({ license_plate: values.plateNo })
+      .eq("id", vehicleId);
+
+    if (updateError) {
+      toast.error("Gagal memperbarui data kendaraan: " + updateError.message);
+      console.error("Gagal memperbarui data kendaraan:", updateError);
+      return;
+    }
+
+    toast.success("Plat nomor berhasil diperbarui.");
+    if (onSave && inserted) {
+      onSave({
+        id: inserted.id,
+        vehicleId: inserted.vehicle_id,
+        plateNo: inserted.plat_no,
+        createdAt: updatedAt,
+        createdBy: user.user_metadata?.username || user.email || "unknown",
+      });
+    }
+
     setOpen(false);
     reset();
   }
+
 
   function handleDialogChange(isOpen: boolean) {
     setOpen(isOpen);

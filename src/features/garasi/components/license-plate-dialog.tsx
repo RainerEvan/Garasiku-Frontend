@@ -6,10 +6,30 @@ import { LicensePlateVehicle } from "@/models/license-plate-vehicle"
 import { History } from "lucide-react"
 import { useEffect, useState } from "react"
 import { ChangeLicensePlateDialog } from "./change-license-plate-dialog"
+import { supabase } from "@/lib/supabaseClient"
 
 interface LicensePlateDialogProps {
     vehicleId?: string
     currPlateNo?: string
+}
+
+function formatDateTime(dateString?: string) {
+  if (!dateString) return "-"
+
+  const date = new Date(dateString)
+  const tanggal = new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date)
+
+  const jam = new Intl.DateTimeFormat("id-ID", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date)
+
+  return `${tanggal} pukul ${jam}`
 }
 
 export function LicensePlateDialog({ vehicleId, currPlateNo }: LicensePlateDialogProps) {
@@ -19,62 +39,41 @@ export function LicensePlateDialog({ vehicleId, currPlateNo }: LicensePlateDialo
     const [listVehicleLicensePlates, setListVehicleLicensePlates] = useState<LicensePlateVehicle[]>([]);
 
 
-    const vehicleLicensePlates: any[] = [
-        {
-            id: "1",
-            plate_no: "D 1234 ABC",
-            created_at: "2025-01-01",
-            created_by: "rainerevan"
-        },
-        {
-            id: "2",
-            plate_no: "B 5678 DEF",
-            created_at: "2024-10-02",
-            created_by: "rainerevan"
-        },
-        {
-            id: "3",
-            plate_no: "B 9101 GHI",
-            created_at: "2023-05-12",
-            created_by: "rainerevan"
-        }
-    ]
 
     useEffect(() => {
-        const fetchAll = async () => {
-            setLoading(true);
+    const fetchAll = async () => {
+        if (!vehicleId) return;
 
-            try {
-                const [
-                    licensePlatesRes
-                ] = await Promise.all([
-                    // simulate fetching params (you might replace this with supabase or API call)
-                    Promise.resolve(vehicleLicensePlates),
-                ]);
+        setLoading(true);
 
-                // === LICENSE PLATES ===
-                const { data: licensePlatesData, error: licensePlatesError } = { data: licensePlatesRes, error: null }; // Replace with actual API call if needed
-                if (licensePlatesError) {
-                    console.error("Failed to fetch licensePlates:", licensePlatesError);
-                } else if (licensePlatesData) {
-                    const mappedLicensePlates = licensePlatesData.map((v: any) => ({
-                        id: v.id,
-                        vehicleId: v.vehicle_id,
-                        plateNo: v.plate_no,
-                        createdAt: v.created_at,
-                        createdBy: v.created_by,
-                    }));
-                    setListVehicleLicensePlates(mappedLicensePlates);
-                }
-            } catch (err) {
-                console.error("Failed to fetch data:", err);
-            } finally {
-                setLoading(false);
+        try {
+            const { data, error } = await supabase
+                .from("vehicle_plate_history")
+                .select("*")
+                .eq("vehicle_id", vehicleId)
+                .order("updated_at", { ascending: false });
+
+            if (error) {
+                console.error("Failed to fetch license plate history:", error);
+            } else {
+                const mappedLicensePlates = data.map((v: any) => ({
+                    id: v.id,
+                    vehicleId: v.vehicle_id,
+                    plateNo: v.plat_no,
+                    createdAt: v.updated_at,
+                    createdBy: v.updated_by,
+                }));
+                setListVehicleLicensePlates(mappedLicensePlates);
             }
-        };
+        } catch (err) {
+            console.error("Failed to fetch data:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        fetchAll();
-    }, []);
+    fetchAll();
+}, [vehicleId]);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -102,7 +101,7 @@ export function LicensePlateDialog({ vehicleId, currPlateNo }: LicensePlateDialo
                                         <p className="text-sm font-medium">{licensePlate.plateNo}</p>
                                     </div>
                                     <div className="w-full grid grid-cols-2 gap-5 text-xs text-gray-400">
-                                        <SectionItem label="Diubah Pada" value={licensePlate.createdAt} />
+                                        <SectionItem label="Diubah Pada" value={formatDateTime(licensePlate.createdAt)} />
                                         <SectionItem label="Diubah Oleh" value={licensePlate.createdBy} />
                                     </div>
                                 </div>

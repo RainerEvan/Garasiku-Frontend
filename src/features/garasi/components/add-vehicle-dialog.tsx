@@ -31,7 +31,6 @@ interface AddVehicleDialogProps {
   onSave?: (newVehicle: string) => void
 }
 
-// Define the form schema with validation
 const formSchema = z.object({
   name: z.string().min(1, { message: "Nama harus terisi" }),
   category: z.string().min(1, { message: "Jenis harus terisi" }),
@@ -86,13 +85,11 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
 
   const { watch, setValue, reset } = form;
 
-  // Watch for changes in brand, model, color, and year
   const brand = watch("brand");
   const model = watch("model");
   const color = watch("color");
   const year = watch("year");
 
-  // Update the name field dynamically
   useEffect(() => {
     if (brand || model || color || year) {
       const updatedName = `${brand} ${model} ${color} ${year}`;
@@ -127,6 +124,27 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
       }
 
       if (!vehicle) return;
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user) {
+        toast.error("Gagal mendapatkan user login");
+        console.error("Gagal mendapatkan user login:", userError);
+        return;
+      }
+      const { error: plateHistoryError } = await supabase
+        .from("vehicle_plate_history")
+        .insert({
+          vehicle_id: vehicle.id,
+          plate_no: values.licensePlate,
+          created_by: user.user_metadata?.username || user.email || "system",
+        });
+
+      if (plateHistoryError) {
+        console.error("Gagal menyimpan riwayat plat nomor:", plateHistoryError.message);
+        return;
+      }
 
       const { error: stnkError } = await supabase
         .from("stnk")

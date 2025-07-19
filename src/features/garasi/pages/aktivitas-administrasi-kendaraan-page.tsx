@@ -8,6 +8,8 @@ import { useLoading } from "@/lib/loading-context";
 import { useEffect, useMemo, useState } from "react";
 import { ADMINISTRATION_TYPE_PARAM, STATUS_PARAM } from "@/lib/constants";
 import { Param } from "@/models/param";
+import { useParams } from "react-router-dom";
+import { supabase } from "@/lib/supabaseClient"
 
 type SelectOption = {
     label: string
@@ -16,6 +18,7 @@ type SelectOption = {
 
 export default function AktivitasAdministrasiKendaraanPage() {
     const { setLoading } = useLoading();
+    const { id: vehicleId } = useParams();
 
     const [searchQuery, setSearchQuery] = useState("");
     const [selectType, setSelectType] = useState("all");
@@ -27,167 +30,67 @@ export default function AktivitasAdministrasiKendaraanPage() {
 
     const [listAdministrations, setListAdministrations] = useState<Administration[]>([]);
 
-    // Sample Data
-    const administrationActivities: any[] = [
-        {
-            id: "1",
-            ticket_num: "ADM25-00001",
-            vehicle_id: "1",
-            vehicle: {
-                id: "1",
-                name: "Honda Civic Turbo Hitam 2022",
-                category: "mobil",
-                license_plate: "D 1234 ABC",
-            },
-            type: "administrasi-stnk-1",
-            due_date: "2025-07-19",
-            end_date: undefined,
-            status: "pending",
-        },
-        {
-            id: "2",
-            ticket_num: "ADM25-00002",
-            vehicle_id: "1",
-            vehicle: {
-                id: "1",
-                name: "Honda Civic Turbo Hitam 2022",
-                category: "mobil",
-                license_plate: "D 1234 ABC",
-            },
-            type: "administrasi-stnk-5",
-            due_date: "2025-07-19",
-            end_date: "2025-07-19",
-            status: "completed",
-        },
-        {
-            id: "3",
-            ticket_num: "ADM25-00003",
-            vehicle_id: "1",
-            vehicle: {
-                id: "1",
-                name: "Honda Civic Turbo Hitam 2022",
-                category: "mobil",
-                license_plate: "D 1234 ABC",
-            },
-            type: "administrasi-stnk-1",
-            due_date: "2026-07-14",
-            end_date: "2025-07-14",
-            status: "cancelled",
-        },
-        {
-            id: "4",
-            ticket_num: "ADM25-00004",
-            vehicle_id: "1",
-            vehicle: {
-                id: "1",
-                name: "Honda Civic Turbo Hitam 2022",
-                category: "mobil",
-                license_plate: "D 1234 ABC",
-            },
-            type: "administrasi-stnk-1",
-            due_date: "2027-07-19",
-            end_date: undefined,
-            status: "pending",
-        },
-        {
-            id: "5",
-            ticket_num: "ADM25-00005",
-            vehicle_id: "1",
-            vehicle: {
-                id: "1",
-                name: "Honda Civic Turbo Hitam 2022",
-                category: "mobil",
-                license_plate: "D 1234 ABC",
-            },
-            type: "administrasi-stnk-5",
-            due_date: "2030-07-19",
-            end_date: undefined,
-            status: "pending",
-        },
-        {
-            id: "6",
-            ticket_num: "ADM25-00006",
-            vehicle_id: "1",
-            vehicle: {
-                id: "1",
-                name: "Honda Civic Turbo Hitam 2022",
-                category: "mobil",
-                license_plate: "D 1234 ABC",
-            },
-            type: "administrasi-asuransi",
-            due_date: "2031-05-01",
-            end_date: undefined,
-            status: "pending",
-        },
-    ]
+    
 
     useEffect(() => {
         const fetchAll = async () => {
             setLoading(true);
 
             try {
-                await new Promise((resolve) => setTimeout(resolve, 2000));
-
-                const [
-                    administrationTypeParamsRes,
-                    administrationStatusParamsRes,
-                    administrationsRes
-                ] = await Promise.all([
-                    // simulate fetching params (you might replace this with supabase or API call)
+                const [paramsType, paramsStatus] = await Promise.all([
                     Promise.resolve(ADMINISTRATION_TYPE_PARAM),
                     Promise.resolve(STATUS_PARAM),
-                    Promise.resolve(administrationActivities),
                 ]);
 
-                // === PARAMS ===
-                const administrationTypeParamsData: Param[] = administrationTypeParamsRes;
-                const optionsTypeFromParams: SelectOption[] = administrationTypeParamsData.map((param) => ({
-                    label: param.description || param.name,
-                    value: param.name,
-                }));
-                setSelectTypeOptions([{ label: "Semua", value: "all" }, ...optionsTypeFromParams]);
+                setSelectTypeOptions([{ label: "Semua", value: "all" }, ...paramsType.map((p) => ({
+                    label: p.description || p.name,
+                    value: p.name
+                }))]);
 
-                const administrationStatusParamsData: Param[] = administrationStatusParamsRes;
-                const optionsStatusFromParams: SelectOption[] = administrationStatusParamsData.map((param) => ({
-                    label: param.description || param.name,
-                    value: param.name,
-                }));
-                setSelectStatusOptions([{ label: "Semua", value: "all" }, ...optionsStatusFromParams]);
+                setSelectStatusOptions([{ label: "Semua", value: "all" }, ...paramsStatus.map((p) => ({
+                    label: p.description || p.name,
+                    value: p.name
+                }))]);
 
+                const { data, error } = await supabase
+                    .from("administration")
+                    .select(`
+                        id, ticket_num, vehicle_id, type, due_date, end_date, status,
+                        vehicles:vehicle_id (id, name, category, license_plate)
+                    `)
+                    .eq("vehicle_id", vehicleId);
 
-                // === ADMINISTRATIONS ===
-                const { data: administrationsData, error: administrationsError } = { data: administrationsRes, error: null }; // Replace with actual API call if needed
-                if (administrationsError) {
-                    console.error("Failed to fetch administrations:", administrationsError);
-                } else if (administrationsData) {
-                    const mappedAdministrations = administrationsData.map((a: any) => ({
+                if (error) {
+                    console.error("Failed to fetch administrations:", error);
+                } else {
+                    const mapped = data.map((a: any) => ({
                         id: a.id,
                         ticketNum: a.ticket_num,
                         vehicleId: a.vehicle_id,
                         vehicle: {
-                            id: a.vehicle.id,
-                            name: a.vehicle.name,
-                            category: a.vehicle.category,
-                            licensePlate: a.vehicle.license_plate,
+                            id: a.vehicles?.id,
+                            name: a.vehicles?.name,
+                            category: a.vehicles?.category,
+                            licensePlate: a.vehicles?.license_plate,
                         },
                         type: a.type,
                         dueDate: a.due_date,
                         endDate: a.end_date,
                         status: a.status,
                     }));
-                    setListAdministrations(mappedAdministrations);
+
+                    setListAdministrations(mapped);
                 }
+
             } catch (err) {
                 console.error("Failed to fetch data:", err);
             } finally {
                 setLoading(false);
-                console.log(listAdministrations)
             }
         };
 
-        fetchAll();
-    }, []);
-
+        if (vehicleId) fetchAll();
+    }, [vehicleId]);
     const filteredAndSortedAdministration = useMemo(() => {
         const filtered = listAdministrations.filter((administration) => {
             const matchesSearch =

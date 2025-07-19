@@ -50,7 +50,7 @@ export default function UserDetailPage() {
             username: found.username ?? found.email,
             fullname: found.fullname ?? "-",
             email: found.email,
-            phoneNo: found.phone_no ?? "-",
+            phone: found.phone_no ?? "-",
             role: found.role ?? "-",
             isActive: found.status === "active",
           };
@@ -115,7 +115,7 @@ export default function UserDetailPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <SectionItem label="Email" value={user.email} />
-                <SectionItem label="No Telepon" value={user.phoneNo} />
+                <SectionItem label="No Telepon" value={user.phone} />
               </div>
 
               <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2">

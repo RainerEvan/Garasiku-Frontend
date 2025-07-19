@@ -121,7 +121,7 @@ export default function ServisDetailPage() {
     const fetchServiceAttachments = async (serviceId: string) => {
         const { data, error } = await supabase
             .from("attachment_service")
-            .select("*")
+            .select("id, created_at, service_id, file_name, file_type, file_size, file_link, created_by")
             .eq("service_id", serviceId)
             .order("created_at", { ascending: false });
 
@@ -131,8 +131,8 @@ export default function ServisDetailPage() {
 
         if (data) {
             setAttachments(data.map(att => ({
-                id: att.attachment_id,
-                serviceId: att.vehicle_id,
+                id: att.id,
+                serviceId: att.service_id,
                 fileName: att.file_name,
                 fileType: att.file_type,
                 fileSize: att.file_size,
