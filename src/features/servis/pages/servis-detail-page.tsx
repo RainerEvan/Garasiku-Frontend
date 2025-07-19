@@ -109,7 +109,7 @@ export default function ServisDetailPage() {
             }
 
             const { data: attachData, error: attachError } = await supabase
-                .from("attachment_vehicle")
+                .from("attachment_service")
                 .select("*")
                 .eq("vehicle_id", svc.vehicle_id)
                 .order("sort", { ascending: true });
