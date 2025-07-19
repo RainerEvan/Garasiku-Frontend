@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLoading } from "@/lib/loading-context"
 import { supabase } from "@/lib/supabaseClient"
 import { VEHICLE_CATEGORY_PARAM } from "@/lib/constants"
-import { Param } from "@/models/param"
 
 type SelectOption = {
   label: string
