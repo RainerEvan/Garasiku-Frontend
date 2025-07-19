@@ -718,6 +718,7 @@ export default function KendaraanDetailPage() {
                                         <div key={attachment.id}>
                                             <AttachmentItem
                                                 attachment={attachment}
+                                                type="vehicle"
                                             />
                                             {index < attachments.length - 1 && (
                                                 <Separator className="my-4" />

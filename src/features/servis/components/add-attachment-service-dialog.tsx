@@ -17,6 +17,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { supabase } from "@/lib/supabaseClient"
+import { toast } from "sonner"
 import { AttachmentService } from "@/models/attachment-service"
 
 interface AddAttachmentServiceDialogProps {
@@ -24,44 +26,82 @@ interface AddAttachmentServiceDialogProps {
   onSave?: (newAttachment: AttachmentService) => void
 }
 
-// Define the form schema with validation
+// Schema: hanya izinkan file PDF atau gambar
 const formSchema = z.object({
-  serviceId: z.string().min(1, { message: "Service Id harus terisi" }),
-  fileName: z.string().min(1, { message: "Dokumen harus terisi" }),
-  fileType: z.string().min(1, { message: "File Type harus terisi" }),
-  fileSize: z.string().min(1, { message: "File Size harus terisi" }),
-  fileLink: z.string().min(1, { message: "File Link harus terisi" }),
+  file: z
+    .instanceof(File)
+    .refine((file) => file.type === "application/pdf" || file.type.startsWith("image/"), {
+      message: "File harus berupa PDF atau gambar",
+    }),
 })
+
+type FormData = z.infer<typeof formSchema>
 
 export function AddAttachmentServiceDialog({ serviceId, onSave }: AddAttachmentServiceDialogProps) {
   const [open, setOpen] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      serviceId: serviceId,
-      fileName: "",
-      fileType: "",
-      fileSize: "",
-      fileLink: "",
+      file: undefined,
     },
   })
 
-  const { reset } = form;
+  const { reset } = form
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Tambah dokumen kendaran: ", values)
-    if (onSave) {
-      onSave(values);
+  async function onSubmit(values: FormData) {
+    try {
+      if (!serviceId) throw new Error("ID servis tidak tersedia")
+
+      const file = values.file
+      const fileName = `${Date.now()}-${file.name}`
+      const filePath = `${serviceId}/attachment/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from("service")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        })
+
+      if (uploadError) throw uploadError
+
+
+      const insertPayload = {
+        service_id: serviceId,
+        file_name: file.name,
+        file_type: file.type,
+        file_size: file.size.toString(),
+        file_link: filePath,
+        created_by: "system"
+      }
+
+      const { data: inserted, error: insertError } = await supabase
+        .from("attachment_service")
+        .insert(insertPayload)
+        .select("*")
+        .single()
+
+      if (insertError) throw insertError
+
+      toast.success("Dokumen servis berhasil ditambahkan")
+
+      if (onSave) {
+        onSave(inserted)
+      }
+
+      setOpen(false)
+      reset()
+    } catch (err: any) {
+      console.error(err)
+      toast.error("Gagal menambahkan dokumen")
     }
-    setOpen(false);
-    reset();
   }
 
   function handleDialogChange(isOpen: boolean) {
-    setOpen(isOpen);
+    setOpen(isOpen)
     if (!isOpen) {
-      reset();
+      reset()
     }
   }
 
@@ -82,21 +122,21 @@ export function AddAttachmentServiceDialog({ serviceId, onSave }: AddAttachmentS
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Detail Kendaraan */}
             <div className="flex flex-col gap-5">
               <FormField
                 control={form.control}
-                name="fileName"
+                name="file"
                 render={({ field }) => (
                   <FormItem className="space-y-1">
                     <FormLabel className="font-medium">Dokumen</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Dokumen"
-                        {...field}
-                        className="w-full"
                         type="file"
-                        accept="application/pdf, image/*"
+                        accept="application/pdf,image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) field.onChange(file)
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
@@ -111,13 +151,10 @@ export function AddAttachmentServiceDialog({ serviceId, onSave }: AddAttachmentS
                   Batal
                 </Button>
               </DialogClose>
-              <Button type="submit">
-                Simpan
-              </Button>
+              <Button type="submit">Simpan</Button>
             </DialogFooter>
           </form>
         </Form>
-
       </DialogContent>
     </Dialog>
   )

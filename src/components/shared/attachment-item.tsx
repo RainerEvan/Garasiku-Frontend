@@ -2,41 +2,49 @@ import { File, MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../shadcn/dropdown-menu"
 import { Button } from "../shadcn/button"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../shadcn/alert-dialog"
-import { AttachmentVehicle } from "@/models/attachment-vehicle"
 import { useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
+import { AttachmentVehicle } from "@/models/attachment-vehicle"
+import { toast } from "sonner"
 
 interface AttachmentItemProps {
-    attachment: AttachmentVehicle
+    attachment: AttachmentVehicle,
+    type: "vehicle" | "service"
     onDelete?: (id: string) => void
 }
 
 export default function AttachmentItem({
     attachment,
+    type,
     onDelete,
 }: AttachmentItemProps) {
     const [openDropdown, setOpenDropdown] = useState(false)
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
     const [loading, setLoading] = useState(false)
 
+    const bucketName = type === "vehicle" ? "kendaraan" : "service"
+    const tableName = type === "vehicle" ? "attachment_vehicle" : "attachment_service"
+
     async function handleDelete() {
         setLoading(true)
         try {
             // Hapus file dari storage
             const { error: storageError } = await supabase.storage
-                .from("kendaraan")
+                .from(bucketName)
                 .remove([attachment.fileLink ?? ""]);
             if (storageError) throw storageError
 
             // Hapus data dari database
             const { error: dbError } = await supabase
-                .from("attachment_vehicle")
+                .from(tableName)
                 .delete()
                 .eq("id", attachment.id)
             if (dbError) throw dbError
 
             if (onDelete && attachment.id) onDelete(attachment.id)
+            toast.success("Dokumen berhasil dihapus")
         } catch (error) {
+            toast.error("Gagal menghapus dokumen")
             console.error("Gagal menghapus dokumen:", error)
         } finally {
             setOpenDeleteDialog(false)
@@ -47,7 +55,7 @@ export default function AttachmentItem({
     function handleDownload() {
         const { data } = supabase
             .storage
-            .from("kendaraan") 
+            .from(bucketName)
             .getPublicUrl(attachment.fileLink ?? ""); 
 
         if (data?.publicUrl) {
@@ -56,7 +64,6 @@ export default function AttachmentItem({
             console.error("Gagal mendapatkan public URL untuk file:", attachment.fileLink);
         }
     }
-
 
     return (
         <div className="flex flex-row p-2 gap-4">

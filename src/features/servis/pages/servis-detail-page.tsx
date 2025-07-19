@@ -331,6 +331,8 @@ export default function ServisDetailPage() {
                                         <div key={attachment.id}>
                                             <AttachmentItem
                                                 attachment={attachment}
+                                                  type="service"
+
                                             />
                                             {index < attachments.length - 1 && (
                                                 <Separator className="my-4" />
