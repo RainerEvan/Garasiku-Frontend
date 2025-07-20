@@ -10,11 +10,12 @@ import { formatDateTime } from "@/lib/utils"
 import { LoadingOverlay } from "@/components/shared/loading-overlay"
 
 interface LicensePlateDialogProps {
-    vehicleId?: string
-    currPlateNo?: string
+    vehicleId?: string;
+    currPlateNo?: string;
+    onLicensePlateChange?: (newLicensePlate: string) => void;
 }
 
-export function LicensePlateDialog({ vehicleId, currPlateNo }: LicensePlateDialogProps) {
+export function LicensePlateDialog({ vehicleId, currPlateNo, onLicensePlateChange }: LicensePlateDialogProps) {
     const [loading, setLoading] = useState(false);
 
     const [open, setOpen] = useState(false)
@@ -36,8 +37,8 @@ export function LicensePlateDialog({ vehicleId, currPlateNo }: LicensePlateDialo
                 id: v.id,
                 vehicleId: v.vehicle_id,
                 plateNo: v.plat_no,
-                createdAt: v.updated_at,
-                createdBy: v.updated_by,
+                updatedAt: v.updated_at,
+                updatedBy: v.updated_by,
             })));
         }
     }
@@ -78,7 +79,17 @@ export function LicensePlateDialog({ vehicleId, currPlateNo }: LicensePlateDialo
                     </DialogHeader>
 
                     <div className="w-full flex">
-                        <ChangeLicensePlateDialog vehicleId={vehicleId} currPlateNo={currPlateNo} onSave={() => fetchVehicleLicensePlates(vehicleId!)} />
+                        <ChangeLicensePlateDialog 
+                            vehicleId={vehicleId} 
+                            currPlateNo={currPlateNo} 
+                            onSave={(newPlateNo) => {
+                                fetchVehicleLicensePlates(vehicleId!)
+                                if (onLicensePlateChange) {
+                                    onLicensePlateChange(newPlateNo.plateNo || "");
+                                }
+                            }}
+                            setLoading={setLoading}
+                        />
                     </div>
 
                     {listVehicleLicensePlates.length > 0 ? (
@@ -90,8 +101,8 @@ export function LicensePlateDialog({ vehicleId, currPlateNo }: LicensePlateDialo
                                             <p className="text-sm font-medium">{licensePlate.plateNo}</p>
                                         </div>
                                         <div className="w-full grid grid-cols-2 gap-5 text-xs text-gray-400">
-                                            <SectionItem label="Diubah Pada" value={formatDateTime(licensePlate.createdAt)} />
-                                            <SectionItem label="Diubah Oleh" value={licensePlate.createdBy} />
+                                            <SectionItem label="Diubah Pada" value={formatDateTime(licensePlate.updatedAt)} />
+                                            <SectionItem label="Diubah Oleh" value={licensePlate.updatedBy} />
                                         </div>
                                     </div>
                                 </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { Button } from "@/components/shadcn/button"
 import {
@@ -42,13 +42,7 @@ const formSchema = z.object({
 export function AddUserDialog({ onSave }: AddUserDialogProps) {
   const [open, setOpen] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  useEffect(() => {
-    const role = user?.user_metadata?.role
-    setIsAdmin(role === "admin")
-  }, [user])
+  const { isAdmin } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

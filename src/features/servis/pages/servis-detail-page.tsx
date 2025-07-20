@@ -19,7 +19,7 @@ import AttachmentItem from "@/components/shared/attachment-item";
 import { AttachmentService } from "@/models/attachment-service";
 import TaskTypeBar from "@/components/shared/task-type-bar";
 import StatusBar from "@/components/shared/status-bar";
-import { Status } from "@/lib/constants";
+import { ONGOING, PENDING, Status } from "@/lib/constants";
 import { EditServiceRecordDialog } from "../components/edit-service-record-dialog";
 import { AddAttachmentServiceDialog } from "../components/add-attachment-service-dialog";
 import { StartServiceDialog } from "../components/start-service-dialog";
@@ -30,6 +30,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatDate, formatRupiah } from "@/lib/utils";
 import { LoadingOverlay } from "@/components/shared/loading-overlay";
+import { toast } from "sonner";
 
 export default function ServisDetailPage() {
     const [loading, setLoading] = useState(false);
@@ -171,21 +172,26 @@ export default function ServisDetailPage() {
 
     const handleCancelService = async () => {
         if (!service) return;
+        setLoading(true);
 
-        const { error } = await supabase
-            .from("service")
-            .update({ status: "cancelled" })
-            .eq("id", service.id);
+        try {
+            const { error } = await supabase
+                .from("service")
+                .update({ status: "cancelled" })
+                .eq("id", service.id);
 
-        if (error) {
-            console.error("Gagal membatalkan servis:", error);
-            return;
+            if (error) {
+                toast.error("Gagal mengupdate service " + error.message);
+            }
+
+            toast.success("Berhasil membatalkan administrasi.");
+            await fetchServiceDetail(service.id!);
+        } catch (error) {
+            console.error(error);
+            toast.error("Gagal membatalkan servis: " + error);
+        } finally {
+            setLoading(false);
         }
-
-        // Refresh service state
-        setService((prev) =>
-            prev ? { ...prev, status: "cancelled" } : prev
-        );
     };
 
     if (!service && !loading) return (
@@ -223,8 +229,8 @@ export default function ServisDetailPage() {
                                     </div>
                                 </div>
 
-                                {service.status == "pending" && (
-                                    <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
+                                <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
+                                    {(service.status == PENDING || service.status == ONGOING) && (
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>
                                                 <Button variant="destructive">Batalkan Servis</Button>
@@ -242,32 +248,16 @@ export default function ServisDetailPage() {
                                                 </AlertDialogFooter>
                                             </AlertDialogContent>
                                         </AlertDialog>
-                                        <StartServiceDialog service={service} />
-                                    </div>
-                                )}
+                                    )}
 
-                                {service.status == "ongoing" && (
-                                    <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="destructive">Batalkan Servis</Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Batalkan Servis?</AlertDialogTitle>
-                                                    <AlertDialogDescription>
-                                                        Apakah Anda yakin ingin membatalkan servis {service.ticketNum}?
-                                                    </AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Tidak</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={handleCancelService}>Batalkan</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                        <CompleteServiceDialog service={service} />
-                                    </div>
-                                )}
+                                    {service.status == PENDING && (
+                                        <StartServiceDialog service={service} onSave={() => fetchServiceDetail(id!)} />
+                                    )}
+
+                                    {service.status == ONGOING && (
+                                        <CompleteServiceDialog service={service} onSave={() => fetchServiceDetail(id!)} />
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -49,7 +49,6 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      // 🔍 Call RPC to get user email
       const { data: result, error: rpcError } = await supabase
         .rpc("lookup_user_by_username", { uname: username })
 

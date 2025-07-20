@@ -20,6 +20,7 @@ import { Checkbox } from "@/components/shadcn/checkbox"
 import { Param } from "@/models/param"
 import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
+import { LoadingOverlay } from "@/components/shared/loading-overlay"
 
 interface EditEquipmentVehicleDialogProps {
   vehicleId?: string
@@ -33,6 +34,7 @@ const formSchema = z.object({
 })
 
 export function EditEquipmentVehicleDialog({ vehicleId, equipmentParam, vehicleEquipments, onSave }: EditEquipmentVehicleDialogProps) {
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -45,94 +47,109 @@ export function EditEquipmentVehicleDialog({ vehicleId, equipmentParam, vehicleE
   const { reset } = form;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Edit equipment vehicle data: ", values)
+    setLoading(true);
 
-    const formattedArray = values.items.join("|");
+    try {
+      const formattedArray = values.items.join("|");
 
-    const { error } = await supabase
-      .from("vehicles")
-      .update({ equipments: formattedArray })
-      .eq("id", vehicleId);
+      const { error } = await supabase
+        .from("vehicles")
+        .update({ equipments: formattedArray })
+        .eq("id", vehicleId);
 
-    if (error) {
-      toast.error("Gagal menyimpan kelengkapan kendaraan.");
-    } else {
+      if (error) {
+        throw new Error("Gagal mengubah equipments vehicle: " + error.message);
+      }
+
       toast.success("Kelengkapan kendaraan berhasil diperbarui.");
-    }
 
-    if (onSave) {
-      onSave(values.items);
-    }
+      if (onSave) {
+        onSave(values.items);
+      }
 
-    setOpen(false);
+      setOpen(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal mengubah data kelengkapan kendaraan: " + error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handleDialogChange(isOpen: boolean) {
     setOpen(isOpen);
-    if (!isOpen) {
+    if (isOpen) {
+      reset({
+        items: vehicleEquipments
+      });
+    } else {
       reset();
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Edit />
-          Ubah
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle>Ubah Kelengkapan Kendaraan</DialogTitle>
-          <DialogDescription>Atur informasi kelengkapan kendaraan dan klik button simpan.</DialogDescription>
-        </DialogHeader>
+    <>
+      <LoadingOverlay loading={loading} />
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Kelengkapan Kendaraan */}
-            <FormField
-              control={form.control}
-              name="items"
-              render={({ field }) => (
-                <FormItem className={`grid gap-5 p-2 ${equipmentParam.length > 5 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
-                  {equipmentParam.map((item) => (
-                    <FormItem key={item.id} className="flex flex-row items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value.includes(item.name)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              field.onChange([...field.value, item.name]);
-                            } else {
-                              field.onChange(field.value.filter((val) => val !== item.name));
-                            }
-                          }}
-                        />
-                      </FormControl>
-                      <FormLabel className="text-sm font-normal">{item.description}</FormLabel>
-                    </FormItem>
-                  ))}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      <Dialog open={open} onOpenChange={handleDialogChange}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Edit />
+            Ubah
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Ubah Kelengkapan Kendaraan</DialogTitle>
+            <DialogDescription>Atur informasi kelengkapan kendaraan dan klik button simpan.</DialogDescription>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Kelengkapan Kendaraan */}
+              <FormField
+                control={form.control}
+                name="items"
+                render={({ field }) => (
+                  <FormItem className={`grid gap-5 p-2 ${equipmentParam.length > 5 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+                    {equipmentParam.map((item) => (
+                      <FormItem key={item.id} className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value.includes(item.name)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                field.onChange([...field.value, item.name]);
+                              } else {
+                                field.onChange(field.value.filter((val) => val !== item.name));
+                              }
+                            }}
+                          />
+                        </FormControl>
+                        <FormLabel className="text-sm font-normal">{item.description}</FormLabel>
+                      </FormItem>
+                    ))}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
 
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline">
-                  Batal
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">
+                    Batal
+                  </Button>
+                </DialogClose>
+                <Button type="submit">
+                  Simpan
                 </Button>
-              </DialogClose>
-              <Button type="submit">
-                Simpan
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              </DialogFooter>
+            </form>
+          </Form>
 
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

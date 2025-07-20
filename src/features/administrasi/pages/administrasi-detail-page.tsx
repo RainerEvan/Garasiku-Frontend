@@ -18,7 +18,7 @@ import {
 import { Administration } from "@/models/administration";
 import TaskTypeBar from "@/components/shared/task-type-bar";
 import StatusBar from "@/components/shared/status-bar";
-import { Status } from "@/lib/constants";
+import { PENDING, Status } from "@/lib/constants";
 import { DataBarCard } from "@/components/shared/data-bar-card";
 import { CompleteAdministrationDialog } from "../components/complete-administrasi-dialog";
 import { supabase } from "@/lib/supabaseClient";
@@ -83,22 +83,27 @@ export default function AdministrasiDetailPage() {
   };
 
   const handleCancelAdministration = async () => {
-    if (!id) return;
-
+    if (!administration) return;
     setLoading(true);
 
-    const { error } = await supabase
-      .from("administration")
-      .update({ status: "cancelled" })
-      .eq("id", id);
+    try {
+      const { error } = await supabase
+        .from("administration")
+        .update({ status: "cancelled" })
+        .eq("id", administration.id);
 
-    setLoading(false);
+      if (error) {
+        toast.error("Gagal mengupdate administration " + error.message);
+      }
 
-    if (error) {
-      toast.error("Gagal membatalkan administrasi " + error.message);
+      toast.success("Berhasil membatalkan administrasi.");
+      await fetchAdministrationDetail(administration.id!);
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal membatalkan administrasi: " + error);
+    } finally {
+      setLoading(false);
     }
-    toast.success("Berhasil membatalkan administrasi.");
-
   };
 
   useEffect(() => {
@@ -152,7 +157,7 @@ export default function AdministrasiDetailPage() {
                   </div>
                 </div>
 
-                {administration.status === "pending" && (
+                {administration.status == PENDING && (
                   <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -174,6 +179,7 @@ export default function AdministrasiDetailPage() {
                     <CompleteAdministrationDialog
                       administration={administration}
                       dueDate={administration.dueDate || ""}
+                      onSave={() => fetchAdministrationDetail(id!)}
                     />
                   </div>
                 )}

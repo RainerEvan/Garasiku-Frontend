@@ -8,25 +8,26 @@ import { AttachmentVehicle } from "@/models/attachment-vehicle"
 import { toast } from "sonner"
 
 interface AttachmentItemProps {
-    attachment: AttachmentVehicle,
-    type: "vehicle" | "service"
-    onDelete?: (id: string) => void
+    attachment: AttachmentVehicle;
+    type: "vehicle" | "service";
+    onAttachmentDelete?: (id: string) => void;
+    setLoading?: (val: boolean) => void;
 }
 
 export default function AttachmentItem({
     attachment,
     type,
-    onDelete,
+    onAttachmentDelete,
+    setLoading,
 }: AttachmentItemProps) {
     const [openDropdown, setOpenDropdown] = useState(false)
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
-    const [loading, setLoading] = useState(false)
 
     const bucketName = type === "vehicle" ? "kendaraan" : "service"
     const tableName = type === "vehicle" ? "attachment_vehicle" : "attachment_service"
 
     async function handleDelete() {
-        setLoading(true)
+        setLoading?.(true)
         try {
             // Hapus file dari storage
             const { error: storageError } = await supabase.storage
@@ -41,14 +42,16 @@ export default function AttachmentItem({
                 .eq("id", attachment.id)
             if (dbError) throw dbError
 
-            if (onDelete && attachment.id) onDelete(attachment.id)
+            if (onAttachmentDelete && attachment.id) {
+                onAttachmentDelete(attachment.id)
+            }
             toast.success("Dokumen berhasil dihapus")
         } catch (error) {
             toast.error("Gagal menghapus dokumen")
             console.error("Gagal menghapus dokumen:", error)
         } finally {
             setOpenDeleteDialog(false)
-            setLoading(false)
+            setLoading?.(false)
         }
     }
 
@@ -106,9 +109,9 @@ export default function AttachmentItem({
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel disabled={loading}>Tidak</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} disabled={loading}>
-                            {loading ? "Menghapus..." : "Hapus"}
+                        <AlertDialogCancel>Tidak</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete}>
+                            Hapus
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

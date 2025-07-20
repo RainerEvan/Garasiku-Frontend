@@ -34,7 +34,7 @@ export function EditImageVehicleDialog({
     const [loading, setLoading] = useState(false);
 
     const [open, setOpen] = useState(false)
-    const [carImages, setCarImages] = useState<string[]>([...images])
+    const [VehicleImages, setVehicleImages] = useState<string[]>([...images])
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [deletedImages, setDeletedImages] = useState<string[]>([])
 
@@ -64,14 +64,14 @@ export function EditImageVehicleDialog({
             }
         }
 
-        setCarImages((prev) => [...prev, ...compressedImages])
+        setVehicleImages((prev) => [...prev, ...compressedImages])
     }
 
     const handleDeleteImage = (index: number) => {
-        const removed = carImages[index];
-        const updated = [...carImages];
+        const removed = VehicleImages[index];
+        const updated = [...VehicleImages];
         updated.splice(index, 1);
-        setCarImages(updated);
+        setVehicleImages(updated);
 
         // Simpan ke daftar hapus jika bukan blob (sudah diupload)
         if (!removed.startsWith("blob:")) {
@@ -93,7 +93,7 @@ export function EditImageVehicleDialog({
                     .remove([path]);
 
                 if (storageError) {
-                    console.error("Gagal hapus file dari storage:", storageError.message);
+                    throw new Error("Gagal hapus file dari storage: " + storageError.message);
                 }
 
                 // 2. Hapus dari attachment_vehicle
@@ -103,7 +103,7 @@ export function EditImageVehicleDialog({
                     .eq("file_link", url);
 
                 if (dbError) {
-                    console.error("Gagal hapus data attachment_vehicle:", dbError.message);
+                    throw new Error("Gagal hapus data attachment_vehicle: " + dbError.message);
                 }
             } catch (err) {
                 console.error("Error deleting file:", err);
@@ -119,15 +119,12 @@ export function EditImageVehicleDialog({
             const fileName = `${uuidv4()}.${fileExt}`;
             const filePath = `${vehicleId}/gallery/${fileName}`;
 
-            console.log("Uploading:", file.name, "->", filePath);
-
             const { error: uploadError } = await supabase.storage
                 .from("kendaraan")
                 .upload(filePath, file, { upsert: true });
 
             if (uploadError) {
-                console.error("Upload failed:", uploadError.message);
-                continue;
+                throw new Error("Gagal upload image: " + uploadError.message);
             }
 
             const { data: publicUrlData } = supabase.storage
@@ -152,12 +149,14 @@ export function EditImageVehicleDialog({
     }
 
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {        
         e.preventDefault();
+        if (loading) return;
+
         setLoading(true);
 
         try {
-            const newBlobs = carImages.filter((img) => img.startsWith("blob:"));
+            const newBlobs = VehicleImages.filter((img) => img.startsWith("blob:"));
             const filesToUpload: File[] = [];
 
             for (const blobUrl of newBlobs) {
@@ -170,7 +169,7 @@ export function EditImageVehicleDialog({
             const uploadedUrls = await uploadImagesToStorage(filesToUpload, vehicleId);
 
             // Gabung yang lama (selain blob) + hasil upload
-            const finalImages = carImages.filter((img) => !img.startsWith("blob:")).concat(uploadedUrls);
+            const finalImages = VehicleImages.filter((img) => !img.startsWith("blob:")).concat(uploadedUrls);
 
             // Hapus gambar yang ditandai
             if (deletedImages.length > 0) {
@@ -182,20 +181,27 @@ export function EditImageVehicleDialog({
                 onSave(finalImages);
             }
             setOpen(false);
-        } catch (err) {
-            console.error("Error saving images:", err);
-            toast.error("Gagal menyimpan foto kendaraan.");
+        } catch (error) {
+            console.error(error);
+            toast.error("Gagal menyimpan foto kendaraan: " + error);
         } finally {
             setLoading(false);
         }
     };
 
+    function handleDialogChange(isOpen: boolean) {
+        setOpen(isOpen);
+        if (!isOpen) {
+            setVehicleImages([...images]);
+            setDeletedImages([]);
+        }
+    }
 
     return (
         <>
             <LoadingOverlay loading={loading} />
 
-            <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog open={open} onOpenChange={handleDialogChange}>
                 <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="absolute top-2 right-2 bg-background hover:bg-background shadow-md">
                         <ImageIcon />
@@ -211,7 +217,7 @@ export function EditImageVehicleDialog({
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-4">
                             <div className="flex items-center gap-2">
-                                <div className="flex-1">Total Foto: {carImages.length}</div>
+                                <div className="flex-1">Total Foto: {VehicleImages.length}</div>
                                 <input
                                     type="file"
                                     ref={fileInputRef}
@@ -227,9 +233,9 @@ export function EditImageVehicleDialog({
                             </div>
 
                             <ScrollArea className="h-[50vh]">
-                                {carImages.length > 0 ? (
+                                {VehicleImages.length > 0 ? (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                                        {carImages.map((image, index) => (
+                                        {VehicleImages.map((image, index) => (
                                             <div key={`${image}-${index}`} className="group relative flex items-center gap-4">
                                                 <div className="relative aspect-video w-full overflow-hidden">
                                                     <img src={image || "/placeholder.svg"} alt={`Car image ${index + 1}`} className="object-cover w-full h-full" />

@@ -131,12 +131,11 @@ export function AddAttachmentServiceDialog({ serviceId, onSave }: AddAttachmentS
                     <FormLabel className="font-medium">Dokumen</FormLabel>
                     <FormControl>
                       <Input
+                        placeholder="Dokumen"
+                        onChange={(e) => field.onChange(e.target.files?.[0])}
+                        className="w-full"
                         type="file"
                         accept="application/pdf,image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0]
-                          if (file) field.onChange(file)
-                        }}
                       />
                     </FormControl>
                     <FormMessage />

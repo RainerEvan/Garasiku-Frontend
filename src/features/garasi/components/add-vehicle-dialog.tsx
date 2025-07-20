@@ -75,25 +75,37 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
     };
   }, [user]);
 
+  const fetchBrandParams = async () => {
+    const { data, error } = await supabase
+      .from("parameter")
+      .select("*")
+      .eq("group", PARAM_GROUP_MERK_KENDARAAN)
+      .order("name");
+
+    if (error) {
+      console.error("Brand params fetch error:", error);
+    }
+
+    if (data) {
+      setVehicleBrandParam(data);
+    }
+  }
+
   useEffect(() => {
     if (!open) return;
 
-    async function fetchBrandParams() {
-      const { data, error } = await supabase
-        .from("parameter")
-        .select("*")
-        .eq("group", PARAM_GROUP_MERK_KENDARAAN)
-        .order("name")
-
-      if (error) {
-        console.error("Brand params fetch error:", error)
-        return
+    const fetchAll = async () => {
+      setLoading(true);
+      try {
+        await fetchBrandParams();
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      setVehicleBrandParam(data)
-    }
-
-    fetchBrandParams()
+    fetchAll();
   }, [open])
 
   const { watch, setValue, reset } = form;
@@ -134,8 +146,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
         .single();
 
       if (insertError) {
-        console.error("Gagal menyimpan kendaraan:", insertError.message);
-        return;
+        throw new Error("Gagal menyimpan kendaraan: " + insertError.message);
       }
 
       if (!vehicle) return;
@@ -151,8 +162,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
         });
 
       if (plateHistoryError) {
-        console.error("Gagal menyimpan riwayat plat nomor:", plateHistoryError.message);
-        return;
+        throw new Error("Gagal menyimpan plat no vehicle: " + plateHistoryError.message);
       }
 
       const { error: stnkError } = await supabase
@@ -164,11 +174,11 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
           type: values.model,
           category: values.category,
           color: values.color,
+          license_plate: values.licensePlate,
         });
 
       if (stnkError) {
-        console.error("Gagal menyimpan data STNK:", stnkError.message);
-        return;
+        throw new Error("Gagal menyimpan data stnk: " + stnkError.message);
       }
 
       if (stnkDate) {
@@ -189,7 +199,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
           });
 
         if (adminStnkError) {
-          console.error("Gagal menambahkan ke administrasi:", adminStnkError.message);
+          throw new Error("Gagal menyimpan data administration stnk: " + adminStnkError.message);
           return;
         }
       }
@@ -212,12 +222,11 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
           });
 
         if (adminInsuranceError) {
-          console.error("Gagal menambahkan ke administrasi:", adminInsuranceError.message);
+          throw new Error("Gagal menyimpan data administration insurance: " + adminInsuranceError.message);
           return;
         }
       }
 
-      console.log("Kendaraan & administrasi berhasil disimpan:", vehicle);
       toast.success("Data kendaraan baru berhasil ditambahkan.")
 
       if (onSave) {
@@ -226,9 +235,9 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
 
       setOpen(false);
       reset();
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      toast.error("Gagal menambahkan data kendaraan baru");
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal menambahkan data kendaraan baru: " + error);
     } finally {
       setLoading(false);
     }
@@ -244,6 +253,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
   return (
     <>
       <LoadingOverlay loading={loading} />
+
       <Dialog open={open} onOpenChange={handleDialogChange}>
         <DialogTrigger asChild>
           <div>

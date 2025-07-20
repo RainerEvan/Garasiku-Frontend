@@ -115,7 +115,7 @@ export default function KendaraanDetailPage() {
                 vehicleId: base.vehicleid,
                 stnkNumber: base.stnk_number,
                 fuelType: base.fuel_type,
-                licensePlate: base.license_plate,
+                licensePlate: base.stnk_license_plate,
                 registrationYear: base.registration_year,
                 manufacturedYear: base.manufactured_year,
                 bpkbNumber: base.bpkb_number,
@@ -376,7 +376,7 @@ export default function KendaraanDetailPage() {
                 .eq("vehicle_id", vehicleId);
 
             if (servicesError) {
-                throw new Error("Gagal menghapus services: " + servicesError.message);
+                throw new Error("Gagal menghapus service: " + servicesError.message);
             }
 
             const { error: stnkError } = await supabase
@@ -385,7 +385,7 @@ export default function KendaraanDetailPage() {
                 .eq("vehicle_id", vehicleId);
 
             if (stnkError) {
-                throw new Error("Gagal menghapus STNK: " + stnkError.message);
+                throw new Error("Gagal menghapus stnk: " + stnkError.message);
             }
 
             const { error: adminError } = await supabase
@@ -403,7 +403,7 @@ export default function KendaraanDetailPage() {
                 .eq("id", vehicleId);
 
             if (vehicleError) {
-                throw new Error("Gagal menghapus kendaraan: " + vehicleError.message);
+                throw new Error("Gagal menghapus vehicles: " + vehicleError.message);
             }
 
             toast.success(`Kendaraan "${vehicle.name}" berhasil dihapus.`);
@@ -447,6 +447,12 @@ export default function KendaraanDetailPage() {
         }
     };
 
+    const handleLicensePlateChange = (newPlate: string) => {
+        if (!vehicle) return;
+
+        setVehicle({ ...vehicle, licensePlate: newPlate });
+    }
+
     if (!vehicle && !loading) return (
         <EmptyState title="Kendaraan Tidak Ditemukan" description="Kendaraan dengan ID tersebut tidak tersedia." />
     );
@@ -476,7 +482,7 @@ export default function KendaraanDetailPage() {
 
                         <div className="col-span-1 md:col-span-3 w-full flex flex-col justify-between gap-3 p-5">
                             {/* License Plate */}
-                            <LicensePlateDialog vehicleId={vehicle.id} currPlateNo={vehicle.licensePlate} />
+                            <LicensePlateDialog vehicleId={vehicle.id} currPlateNo={vehicle.licensePlate} onLicensePlateChange={handleLicensePlateChange}/>
 
                             {/* Details */}
                             <div className="flex flex-col gap-3">
@@ -644,7 +650,7 @@ export default function KendaraanDetailPage() {
                                         <SectionItem label="Isi Silinder" value={vehicleStnk.cylinderCapacity} />
                                         <SectionItem label="No Pendaftaran" value={vehicleStnk.registrationNumber} />
                                         <SectionItem label="No Rangka" value={vehicleStnk.chassisNumber} />
-                                        <SectionItem label="Berlaku Sampai" value={vehicleStnk.validUntil} />
+                                        <SectionItem label="Berlaku Sampai" value={formatDate(vehicleStnk.validUntil)} />
                                         <SectionItem label="No Mesin" value={vehicleStnk.engineNumber} />
                                     </div>
                                 </div>
@@ -743,7 +749,7 @@ export default function KendaraanDetailPage() {
                         <SectionCard
                             title="Lampiran Dokumen"
                             headerAction={
-                                <AddAttachmentVehicleDialog vehicleId={vehicle.id} />
+                                <AddAttachmentVehicleDialog vehicleId={vehicle.id} onSave={() => fetchVehicleAttachments(id!)} />
                             }
                         >
                             {vehicleAttachments.length > 0 && (
@@ -754,6 +760,8 @@ export default function KendaraanDetailPage() {
                                                 <AttachmentItem
                                                     attachment={attachment}
                                                     type="vehicle"
+                                                    onAttachmentDelete={() => fetchVehicleAttachments(id!)}
+                                                    setLoading={setLoading}
                                                 />
                                                 {index < vehicleAttachments.length - 1 && (
                                                     <Separator className="my-4" />

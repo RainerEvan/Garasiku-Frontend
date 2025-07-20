@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Vehicle } from "@/models/vehicle";
 import { supabase } from "@/lib/supabaseClient";
 import { LoadingOverlay } from "@/components/shared/loading-overlay";
+import { toast } from "sonner";
 
 export default function CariKendaraanPage() {
   const [loading, setLoading] = useState(false);
@@ -22,54 +23,44 @@ export default function CariKendaraanPage() {
         .rpc("search_vehicles_by_plates", { cleaned_plate: cleanedSearch });
 
       if (error) {
-        console.error("Gagal mencari kendaraan:", error.message);
+        throw new Error("Gagal search vehicle: " + error.message);
+      }
+
+      if (data.length > 0) {
+        setVehicle({
+          id: data[0].vehicleid,
+          name: data[0].name,
+          type: data[0].vehicle_type,
+          year: data[0].vehicle_year,
+          brand: data[0].vehicle_brand,
+          color: data[0].vehicle_color,
+          category: data[0].vehicle_category,
+          licensePlate: data[0].license_plate,
+          image: data[0].image_url,
+          isSold: data[0].is_sold,
+          location: {
+            id: data[0].location_id ?? "",
+            vehicleId: data[0].vehicleid ?? "",
+            name: data[0].location_name ?? "Belum ada lokasi",
+            address: data[0].location_address ?? "Belum ada alamat",
+          },
+          soldDate: data[0].sold_date ?? undefined,
+        });
       } else {
-        console.log("Kendaraan ditemukan:", data);
+        throw new Error("Kendaraan tidak ditemukan");
       }
-
-
-      if (error) {
-        console.error("Supabase fetch error:", error.message);
-        setVehicle(null);
-        return;
-      }
-
-      if (!data) {
-        setVehicle(null);
-        return;
-      }
-
-      const mapped: Vehicle = {
-        id: data[0].vehicleid,
-        name: data[0].name,
-        category: data[0].vehicle_category,
-        year: data[0].vehicle_year?.toString() ?? "",
-        brand: data[0].vehicle_brand,
-        color: data[0].vehicle_color,
-        type: data[0].vehicle_type,
-        licensePlate: data[0].license_plate,
-        image: data[0].image_url ?? "/assets/car.jpg",
-        location: {
-          id: data[0].location_id ?? "",
-          vehicleId: data[0].vehicleid ?? "",
-          name: data[0].location_name ?? "-",
-          address: data[0].location_address ?? "-",
-        },
-      };
-
-      setVehicle(mapped);
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      setVehicle(null);
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal mencari data kendaraan: " + error);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <>
       <LoadingOverlay loading={loading} />
-      
+
       <div className="min-h-screen flex flex-col">
         <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
           <div className="flex items-center justify-between">

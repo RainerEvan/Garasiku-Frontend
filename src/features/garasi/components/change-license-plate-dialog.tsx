@@ -21,9 +21,10 @@ import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
 
 interface ChangeLicensePlateDialogProps {
-  vehicleId?: string
-  currPlateNo?: string
-  onSave?: (newLicensePlateVehicle: LicensePlateVehicle) => void
+  vehicleId?: string;
+  currPlateNo?: string;
+  onSave?: (newLicensePlateVehicle: LicensePlateVehicle) => void;
+  setLoading?: (val: boolean) => void;
 }
 
 // Define the form schema with validation
@@ -44,7 +45,7 @@ const formSchema = (currPlateNo?: string) => z.object({
   }
 )
 
-export function ChangeLicensePlateDialog({ vehicleId, currPlateNo, onSave }: ChangeLicensePlateDialogProps) {
+export function ChangeLicensePlateDialog({ vehicleId, currPlateNo, onSave, setLoading }: ChangeLicensePlateDialogProps) {
   const { user } = useAuth();
 
   const [open, setOpen] = useState(false)
@@ -69,54 +70,57 @@ export function ChangeLicensePlateDialog({ vehicleId, currPlateNo, onSave }: Cha
 
   async function onSubmit(values: z.infer<ReturnType<typeof formSchema>>) {
     if (!vehicleId) return;
+    setLoading?.(true);
 
-    const updatedAt = new Date().toISOString();
+    try {
+      const updatedAt = new Date().toISOString();
 
-    const newPlate = {
-      vehicle_id: vehicleId,
-      plat_no: values.plateNo,
-      updated_by: user.user_metadata?.username || user.email || "unknown",
-      updated_at: updatedAt
-    };
+      const newPlate = {
+        vehicle_id: vehicleId,
+        plat_no: values.plateNo,
+        updated_by: userMeta?.username || "system",
+        updated_at: updatedAt
+      };
 
-    const { data: inserted, error: insertError } = await supabase
-      .from("vehicle_plate_history")
-      .insert(newPlate)
-      .select("*")
-      .single();
+      const { data: inserted, error: insertError } = await supabase
+        .from("vehicle_plate_history")
+        .insert(newPlate)
+        .select("*")
+        .single();
 
-    if (insertError) {
-      toast.error("Gagal menyimpan plat nomor: " + insertError.message);
-      console.error("Gagal menyimpan plat nomor:", insertError);
-      return;
+      if (insertError) {
+        throw new Error("Gagal menambahkan vehicle_plate_history: " + insertError.message);
+      }
+
+      const { error: updateError } = await supabase
+        .from("vehicles")
+        .update({ license_plate: values.plateNo })
+        .eq("id", vehicleId);
+
+      if (updateError) {
+        throw new Error("Gagal mengubah plat no vehicles: " + updateError.message);
+      }
+
+      toast.success("Plat nomor berhasil diperbarui.");
+      if (onSave && inserted) {
+        onSave({
+          id: inserted.id,
+          vehicleId: inserted.vehicle_id,
+          plateNo: inserted.plat_no,
+          updatedAt: inserted.updated_at,
+          updatedBy: inserted.updated_by,
+        });
+      }
+
+      setOpen(false);
+      reset();
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal mengubah plat no kendaraan: " + error);
+    } finally {
+      setLoading?.(false);
     }
-
-    const { error: updateError } = await supabase
-      .from("vehicles")
-      .update({ license_plate: values.plateNo })
-      .eq("id", vehicleId);
-
-    if (updateError) {
-      toast.error("Gagal memperbarui data kendaraan: " + updateError.message);
-      console.error("Gagal memperbarui data kendaraan:", updateError);
-      return;
-    }
-
-    toast.success("Plat nomor berhasil diperbarui.");
-    if (onSave && inserted) {
-      onSave({
-        id: inserted.id,
-        vehicleId: inserted.vehicle_id,
-        plateNo: inserted.plat_no,
-        createdAt: updatedAt,
-        createdBy: userMeta?.username || "unknown",
-      });
-    }
-
-    setOpen(false);
-    reset();
   }
-
 
   function handleDialogChange(isOpen: boolean) {
     setOpen(isOpen);

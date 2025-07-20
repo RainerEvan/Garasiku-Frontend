@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Param } from "@/models/param"
 import { VEHICLE_CATEGORY_PARAM, PARAM_GROUP_MERK_KENDARAAN } from "@/lib/constants"
 import { supabase } from "@/lib/supabaseClient"
+import { LoadingOverlay } from "@/components/shared/loading-overlay";
 
 interface EditDetailVehicleDialogProps {
   vehicle: Vehicle
@@ -40,6 +41,7 @@ const formSchema = z.object({
 })
 
 export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDialogProps) {
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -58,28 +60,40 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
   const vehicleCategoryParam = VEHICLE_CATEGORY_PARAM
   const [vehicleBrandParam, setVehicleBrandParam] = useState<Param[]>([])
 
-  useEffect(() => {
-    if (!open) return;
-    
-    async function fetchBrandParams() {
-      const { data, error } = await supabase
-        .from("parameter")
-        .select("*")
-        .eq("group", PARAM_GROUP_MERK_KENDARAAN)
-        .order("name")
+  const fetchBrandParams = async () => {
+    const { data, error } = await supabase
+      .from("parameter")
+      .select("*")
+      .eq("group", PARAM_GROUP_MERK_KENDARAAN)
+      .order("name");
 
-      if (error) {
-        console.error("Brand params fetch error:", error)
-        return
-      }
-
-      setVehicleBrandParam(data)
+    if (error) {
+      console.error("Brand params fetch error:", error);
     }
 
-    fetchBrandParams()
-  }, [open])
+    if (data) {
+      setVehicleBrandParam(data);
+    }
+  }
 
-  const { watch, setValue } = form
+  useEffect(() => {
+    if (!open) return;
+
+    const fetchAll = async () => {
+      setLoading(true);
+      try {
+        await fetchBrandParams();
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAll();
+  }, [open]);
+
+  const { watch, setValue, reset } = form
 
   const brand = watch("brand")
   const type = watch("type")
@@ -92,191 +106,202 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
   }, [brand, type, color, year, setValue])
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Submit form values:", values)
-    if (!values.id) {
-      console.error("ID kendaraan kosong.")
-      toast.error("ID kendaraan tidak valid.")
-      return
-    }
+    setLoading(true);
 
-    const { data, error } = await supabase
-      .from("vehicles")
-      .update({
-        name: values.name,
-        category: values.category,
-        brand: values.brand,
-        type: values.type,
-        year: values.year,
-        color: values.color,
-      })
-      .eq("id", values.id)
-      .select("*");
+    try {
+      const { data, error } = await supabase
+        .from("vehicles")
+        .update({
+          name: values.name,
+          category: values.category,
+          brand: values.brand,
+          type: values.type,
+          year: values.year,
+          color: values.color,
+        })
+        .eq("id", values.id)
+        .select("*")
+        .single();
 
-    console.log("Update ke Supabase:", {
-      id: values.id,
-      name: values.name,
-      category: values.category,
-      brand: values.brand,
-      type: values.type,
-      year: values.year,
-      color: values.color,
-    })
+      if (error) {
+        throw new Error("Gagal mengubah data vehicle: " + error.message);
+      }
 
-    console.log("Update response:", { data, error })
-
-    if (error) {
-      console.error("Gagal update kendaraan:", error.message)
-      toast.error("Gagal update kendaraan: " + error.message)
-      return
-    } else {
       toast.success("Data kendaraan berhasil diperbarui.")
-    }
 
-    if (onSave) {
-      onSave(values);
-    }
+      if (onSave) {
+        onSave(data as Vehicle);
+      }
 
-    setOpen(false);
+      setOpen(false);
+      reset();
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal mengubah data kendaraan: " + error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleDialogChange(isOpen: boolean) {
+    setOpen(isOpen);
+    if (isOpen) {
+      reset({
+        id: vehicle.id,
+        name: vehicle.name,
+        category: vehicle.category,
+        brand: vehicle.brand,
+        type: vehicle.type,
+        year: vehicle.year ? Number(vehicle.year) : new Date().getFullYear(),
+        color: vehicle.color,
+      });
+    } else {
+      reset();
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Edit />
-          Ubah
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle>Ubah Detail Kendaraan</DialogTitle>
-          <DialogDescription>Atur informasi detail kendaraan dan klik button simpan.</DialogDescription>
-        </DialogHeader>
+    <>
+      <LoadingOverlay loading={loading} />
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="flex flex-col gap-5">
-              <div className="grid grid-cols-1 gap-5">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Nama Kendaraan</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Hasil nama kendaraan" {...field} className="w-full" disabled />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Jenis</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+      <Dialog open={open} onOpenChange={handleDialogChange}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Edit />
+            Ubah
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Ubah Detail Kendaraan</DialogTitle>
+            <DialogDescription>Atur informasi detail kendaraan dan klik button simpan.</DialogDescription>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="flex flex-col gap-5">
+                <div className="grid grid-cols-1 gap-5">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="font-medium">Nama Kendaraan</FormLabel>
                         <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Pilih jenis kendaraan" />
-                          </SelectTrigger>
+                          <Input placeholder="Hasil nama kendaraan" {...field} className="w-full" disabled />
                         </FormControl>
-                        <SelectContent>
-                          {vehicleCategoryParam.map((option) => (
-                            <SelectItem key={option.id} value={option.name}>
-                              {option.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="font-medium">Jenis</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Pilih jenis kendaraan" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {vehicleCategoryParam.map((option) => (
+                              <SelectItem key={option.id} value={option.name}>
+                                {option.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="brand"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Merk</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormField
+                    control={form.control}
+                    name="brand"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="font-medium">Merk</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Pilih merk kendaraan" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {vehicleBrandParam.map((option) => (
+                              <SelectItem key={option.id} value={option.name}>
+                                {option.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="font-medium">Tipe</FormLabel>
                         <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Pilih merk kendaraan" />
-                          </SelectTrigger>
+                          <Input placeholder="Masukkan tipe kendaraan" {...field} className="w-full" />
                         </FormControl>
-                        <SelectContent>
-                          {vehicleBrandParam.map((option) => (
-                            <SelectItem key={option.id} value={option.name}>
-                              {option.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Tipe</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Masukkan tipe kendaraan" {...field} className="w-full" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="year"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="font-medium">Tahun</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Masukkan tahun kendaraan" {...field} className="w-full" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="year"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Tahun</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Masukkan tahun kendaraan" {...field} className="w-full" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="color"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Warna</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Masukkan warna kendaraan" {...field} className="w-full" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="color"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="font-medium">Warna</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Masukkan warna kendaraan" {...field} className="w-full" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
-            </div>
 
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline">
-                  Batal
-                </Button>
-              </DialogClose>
-              <Button type="submit">Simpan</Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">
+                    Batal
+                  </Button>
+                </DialogClose>
+                <Button type="submit">Simpan</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

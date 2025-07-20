@@ -1,5 +1,5 @@
 // (Semua import tetap seperti sebelumnya)
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/shadcn/button";
 import {
   Dialog,
@@ -81,34 +81,54 @@ export function MoveLocationVehicleDialog({
     },
   });
 
+  const userMeta = useMemo(() => {
+    if (!user) return null;
+    const meta = user.user_metadata || {};
+    return {
+      username: meta.username || user.email?.split("@")[0] || "nama pengguna",
+    };
+  }, [user]);
+
   const { watch, setValue, reset } = form;
   const selectedName = watch("name");
   const isManualAddress = selectedName === "Lain-lain";
 
+  const fetchLocationParams = async () => {
+    const { data, error } = await supabase
+      .from("parameter")
+      .select("name, description")
+      .eq("group", PARAM_GROUP_LOKASI_KENDARAAN);
+
+    if (error) {
+      console.error("Locations params fetch error:", error);
+    }
+
+    if (data) {
+      const extendedData = [
+        ...data,
+        { name: "Lain-lain", description: "" }
+      ];
+
+      setLocationParams(extendedData);
+    }
+  }
+
   useEffect(() => {
-    const fetchLocationParams = async () => {
+    if (!open) return;
+
+    const fetchAll = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase
-          .from("parameter")
-          .select("name, description")
-          .eq("group", PARAM_GROUP_LOKASI_KENDARAAN);
-
-        if (error) {
-          toast.error("Gagal memuat data parameter");
-          console.error("Failed to fetch parameter locations:", error);
-        } else {
-          setLocationParams(data || []);
-        }
+        await fetchLocationParams();
       } catch (err) {
-        console.error("Unexpected error fetching parameter:", err);
+        console.error("Failed to fetch data:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchLocationParams();
-  }, []);
+    fetchAll();
+  }, [open]);
 
   useEffect(() => {
     const location = locationParams.find((l) => l.name === selectedName);
@@ -124,48 +144,39 @@ export function MoveLocationVehicleDialog({
   }, [selectedName, isManualAddress, locationParams, setValue, form]);
 
   async function onSubmit(values: z.infer<ReturnType<typeof formSchema>>) {
-    console.log("Move location kendaraan data: ", values);
-
-    if (!user) {
-      toast.error("Gagal mendapatkan user login");
-      setLoading(false);
-      return;
-    }
-
-    const username = user.user_metadata?.username || user.email || "unknown";
-
     if (!vehicleId) return;
-
     setLoading(true);
 
-    const createdAt = new Date().toISOString();
+    try {
+      const createdAt = new Date().toISOString();
+      const { error } = await supabase
+        .from("vehicle_locations")
+        .insert({
+          vehicle_id: vehicleId,
+          name: values.name,
+          address: values.address,
+          created_by: userMeta?.username || "system",
+          created_at: createdAt,
+        });
 
-    const { error } = await supabase
-      .from("vehicle_locations")
-      .insert({
-        vehicle_id: vehicleId,
-        name: values.name,
-        address: values.address,
-        created_by: username,
-        created_at: createdAt,
-      });
+      if (error) {
+        throw new Error("Gagal menambah vehicle_locations: " + error.message);
+      }
 
-    setLoading(false);
+      toast.success("Lokasi kendaraan berhasil diperbarui.");
 
-    if (error) {
-      toast.error("Gagal insert lokasi kendaraan");
-      console.error("Gagal insert lokasi kendaraan:", error);
-      return;
+      if (onSave) {
+        onSave(values);
+      }
+
+      setOpen(false);
+      reset();
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal mengubah lokasi kendaraan: " + error);
+    } finally {
+      setLoading(false);
     }
-
-    toast.success("Berhasil Update Lokasi Kendaraan");
-
-    if (onSave) {
-      onSave(values);
-    }
-
-    setOpen(false);
-    reset();
   }
 
   function handleDialogChange(isOpen: boolean) {
