@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom"; // atau next/router jika pakai Next.js
 import { supabase } from "@/lib/supabaseClient";
 import { useLoading } from "@/lib/loading-context";
@@ -74,14 +74,9 @@ export default function UserDetailPage() {
 
   if (!user) return null;
 
-  const avatarLetter = useMemo(() => {
-    const str = user?.fullname || user?.username || "U";
-    return str.charAt(0).toUpperCase();
-  }, [user]);
+  const avatarLetter = (user?.fullname || user?.username || "U").charAt(0).toUpperCase();
 
-  const isActive = useMemo(() => {
-    return user.isActive ? "active" : "inactive";
-  }, [user]);
+  const isActive = user.isActive ? "active" : "inactive";
 
   return (
     <div className="min-h-screen flex flex-col">

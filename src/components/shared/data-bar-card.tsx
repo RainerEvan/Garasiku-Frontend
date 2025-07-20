@@ -15,8 +15,6 @@ export function DataBarCard({
   description = "-"
 }: DataBarCardProps) {
   const Icon = type ? TASK_TYPE_ICONS[type] : null;
-  const safeLabel = label ?? "-";
-  const safeDescription = description ?? "-";
 
   return (
     <>
@@ -27,8 +25,8 @@ export function DataBarCard({
               {Icon && <Icon className="w-5 h-5" />}
             </div>
             <div>
-              <p className="text-sm font-medium">{safeLabel}</p>
-              <p className="text-xs text-medium">{safeDescription}</p>
+              <p className="text-sm font-medium">{label ?? "-"}</p>
+              <p className="text-xs text-medium">{description ?? "-"}</p>
             </div>
           </div>
         </div>
@@ -41,8 +39,8 @@ export function DataBarCard({
               {Icon && <Icon className="w-5 h-5" />}
             </div>
             <div>
-              <p className="text-sm font-medium">{safeLabel}</p>
-              <p className="text-xs text-medium">{safeDescription}</p>
+              <p className="text-sm font-medium">{label ?? "-"}</p>
+              <p className="text-xs text-medium">{description ?? "-"}</p>
             </div>
           </div>
           <ChevronRight className="w-4 h-4" />

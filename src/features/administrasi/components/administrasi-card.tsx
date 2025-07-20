@@ -2,7 +2,7 @@ import SectionItem from "@/components/shared/section-item"
 import StatusBar from "@/components/shared/status-bar"
 import TaskTypeBar from "@/components/shared/task-type-bar"
 import { Status } from "@/lib/constants"
-import { cn } from "@/lib/utils"
+import { cn, formatDate } from "@/lib/utils"
 import { Administration } from "@/models/administration"
 import { cva } from "class-variance-authority"
 import { Link } from "react-router-dom"
@@ -63,7 +63,7 @@ export function AdministrationCard({
             <TaskTypeBar taskType={administration.type} />
           </div>
           <div>
-            <SectionItem label="Jatuh Tempo" value={administration.dueDate} className="items-end" />
+            <SectionItem label="Jatuh Tempo" value={formatDate(administration.dueDate)} className="items-end" />
           </div>
         </div>
       </div>

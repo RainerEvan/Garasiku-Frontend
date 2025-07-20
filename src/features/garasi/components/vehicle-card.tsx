@@ -1,4 +1,5 @@
 import { TASK_TYPE_ICONS } from "@/lib/constants";
+import { formatDate } from "@/lib/utils";
 import { Vehicle } from "@/models/vehicle"
 import { Link } from "react-router-dom"
 
@@ -46,7 +47,7 @@ export function VehicleCard({
             {variant === "sold" && vehicle.soldDate && (
               <div>
                 <p className="text-sm font-medium">Terjual</p>
-                <p className="text-xs text-medium">{vehicle.soldDate}</p>
+                <p className="text-xs text-medium">{formatDate(vehicle.soldDate)}</p>
               </div>
             )}
           </div>

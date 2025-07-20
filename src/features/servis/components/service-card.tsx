@@ -2,7 +2,7 @@ import SectionItem from "@/components/shared/section-item"
 import StatusBar from "@/components/shared/status-bar"
 import TaskType from "@/components/shared/task-type-bar"
 import { Status } from "@/lib/constants"
-import { cn } from "@/lib/utils"
+import { cn, formatDate } from "@/lib/utils"
 import { Service } from "@/models/service"
 import { cva } from "class-variance-authority"
 import { Link } from "react-router-dom"
@@ -63,7 +63,7 @@ export function ServiceCard({
             <TaskType taskType={service.type} />
           </div>
           <div>
-            <SectionItem label="Jadwal Servis" value={service.scheduleDate} className="items-end" />
+            <SectionItem label="Jadwal Servis" value={formatDate(service.scheduleDate)} className="items-end" />
           </div>
         </div>
       </div>

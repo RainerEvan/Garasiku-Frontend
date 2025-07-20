@@ -22,6 +22,8 @@ import { Switch } from "@/components/shadcn/switch"
 import { useUser } from "@supabase/auth-helpers-react"
 import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
+import { ROLE_PARAM } from "@/lib/constants"
 
 interface AddUserDialogProps {
   onSave?: (newUser: User) => void
@@ -61,8 +63,9 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
     },
   })
 
-  const { reset } = form
+  const roleParam = ROLE_PARAM;
 
+  const { reset } = form
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -119,7 +122,7 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
       if (err instanceof Error) {
         toast.error(err.message)
       } else {
-        toast.error("Terjadi kesalahan tak dikenal")
+        toast.error("Terjadi kesalahan pada sistem")
       }
     }
   }
@@ -130,8 +133,6 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
       reset()
     }
   }
-
-  // if (!isAdmin) return null
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
@@ -237,13 +238,20 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
                   render={({ field }) => (
                     <FormItem className="space-y-1">
                       <FormLabel className="font-medium">Role</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Masukkan role user"
-                          {...field}
-                          className="w-full"
-                        />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Pilih role user" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {roleParam.map((option) => (
+                            <SelectItem key={option.id} value={option.name}>
+                              {option.description}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

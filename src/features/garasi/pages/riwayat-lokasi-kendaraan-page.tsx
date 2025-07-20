@@ -22,7 +22,7 @@ export default function RiwayatLokasiKendaraanPage() {
             .order("created_at", { ascending: false });
 
         if (error) {
-            console.error("Locations fetch error:", error)
+            console.error("Vehicle Locations fetch error:", error)
         }
 
         if (data) {

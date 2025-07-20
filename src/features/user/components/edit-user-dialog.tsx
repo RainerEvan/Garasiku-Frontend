@@ -20,6 +20,8 @@ import { Input } from "@/components/shadcn/input"
 import { Switch } from "@/components/shadcn/switch"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabaseClient"
+import { ROLE_PARAM } from "@/lib/constants"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
 
 interface EditUserDialogProps {
   user: User,
@@ -52,6 +54,8 @@ export function EditUserDialog({ user, onSave }: EditUserDialogProps) {
       isActive: user.isActive
     },
   })
+
+  const roleParam = ROLE_PARAM;
 
   const { reset } = form;
 
@@ -110,7 +114,7 @@ export function EditUserDialog({ user, onSave }: EditUserDialogProps) {
       if (err instanceof Error) {
         toast.error(err.message)
       } else {
-        toast.error("Terjadi kesalahan tak dikenal")
+        toast.error("Terjadi kesalahan pada sistem")
       }
     }
   }
@@ -218,13 +222,20 @@ export function EditUserDialog({ user, onSave }: EditUserDialogProps) {
                   render={({ field }) => (
                     <FormItem className="space-y-1">
                       <FormLabel className="font-medium">Role</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Masukkan role user"
-                          {...field}
-                          className="w-full"
-                        />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Pilih role user" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {roleParam.map((option) => (
+                            <SelectItem key={option.id} value={option.name}>
+                              {option.description}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

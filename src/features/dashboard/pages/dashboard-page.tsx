@@ -55,7 +55,7 @@ export default function DashboardPage() {
           <DashboardCard
             title="Kendaraan Aktif"
             count={activeVehicleCount}
-            urlLink="daftar-kendaraan"
+            urlLink="garasi/daftar-kendaraan"
             icon={Truck}
             className="col-span-1"
             background="bg-secondary"
@@ -65,7 +65,7 @@ export default function DashboardPage() {
           <DashboardCard
             title="Kendaraan Terjual"
             count={soldVehicleCount}
-            urlLink="daftar-kendaraan"
+            urlLink="garasi/daftar-kendaraan"
             icon={Tag}
             className="col-span-1"
             background="border bg-background"
