@@ -20,19 +20,20 @@ import { Stnk } from "@/models/stnk"
 import { Param } from "@/models/param"
 import { AddAttachmentVehicleDialog } from "../components/add-attachment-vehicle-dialog"
 import AdministrationActivityItem from "../components/administration-activity-item"
-import { Link, useParams } from "react-router-dom"
+import { Link, useNavigate, useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
-import { useLoading } from "@/lib/loading-context"
 import { LicensePlateDialog } from "../components/license-plate-dialog"
 import { LocationVehicle } from "@/models/location-vehicle"
 import { toast } from "sonner"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PARAM_GROUP_KELENGKAPAN_KENDARAAN } from "@/lib/constants"
 import { formatDate } from "@/lib/utils"
+import { LoadingOverlay } from "@/components/shared/loading-overlay"
 
 export default function KendaraanDetailPage() {
-    const { loading, setLoading } = useLoading();
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const { id } = useParams<{ id: string }>();
 
@@ -49,7 +50,6 @@ export default function KendaraanDetailPage() {
     const [vehicleEquipments, setVehicleEquipments] = useState<string[]>([]);
     const [vehicleImages, setVehicleImages] = useState<AttachmentVehicle[]>([]);
     const [vehicleAttachments, setVehicleAttachments] = useState<AttachmentVehicle[]>([]);
-    
 
     const fetchEquipmentParams = async () => {
         const { data, error } = await supabase
@@ -358,10 +358,6 @@ export default function KendaraanDetailPage() {
     const handleDeleteVehicle = async () => {
         if (!vehicle?.id) return;
         const vehicleId = vehicle.id;
-
-        const confirmed = window.confirm(`Apakah Anda yakin ingin menghapus kendaraan ${vehicle.name} beserta seluruh datanya?`);
-        if (!confirmed) return;
-
         setLoading(true);
 
         try {
@@ -411,6 +407,7 @@ export default function KendaraanDetailPage() {
             }
 
             toast.success(`Kendaraan "${vehicle.name}" berhasil dihapus.`);
+            navigate("/garasi/daftar-kendaraan");
         } catch (error) {
             console.error(error);
             toast.error("Gagal menghapus kendaraan: " + error);
@@ -421,33 +418,33 @@ export default function KendaraanDetailPage() {
 
     const handleSellVehicle = async () => {
         if (!vehicle?.id) return;
+        const vehicleId = vehicle.id;
+        setLoading(true);
 
-        const todayDateOnly = new Date().toISOString().split("T")[0]; // Format: "YYYY-MM-DD"
-        const isSelling = !vehicle.isSold;
+        try {
+            const todayDateOnly = new Date().toISOString().split("T")[0]; // Format: "YYYY-MM-DD"
+            const isSelling = !vehicle.isSold;
 
-        const { error } = await supabase
-            .from("vehicles")
-            .update({
-                is_sold: isSelling,
-                sold_date: isSelling ? todayDateOnly : null,
-            })
-            .eq("id", vehicle.id);
+            const { error } = await supabase
+                .from("vehicles")
+                .update({
+                    is_sold: isSelling,
+                    sold_date: isSelling ? todayDateOnly : null,
+                })
+                .eq("id", vehicleId);
 
-        if (error) {
-            console.error("Gagal memperbarui status kendaraan:", error.message);
-            return;
+            if (error) {
+                throw new Error("Gagal mengubah status kendaraan: " + error.message);
+            }
+
+            toast.success(`Kendaraan "${vehicle.name}" berhasil diubah menjadi ${isSelling ? "terjual" : "aktif"}.`);
+            await fetchVehicleDetails(vehicleId);
+        } catch (error) {
+            console.error(error);
+            toast.error("Gagal mengubah status kendaraan: " + error);
+        } finally {
+            setLoading(false);
         }
-
-        // Update state kendaraan
-        setVehicle(prev =>
-            prev
-                ? {
-                    ...prev,
-                    isSold: isSelling,
-                    soldDate: isSelling ? todayDateOnly : undefined,
-                }
-                : null
-        );
     };
 
     if (!vehicle && !loading) return (
@@ -457,315 +454,319 @@ export default function KendaraanDetailPage() {
     if (!vehicle) return null;
 
     return (
-        <div className="min-h-screen flex flex-col">
-            {/* Main content */}
-            <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
-                <div className="flex items-center">
-                    <h1 className="text-3xl font-bold">{vehicle.name}</h1>
-                </div>
+        <>
+            <LoadingOverlay loading={loading} />
 
-                {/* Vehicle Details */}
-                <div className="grid grid-cols-1 rounded-lg border bg-background md:grid-cols-7">
+            <div className="min-h-screen flex flex-col">
+                {/* Main content */}
+                <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
+                    <div className="flex items-center">
+                        <h1 className="text-3xl font-bold">{vehicle.name}</h1>
+                    </div>
 
-                    {/* Image Carousel */}
-                    <div className="col-span-1 md:col-span-4 md:p-5 md:pr-0">
-                        {vehicle?.id && (
-                            <ImageCarousel images={vehicleImages.map(image => image.fileLink || '')} vehicleId={vehicle.id} onSave={() => fetchVehicleGallery(id!)} />
+                    {/* Vehicle Details */}
+                    <div className="grid grid-cols-1 rounded-lg border bg-background md:grid-cols-7">
+
+                        {/* Image Carousel */}
+                        <div className="col-span-1 md:col-span-4 md:p-5 md:pr-0">
+                            {vehicle?.id && (
+                                <ImageCarousel images={vehicleImages.map(image => image.fileLink || '')} vehicleId={vehicle.id} onSave={() => fetchVehicleGallery(id!)} />
+                            )}
+                        </div>
+
+                        <div className="col-span-1 md:col-span-3 w-full flex flex-col justify-between gap-3 p-5">
+                            {/* License Plate */}
+                            <LicensePlateDialog vehicleId={vehicle.id} currPlateNo={vehicle.licensePlate} />
+
+                            {/* Details */}
+                            <div className="flex flex-col gap-3">
+                                <div className="flex gap-5 items-center justify-between">
+                                    <h1 className="font-semibold">Detail Kendaraan</h1>
+                                    <EditDetailVehicleDialog vehicle={vehicle} onSave={() => fetchVehicleDetails(id!)} />
+                                </div>
+
+                                <Separator />
+
+                                <div className="grid grid-cols-2 gap-3 py-1">
+                                    <SectionItem label="Jenis" value={vehicle.category} />
+                                    <SectionItem label="Merk" value={vehicle.brand} />
+                                    <SectionItem label="Tipe" value={vehicle.type} />
+                                    <SectionItem label="Tahun" value={vehicle.year} />
+                                    <SectionItem label="Warna" value={vehicle.color} />
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
+                                <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                        <Button variant="destructive">Hapus Kendaraan</Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle>Hapus Kendaraan?</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                                Apakah Anda yakin ingin menghapus kendaraan {vehicle.name}?
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                            <AlertDialogCancel>Tidak</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleDeleteVehicle}>Hapus</AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+
+                                {!vehicle.isSold && (
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="default">Jual Kendaraan</Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Jual Kendaraan?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Apakah Anda yakin ingin menjual kendaraan {vehicle.name}?
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Tidak</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleSellVehicle}>Jual</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                )}
+
+                                {vehicle.isSold && (
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="default">Aktifkan Kendaraan</Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Aktifkan Kendaraan?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Apakah Anda yakin ingin mengaktifkan kendaraan {vehicle.name} kembali?
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Tidak</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleSellVehicle}>Aktifkan</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Info Bar */}
+                    <div className="flex flex-col gap-5">
+                        {/* Lokasi Bar */}
+                        {(!vehicle.isSold) && (
+                            <Link to={`/kendaraan/detail/${vehicle.id}/riwayat-lokasi`}>
+                                <DataBarCard
+                                    variant="button"
+                                    type="lokasi"
+                                    label={vehicleLatestLocation?.name || "Belum ada lokasi"}
+                                    description={vehicleLatestLocation?.address || "Belum ada alamat"}
+                                />
+                            </Link >
                         )}
-                    </div>
 
-                    <div className="col-span-1 md:col-span-3 w-full flex flex-col justify-between gap-3 p-5">
-                        {/* License Plate */}
-                        <LicensePlateDialog vehicleId={vehicle.id} currPlateNo={vehicle.licensePlate} />
-
-                        {/* Details */}
-                        <div className="flex flex-col gap-3">
-                            <div className="flex gap-5 items-center justify-between">
-                                <h1 className="font-semibold">Detail Kendaraan</h1>
-                                <EditDetailVehicleDialog vehicle={vehicle} onSave={() => fetchVehicleDetails(id!)}/>
-                            </div>
-
-                            <Separator />
-
-                            <div className="grid grid-cols-2 gap-3 py-1">
-                                <SectionItem label="Jenis" value={vehicle.category} />
-                                <SectionItem label="Merk" value={vehicle.brand} />
-                                <SectionItem label="Tipe" value={vehicle.type} />
-                                <SectionItem label="Tahun" value={vehicle.year} />
-                                <SectionItem label="Warna" value={vehicle.color} />
-                            </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
-                            <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="destructive">Hapus Kendaraan</Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Hapus Kendaraan?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            Apakah Anda yakin ingin menghapus kendaraan {vehicle.name}?
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Tidak</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleDeleteVehicle}>Hapus</AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-
-                            {!vehicle.isSold && (
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="default">Jual Kendaraan</Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Jual Kendaraan?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Apakah Anda yakin ingin menjual kendaraan {vehicle.name}?
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Tidak</AlertDialogCancel>
-                                            <AlertDialogAction onClick={handleSellVehicle}>Jual</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            )}
-
-                            {vehicle.isSold && (
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="default">Aktifkan Kendaraan</Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Aktifkan Kendaraan?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Apakah Anda yakin ingin mengaktifkan kendaraan {vehicle.name} kembali?
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Tidak</AlertDialogCancel>
-                                            <AlertDialogAction onClick={handleSellVehicle}>Aktifkan</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Info Bar */}
-                <div className="flex flex-col gap-5">
-                    {/* Lokasi Bar */}
-                    {(!vehicle.isSold) && (
-                        <Link to={`/kendaraan/detail/${vehicle.id}/riwayat-lokasi`}>
+                        {/* Terjual Bar */}
+                        {(vehicle.isSold && vehicle.soldDate) && (
                             <DataBarCard
-                                variant="button"
-                                type="lokasi"
-                                label={vehicleLatestLocation?.name || "Belum ada lokasi"}
-                                description={vehicleLatestLocation?.address || "Belum ada alamat"}
+                                variant="default"
+                                type="terjual"
+                                label={"Terjual"}
+                                description={formatDate(vehicle.soldDate)}
                             />
-                        </Link >
-                    )}
-
-                    {/* Terjual Bar */}
-                    {(vehicle.isSold && vehicle.soldDate) && (
-                        <DataBarCard
-                            variant="default"
-                            type="terjual"
-                            label={"Terjual"}
-                            description={formatDate(vehicle.soldDate)}
-                        />
-                    )}
-
-                    <div className="flex flex-col gap-5 md:flex-row">
-                        {/* STNK Bar */}
-                        <DataBarCard
-                            variant="default"
-                            type="administrasi-stnk-1"
-                            label="Jatuh Tempo STNK"
-                            description={formatDate(vehicleStnkDueDate)}
-                        />
-
-                        {/* Asuransi Bar */}
-                        <DataBarCard
-                            variant="default"
-                            type="administrasi-asuransi"
-                            label="Jatuh Tempo Asuransi"
-                            description={formatDate(vehicleInsuranceDueDate)}
-                        />
-
-                        {/* Servis Bar */}
-                        <DataBarCard
-                            variant="default"
-                            type="servis-regular"
-                            label="Servis Terakhir"
-                            description={formatDate(vehicleLastServiceDate)}
-                        />
-                    </div>
-                </div>
-
-                {/* Sections */}
-                <div className="flex flex-col gap-5 overflow-auto">
-                    {/* STNK Details */}
-                    <SectionCard
-                        title="Detail STNK"
-                        headerAction={
-                            vehicleStnk ? <EditDetailStnkDialog stnk={vehicleStnk} onSave={() => fetchVehicleStnk(id!)} /> : null
-                        }
-                        collapsible
-                        defaultCollapsed={true}
-                        collapsedHeight={140}
-                    >
-                        {vehicleStnk && (
-                            <div className="flex flex-col gap-3 py-1">
-                                <div className="grid grid-cols-2 gap-3 mb-5 md:mb-0">
-                                    <SectionItem label="No Polisi" value={vehicleStnk.licensePlate} />
-                                    <SectionItem label="No STNK" value={vehicleStnk.stnkNumber} />
-                                    <SectionItem className="col-span-2 md:col-span-1" label="Nama Pemilik" value={vehicleStnk.ownerName} />
-                                    <SectionItem className="col-span-2 md:col-span-1" label="Alamat" value={vehicleStnk.ownerAddress} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <SectionItem label="Merk" value={vehicleStnk.brand} />
-                                    <SectionItem label="Warna" value={vehicleStnk.color} />
-                                    <SectionItem label="Tipe" value={vehicleStnk.type} />
-                                    <SectionItem label="Bahan Bakar" value={vehicleStnk.fuelType} />
-                                    <SectionItem label="Jenis" value={vehicleStnk.category} />
-                                    <SectionItem label="Warna TNKB" value={vehicleStnk.licensePlateColor} />
-                                    <SectionItem label="Model" value={vehicleStnk.model} />
-                                    <SectionItem label="Tahun Registrasi" value={vehicleStnk.registrationYear} />
-                                    <SectionItem label="Tahun Pembuatan" value={vehicleStnk.manufacturedYear} />
-                                    <SectionItem label="No BPKB" value={vehicleStnk.bpkbNumber} />
-                                    <SectionItem label="Isi Silinder" value={vehicleStnk.cylinderCapacity} />
-                                    <SectionItem label="No Pendaftaran" value={vehicleStnk.registrationNumber} />
-                                    <SectionItem label="No Rangka" value={vehicleStnk.chassisNumber} />
-                                    <SectionItem label="Berlaku Sampai" value={vehicleStnk.validUntil} />
-                                    <SectionItem label="No Mesin" value={vehicleStnk.engineNumber} />
-                                </div>
-                            </div>
                         )}
-                    </SectionCard>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                        {/* Aktivitas Servis */}
-                        <SectionCard
-                            title="Aktivitas Servis"
-                            headerAction={
-                                <Link to={`/kendaraan/detail/${vehicle.id}/aktivitas-servis`}>
-                                    <Button variant="ghost" size="sm">
-                                        <ChevronRight />
-                                    </Button>
-                                </Link >
-                            }
-                        >
-                            {vehicleServices.length > 0 && (
-                                <div className="flex flex-col py-2">
-                                    {
-                                        vehicleServices.map((servis, index) => (
-                                            <div key={servis.id}>
-                                                <ServiceActivityItem
-                                                    service={servis}
-                                                />
-                                                {index < vehicleServices.length - 1 && (
-                                                    <Separator className="my-4" />
-                                                )}
-                                            </div>
-                                        ))
-                                    }
-                                </div>
-                            )}
-                        </SectionCard>
-
-                        {/* Aktivitas Administrasi */}
-                        <SectionCard
-                            title="Aktivitas Administrasi"
-                            headerAction={
-                                <Link to={`/kendaraan/detail/${vehicle.id}/aktivitas-administrasi`}>
-                                    <Button variant="ghost" size="sm">
-                                        <ChevronRight />
-                                    </Button>
-                                </Link >
-                            }
-                        >
-                            {vehicleAdminitrations.length > 0 && (
-                                <div className="flex flex-col py-2">
-                                    {
-                                        vehicleAdminitrations.map((administrasi, index) => (
-                                            <div key={administrasi.id}>
-                                                <AdministrationActivityItem
-                                                    administrasi={administrasi}
-                                                />
-                                                {index < vehicleAdminitrations.length - 1 && (
-                                                    <Separator className="my-4" />
-                                                )}
-                                            </div>
-                                        ))
-                                    }
-                                </div>
-                            )}
-                        </SectionCard>
-                    </div>
-
-                    {/* Kelengkapan Kendaraan */}
-                    <SectionCard
-                        title="Kelengkapan Kendaraan"
-                        headerAction={
-                            <EditEquipmentVehicleDialog
-                                vehicleId={id}
-                                equipmentParam={equipmentParam}
-                                vehicleEquipments={vehicleEquipments}
-                                onSave={() => fetchVehicleEquipments(id!)}
+                        <div className="flex flex-col gap-5 md:flex-row">
+                            {/* STNK Bar */}
+                            <DataBarCard
+                                variant="default"
+                                type="administrasi-stnk-1"
+                                label="Jatuh Tempo STNK"
+                                description={formatDate(vehicleStnkDueDate)}
                             />
 
-                        }
-                    >
-                        {equipmentParam.length > 0 && (
-                            <div className={`grid gap-5 p-2 ${equipmentParam.length > 5 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
-                                {equipmentParam.map((item) => (
-                                    <div key={item.id} className="flex flex-row items-center space-x-3 space-y-0">
-                                        <Checkbox checked={vehicleEquipments.includes(item.name)} disabled />
-                                        <label className="text-sm font-normal">
-                                            {item.description}
-                                        </label>
+                            {/* Asuransi Bar */}
+                            <DataBarCard
+                                variant="default"
+                                type="administrasi-asuransi"
+                                label="Jatuh Tempo Asuransi"
+                                description={formatDate(vehicleInsuranceDueDate)}
+                            />
+
+                            {/* Servis Bar */}
+                            <DataBarCard
+                                variant="default"
+                                type="servis-regular"
+                                label="Servis Terakhir"
+                                description={formatDate(vehicleLastServiceDate)}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Sections */}
+                    <div className="flex flex-col gap-5 overflow-auto">
+                        {/* STNK Details */}
+                        <SectionCard
+                            title="Detail STNK"
+                            headerAction={
+                                vehicleStnk ? <EditDetailStnkDialog stnk={vehicleStnk} onSave={() => fetchVehicleStnk(id!)} /> : null
+                            }
+                            collapsible
+                            defaultCollapsed={true}
+                            collapsedHeight={140}
+                        >
+                            {vehicleStnk && (
+                                <div className="flex flex-col gap-3 py-1">
+                                    <div className="grid grid-cols-2 gap-3 mb-5 md:mb-0">
+                                        <SectionItem label="No Polisi" value={vehicleStnk.licensePlate} />
+                                        <SectionItem label="No STNK" value={vehicleStnk.stnkNumber} />
+                                        <SectionItem className="col-span-2 md:col-span-1" label="Nama Pemilik" value={vehicleStnk.ownerName} />
+                                        <SectionItem className="col-span-2 md:col-span-1" label="Alamat" value={vehicleStnk.ownerAddress} />
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </SectionCard>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <SectionItem label="Merk" value={vehicleStnk.brand} />
+                                        <SectionItem label="Warna" value={vehicleStnk.color} />
+                                        <SectionItem label="Tipe" value={vehicleStnk.type} />
+                                        <SectionItem label="Bahan Bakar" value={vehicleStnk.fuelType} />
+                                        <SectionItem label="Jenis" value={vehicleStnk.category} />
+                                        <SectionItem label="Warna TNKB" value={vehicleStnk.licensePlateColor} />
+                                        <SectionItem label="Model" value={vehicleStnk.model} />
+                                        <SectionItem label="Tahun Registrasi" value={vehicleStnk.registrationYear} />
+                                        <SectionItem label="Tahun Pembuatan" value={vehicleStnk.manufacturedYear} />
+                                        <SectionItem label="No BPKB" value={vehicleStnk.bpkbNumber} />
+                                        <SectionItem label="Isi Silinder" value={vehicleStnk.cylinderCapacity} />
+                                        <SectionItem label="No Pendaftaran" value={vehicleStnk.registrationNumber} />
+                                        <SectionItem label="No Rangka" value={vehicleStnk.chassisNumber} />
+                                        <SectionItem label="Berlaku Sampai" value={vehicleStnk.validUntil} />
+                                        <SectionItem label="No Mesin" value={vehicleStnk.engineNumber} />
+                                    </div>
+                                </div>
+                            )}
+                        </SectionCard>
 
-
-                    {/* Lampiran Dokumen */}
-                    <SectionCard
-                        title="Lampiran Dokumen"
-                        headerAction={
-                            <AddAttachmentVehicleDialog vehicleId={vehicle.id} />
-                        }
-                    >
-                        {vehicleAttachments.length > 0 && (
-                            <div className="flex flex-col">
-                                {
-                                    vehicleAttachments.map((attachment, index) => (
-                                        <div key={attachment.id}>
-                                            <AttachmentItem
-                                                attachment={attachment}
-                                                type="vehicle"
-                                            />
-                                            {index < vehicleAttachments.length - 1 && (
-                                                <Separator className="my-4" />
-                                            )}
-                                        </div>
-                                    ))
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            {/* Aktivitas Servis */}
+                            <SectionCard
+                                title="Aktivitas Servis"
+                                headerAction={
+                                    <Link to={`/kendaraan/detail/${vehicle.id}/aktivitas-servis`}>
+                                        <Button variant="ghost" size="sm">
+                                            <ChevronRight />
+                                        </Button>
+                                    </Link >
                                 }
-                            </div>
-                        )}
-                    </SectionCard>
-                </div>
-            </main>
-        </div>
+                            >
+                                {vehicleServices.length > 0 && (
+                                    <div className="flex flex-col py-2">
+                                        {
+                                            vehicleServices.map((servis, index) => (
+                                                <div key={servis.id}>
+                                                    <ServiceActivityItem
+                                                        service={servis}
+                                                    />
+                                                    {index < vehicleServices.length - 1 && (
+                                                        <Separator className="my-4" />
+                                                    )}
+                                                </div>
+                                            ))
+                                        }
+                                    </div>
+                                )}
+                            </SectionCard>
+
+                            {/* Aktivitas Administrasi */}
+                            <SectionCard
+                                title="Aktivitas Administrasi"
+                                headerAction={
+                                    <Link to={`/kendaraan/detail/${vehicle.id}/aktivitas-administrasi`}>
+                                        <Button variant="ghost" size="sm">
+                                            <ChevronRight />
+                                        </Button>
+                                    </Link >
+                                }
+                            >
+                                {vehicleAdminitrations.length > 0 && (
+                                    <div className="flex flex-col py-2">
+                                        {
+                                            vehicleAdminitrations.map((administrasi, index) => (
+                                                <div key={administrasi.id}>
+                                                    <AdministrationActivityItem
+                                                        administrasi={administrasi}
+                                                    />
+                                                    {index < vehicleAdminitrations.length - 1 && (
+                                                        <Separator className="my-4" />
+                                                    )}
+                                                </div>
+                                            ))
+                                        }
+                                    </div>
+                                )}
+                            </SectionCard>
+                        </div>
+
+                        {/* Kelengkapan Kendaraan */}
+                        <SectionCard
+                            title="Kelengkapan Kendaraan"
+                            headerAction={
+                                <EditEquipmentVehicleDialog
+                                    vehicleId={id}
+                                    equipmentParam={equipmentParam}
+                                    vehicleEquipments={vehicleEquipments}
+                                    onSave={() => fetchVehicleEquipments(id!)}
+                                />
+
+                            }
+                        >
+                            {equipmentParam.length > 0 && (
+                                <div className={`grid gap-5 p-2 ${equipmentParam.length > 5 ? "sm:grid-cols-2" : "grid-cols-1"}`}>
+                                    {equipmentParam.map((item) => (
+                                        <div key={item.id} className="flex flex-row items-center space-x-3 space-y-0">
+                                            <Checkbox checked={vehicleEquipments.includes(item.name)} disabled />
+                                            <label className="text-sm font-normal">
+                                                {item.description}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </SectionCard>
+
+
+                        {/* Lampiran Dokumen */}
+                        <SectionCard
+                            title="Lampiran Dokumen"
+                            headerAction={
+                                <AddAttachmentVehicleDialog vehicleId={vehicle.id} />
+                            }
+                        >
+                            {vehicleAttachments.length > 0 && (
+                                <div className="flex flex-col">
+                                    {
+                                        vehicleAttachments.map((attachment, index) => (
+                                            <div key={attachment.id}>
+                                                <AttachmentItem
+                                                    attachment={attachment}
+                                                    type="vehicle"
+                                                />
+                                                {index < vehicleAttachments.length - 1 && (
+                                                    <Separator className="my-4" />
+                                                )}
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            )}
+                        </SectionCard>
+                    </div>
+                </main>
+            </div>
+        </>
     )
 }

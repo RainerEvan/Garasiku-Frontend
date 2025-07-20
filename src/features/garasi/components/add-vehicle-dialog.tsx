@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { CalendarIcon, Plus, PlusCircle } from "lucide-react"
 
 import { Button } from "@/components/shadcn/button"
@@ -26,6 +26,8 @@ import { cn } from "@/lib/utils"
 import { VEHICLE_CATEGORY_PARAM, PARAM_GROUP_MERK_KENDARAAN } from "@/lib/constants"
 import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
+import { LoadingOverlay } from "@/components/shared/loading-overlay"
+import { useAuth } from "@/lib/auth-context"
 
 interface AddVehicleDialogProps {
   onSave?: (newVehicle: string) => void
@@ -44,6 +46,9 @@ const formSchema = z.object({
 })
 
 export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
+  const { user } = useAuth();
+
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -61,6 +66,14 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
 
   const vehicleCategoryParam = VEHICLE_CATEGORY_PARAM;
   const [vehicleBrandParam, setVehicleBrandParam] = useState<Param[]>([]);
+
+  const userMeta = useMemo(() => {
+    if (!user) return null;
+    const meta = user.user_metadata || {};
+    return {
+      username: meta.username || user.email?.split("@")[0] || "nama pengguna",
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!open) return;
@@ -98,6 +111,8 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
   }, [brand, model, color, year, setValue]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setLoading(true);
+
     try {
       const stnkDate = values.stnkDueDate;
       const insuranceDate = values.insuranceDueDate;
@@ -112,8 +127,8 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
           year: values.year || new Date().getFullYear(), // fallback kalau null
           color: values.color,
           license_plate: values.licensePlate,
-          stnk_due_date: stnkDate.toISOString(),
-          insurance_due_date: insuranceDate.toISOString(),
+          stnk_due_date: stnkDate ? stnkDate.toISOString() : null,
+          insurance_due_date: insuranceDate ? insuranceDate.toISOString() : null,
         })
         .select()
         .single();
@@ -124,23 +139,15 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
       }
 
       if (!vehicle) return;
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError || !user) {
-        toast.error("Gagal mendapatkan user login");
-        console.error("Gagal mendapatkan user login:", userError);
-        return;
-      }
+
       const updatedAt = new Date().toISOString();
       const { error: plateHistoryError } = await supabase
         .from("vehicle_plate_history")
         .insert({
           vehicle_id: vehicle.id,
           plat_no: values.licensePlate,
-          updated_by: user.user_metadata?.username || user.email || "system",
-          updated_at : updatedAt
+          updated_by: userMeta?.username || "system",
+          updated_at: updatedAt
         });
 
       if (plateHistoryError) {
@@ -164,46 +171,50 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
         return;
       }
 
-      const { data: ticketData, error: ticketError } = await supabase.rpc("generate_ticket_number", {
-        task_type_input: "ADM",
-      });
-      if (ticketError || !ticketData) {
-        throw ticketError || new Error("Gagal generate nomor tiket");
-      }
-      const { error: adminStnkError } = await supabase
-        .from("administration")
-        .insert({
-          vehicle_id: vehicle.id,
-          type: "administrasi-stnk-1",
-          status: "pending",
-          due_date: stnkDate.toISOString(),
-          ticket_num: ticketData
+      if (stnkDate) {
+        const { data: ticketData, error: ticketError } = await supabase.rpc("generate_ticket_number", {
+          task_type_input: "ADM",
         });
+        if (ticketError || !ticketData) {
+          throw ticketError || new Error("Gagal generate nomor tiket");
+        }
+        const { error: adminStnkError } = await supabase
+          .from("administration")
+          .insert({
+            vehicle_id: vehicle.id,
+            type: "administrasi-stnk-1",
+            status: "pending",
+            due_date: stnkDate.toISOString(),
+            ticket_num: ticketData
+          });
 
-      if (adminStnkError) {
-        console.error("Gagal menambahkan ke administrasi:", adminStnkError.message);
-        return;
+        if (adminStnkError) {
+          console.error("Gagal menambahkan ke administrasi:", adminStnkError.message);
+          return;
+        }
       }
 
-      const { data: ticketDataAs, error: ticketErrorAs } = await supabase.rpc("generate_ticket_number", {
-        task_type_input: "ADM",
-      });
-      if (ticketErrorAs || !ticketDataAs) {
-        throw ticketErrorAs || new Error("Gagal generate nomor tiket");
-      }
-      const { error: adminInsuranceError } = await supabase
-        .from("administration")
-        .insert({
-          vehicle_id: vehicle.id,
-          type: "administrasi-asuransi",
-          status: "pending",
-          due_date: insuranceDate.toISOString(),
-          ticket_num: ticketDataAs
+      if (insuranceDate) {
+        const { data: ticketDataAs, error: ticketErrorAs } = await supabase.rpc("generate_ticket_number", {
+          task_type_input: "ADM",
         });
+        if (ticketErrorAs || !ticketDataAs) {
+          throw ticketErrorAs || new Error("Gagal generate nomor tiket");
+        }
+        const { error: adminInsuranceError } = await supabase
+          .from("administration")
+          .insert({
+            vehicle_id: vehicle.id,
+            type: "administrasi-asuransi",
+            status: "pending",
+            due_date: insuranceDate.toISOString(),
+            ticket_num: ticketDataAs
+          });
 
-      if (adminInsuranceError) {
-        console.error("Gagal menambahkan ke administrasi:", adminInsuranceError.message);
-        return;
+        if (adminInsuranceError) {
+          console.error("Gagal menambahkan ke administrasi:", adminInsuranceError.message);
+          return;
+        }
       }
 
       console.log("Kendaraan & administrasi berhasil disimpan:", vehicle);
@@ -218,6 +229,8 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
     } catch (err) {
       console.error("Unexpected error:", err);
       toast.error("Gagal menambahkan data kendaraan baru");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -229,110 +242,42 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogTrigger asChild>
-        <div>
-          <Button className="hidden sm:flex">
-            <PlusCircle /> Tambah Kendaraan
-          </Button>
-          <Button variant="default" size="icon2" className="fixed z-50 bottom-4 right-4 sm:hidden">
-            <Plus className="size-8" />
-          </Button>
-        </div>
-      </DialogTrigger>
-      <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle>Tambah Kendaraan</DialogTitle>
-          <DialogDescription>Tambah kendaraan baru dan klik button simpan.</DialogDescription>
-        </DialogHeader>
+    <>
+      <LoadingOverlay loading={loading} />
+      <Dialog open={open} onOpenChange={handleDialogChange}>
+        <DialogTrigger asChild>
+          <div>
+            <Button className="hidden sm:flex">
+              <PlusCircle /> Tambah Kendaraan
+            </Button>
+            <Button variant="default" size="icon2" className="fixed z-50 bottom-4 right-4 sm:hidden">
+              <Plus className="size-8" />
+            </Button>
+          </div>
+        </DialogTrigger>
+        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Tambah Kendaraan</DialogTitle>
+            <DialogDescription>Tambah kendaraan baru dan klik button simpan.</DialogDescription>
+          </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Detail Kendaraan */}
-            <div className="flex flex-col gap-5">
-              <div className="grid grid-cols-1 gap-5">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Nama Kendaraan</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Hasil nama kendaraan"
-                          {...field}
-                          className="w-full"
-                          disabled
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Detail Kendaraan */}
+              <div className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 gap-5">
                   <FormField
                     control={form.control}
-                    name="category"
+                    name="name"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Jenis</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Pilih jenis kendaraan" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {vehicleCategoryParam.map((option) => (
-                              <SelectItem key={option.id} value={option.name}>
-                                {option.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="brand"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Merk</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Pilih merk kendaraan" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {vehicleBrandParam.map((option) => (
-                              <SelectItem key={option.id} value={option.name}>
-                                {option.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="model"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Model</FormLabel>
+                        <FormLabel className="font-medium">Nama Kendaraan</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Masukkan model kendaraan"
+                            placeholder="Hasil nama kendaraan"
                             {...field}
                             className="w-full"
+                            disabled
                           />
                         </FormControl>
                         <FormMessage />
@@ -340,21 +285,174 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
                     )}
                   />
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 gap-5">
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="font-medium">Jenis</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Pilih jenis kendaraan" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {vehicleCategoryParam.map((option) => (
+                                <SelectItem key={option.id} value={option.name}>
+                                  {option.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <div className="grid grid-cols-1 gap-5">
+                    <FormField
+                      control={form.control}
+                      name="brand"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="font-medium">Merk</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Pilih merk kendaraan" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {vehicleBrandParam.map((option) => (
+                                <SelectItem key={option.id} value={option.name}>
+                                  {option.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="model"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="font-medium">Model</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Masukkan model kendaraan"
+                              {...field}
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-5">
+                    <FormField
+                      control={form.control}
+                      name="year"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="font-medium">Tahun</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Masukkan tahun kendaraan"
+                              {...field}
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="color"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="font-medium">Warna</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Masukkan warna kendaraan"
+                              {...field}
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="licensePlate"
+                      render={({ field }) => (
+                        <FormItem className="space-y-1">
+                          <FormLabel className="font-medium">Plat No</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Masukkan plat no kendaraan"
+                              {...field}
+                              className="w-full"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <FormField
                     control={form.control}
-                    name="year"
+                    name="stnkDueDate"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Tahun</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Masukkan tahun kendaraan"
-                            {...field}
-                            className="w-full"
-                          />
-                        </FormControl>
+                        <FormLabel className="font-medium">Jatuh Tempo STNK</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "dd MMM yyyy")
+                                ) : (
+                                  <span>Pilih jatuh tempo STNK</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              captionLayout="dropdown"
+                              onSelect={field.onChange}
+                              startMonth={new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1)}
+                              endMonth={new Date(new Date().getFullYear() + 5, new Date().getMonth(), 1)}
+                              disabled={(date: Date) =>
+                                date < new Date("1900-01-01")
+                              }
+                            />
+                          </PopoverContent>
+                        </Popover>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -362,35 +460,43 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
 
                   <FormField
                     control={form.control}
-                    name="color"
+                    name="insuranceDueDate"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Warna</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Masukkan warna kendaraan"
-                            {...field}
-                            className="w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="licensePlate"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Plat No</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Masukkan plat no kendaraan"
-                            {...field}
-                            className="w-full"
-                          />
-                        </FormControl>
+                        <FormLabel className="font-medium">Jatuh Tempo Asuransi</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "dd MMM yyyy")
+                                ) : (
+                                  <span>Pilih jatuh tempo Asuransi</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              captionLayout="dropdown"
+                              onSelect={field.onChange}
+                              startMonth={new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1)}
+                              endMonth={new Date(new Date().getFullYear() + 5, new Date().getMonth(), 1)}
+                              disabled={(date: Date) =>
+                                date < new Date("1900-01-01")
+                              }
+                            />
+                          </PopoverContent>
+                        </Popover>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -398,111 +504,21 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <FormField
-                  control={form.control}
-                  name="stnkDueDate"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Jatuh Tempo STNK</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd MMM yyyy")
-                              ) : (
-                                <span>Pilih jatuh tempo STNK</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            captionLayout="dropdown"
-                            onSelect={field.onChange}
-                            startMonth={new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1)}
-                            endMonth={new Date(new Date().getFullYear() + 5, new Date().getMonth(), 1)}
-                            disabled={(date: Date) =>
-                              date < new Date("1900-01-01")
-                            }
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="insuranceDueDate"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Jatuh Tempo Asuransi</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd MMM yyyy")
-                              ) : (
-                                <span>Pilih jatuh tempo Asuransi</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            captionLayout="dropdown"
-                            onSelect={field.onChange}
-                            startMonth={new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1)}
-                            endMonth={new Date(new Date().getFullYear() + 5, new Date().getMonth(), 1)}
-                            disabled={(date: Date) =>
-                              date < new Date("1900-01-01")
-                            }
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline">
-                  Batal
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">
+                    Batal
+                  </Button>
+                </DialogClose>
+                <Button type="submit">
+                  Simpan
                 </Button>
-              </DialogClose>
-              <Button type="submit">
-                Simpan
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              </DialogFooter>
+            </form>
+          </Form>
 
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

@@ -22,13 +22,13 @@ import { Status } from "@/lib/constants";
 import { DataBarCard } from "@/components/shared/data-bar-card";
 import { CompleteAdministrationDialog } from "../components/complete-administrasi-dialog";
 import { supabase } from "@/lib/supabaseClient";
-import { useLoading } from "@/lib/loading-context";
 import { EmptyState } from "@/components/shared/empty-state";
 import { toast } from "sonner"
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatRupiah } from "@/lib/utils";
+import { LoadingOverlay } from "@/components/shared/loading-overlay";
 
 export default function AdministrasiDetailPage() {
-  const { loading, setLoading } = useLoading();
+  const [loading, setLoading] = useState(false);
 
   const { id } = useParams<{ id: string }>();
   const [administration, setAdministration] = useState<Administration | null>(null);
@@ -85,9 +85,6 @@ export default function AdministrasiDetailPage() {
   const handleCancelAdministration = async () => {
     if (!id) return;
 
-    const confirmed = window.confirm("Apakah Anda yakin ingin membatalkan administrasi ini?");
-    if (!confirmed) return;
-
     setLoading(true);
 
     const { error } = await supabase
@@ -101,9 +98,8 @@ export default function AdministrasiDetailPage() {
       toast.error("Gagal membatalkan administrasi " + error.message);
     }
     toast.success("Berhasil membatalkan administrasi.");
-    
-  };
 
+  };
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -122,89 +118,93 @@ export default function AdministrasiDetailPage() {
     fetchDetail();
   }, [id]);
 
-  
+
   if (!administration && !loading) return (
     <EmptyState title="Administrasi Tidak Ditemukan" description="Administrasi dengan ID tersebut tidak tersedia." />
   );
-  
+
   if (!administration) return null;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Main content */}
-      <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
-        <div className="flex flex-col gap-5">
-          <div className="flex flex-col gap-3 rounded-lg border bg-background p-5">
-            <div>
-              <h1 className="text-3xl font-bold">{administration.ticketNum}</h1>
-            </div>
+    <>
+      <LoadingOverlay loading={loading} />
 
-            <Separator />
-
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-5">
-                <div className="flex items-start justify-between">
-                  <TaskTypeBar taskType={administration.type} />
-                  <StatusBar status={administration.status as Status} />
-                </div>
-                <div className="flex items-end justify-between">
-                  <SectionItem label="Jatuh Tempo" value={formatDate(administration.dueDate)} />
-                  <SectionItem label="Administrasi Selesai" value={formatDate(administration.endDate)} />
-                </div>
+      <div className="min-h-screen flex flex-col">
+        {/* Main content */}
+        <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-3 rounded-lg border bg-background p-5">
+              <div>
+                <h1 className="text-3xl font-bold">{administration.ticketNum}</h1>
               </div>
 
-              {administration.status === "pending" && (
-                <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive">Batalkan Administrasi</Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Batalkan Administrasi?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Apakah Anda yakin ingin membatalkan administrasi {administration.ticketNum}?
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Tidak</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleCancelAdministration}>Batalkan</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <CompleteAdministrationDialog
-                    administration={administration}
-                    dueDate={administration.dueDate || ""}
-                  />
+              <Separator />
+
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-5">
+                  <div className="flex items-start justify-between">
+                    <TaskTypeBar taskType={administration.type} />
+                    <StatusBar status={administration.status as Status} />
+                  </div>
+                  <div className="flex items-end justify-between">
+                    <SectionItem label="Jatuh Tempo" value={formatDate(administration.dueDate)} />
+                    <SectionItem label="Administrasi Selesai" value={formatDate(administration.endDate)} />
+                  </div>
                 </div>
-              )}
+
+                {administration.status === "pending" && (
+                  <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive">Batalkan Administrasi</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Batalkan Administrasi?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Apakah Anda yakin ingin membatalkan administrasi {administration.ticketNum}?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Tidak</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleCancelAdministration}>Batalkan</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                    <CompleteAdministrationDialog
+                      administration={administration}
+                      dueDate={administration.dueDate || ""}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex flex-col gap-5">
-          <Link to={`/kendaraan/detail/${administration.vehicleId}`}>
-            <DataBarCard
-              variant="button"
-              type="kendaraan"
-              label={administration.vehicle?.name}
-              description={administration.vehicle?.licensePlate}
-            />
-          </Link>
-        </div>
+          <div className="flex flex-col gap-5">
+            <Link to={`/kendaraan/detail/${administration.vehicleId}`}>
+              <DataBarCard
+                variant="button"
+                type="kendaraan"
+                label={administration.vehicle?.name}
+                description={administration.vehicle?.licensePlate}
+              />
+            </Link>
+          </div>
 
-        <div className="flex flex-col gap-5 overflow-auto">
-          <SectionCard title="Rincian Administrasi">
-            <div className="grid grid-cols-1 gap-3 py-1">
-              <div className="grid grid-cols-2 gap-3">
-                <SectionItem label="Jatuh Tempo Baru" value={administration.newDueDate} />
-                <SectionItem label="Biaya" value={`Rp ${administration.totalCost}`} />
+          <div className="flex flex-col gap-5 overflow-auto">
+            <SectionCard title="Rincian Administrasi">
+              <div className="grid grid-cols-1 gap-3 py-1">
+                <div className="grid grid-cols-2 gap-3">
+                  <SectionItem label="Jatuh Tempo Baru" value={administration.newDueDate} />
+                  <SectionItem label="Biaya" value={administration.totalCost ? `Rp ${formatRupiah(administration.totalCost)}` : undefined} />
+                </div>
+                <SectionItem label="Catatan" value={administration.notes} />
               </div>
-              <SectionItem label="Catatan" value={administration.notes} />
-            </div>
-          </SectionCard>
-        </div>
-      </main>
-    </div>
+            </SectionCard>
+          </div>
+        </main>
+      </div>
+    </>
   );
 }

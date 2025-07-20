@@ -3,12 +3,12 @@ import { Input } from "@/components/shadcn/input"
 import { Search } from "lucide-react"
 import { UserCard } from "../components/user-card"
 import { AddUserDialog } from "../components/add-user-dialog"
-import { useLoading } from "@/lib/loading-context"
 import { supabase } from "@/lib/supabaseClient"
 import { User } from "@/models/user"
+import { LoadingOverlay } from "@/components/shared/loading-overlay"
 
 export default function UserPage() {
-  const { setLoading } = useLoading();
+  const [loading, setLoading] = useState(false);
   const [searchUser, setSearchUser] = useState("")
   const [users, setUsers] = useState<User[]>([])
 
@@ -17,7 +17,6 @@ export default function UserPage() {
       setLoading(true);
       try {
         const { data, error } = await supabase.rpc("get_all_users");
-
 
         if (error) {
           console.error("Failed to fetch users:", error.message);
@@ -49,38 +48,42 @@ export default function UserPage() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">User</h1>
-          <AddUserDialog />
-        </div>
+    <>
+      <LoadingOverlay loading={loading} />
 
-        <div className="flex flex-col gap-3">
-          <div className="relative flex w-full items-center space-x-2">
-            <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
-            <Input
-              type="text"
-              placeholder="Cari nama user"
-              className="w-full pl-10"
-              value={searchUser}
-              onChange={(e) => setSearchUser(e.target.value)}
-            />
+      <div className="min-h-screen flex flex-col">
+        <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">User</h1>
+            <AddUserDialog />
           </div>
 
-          <div className="flex items-center">
-            <p className="text-sm text-muted-foreground">
-              Total Data: <span className="font-medium">{filteredUsers.length}</span>
-            </p>
-          </div>
+          <div className="flex flex-col gap-3">
+            <div className="relative flex w-full items-center space-x-2">
+              <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
+              <Input
+                type="text"
+                placeholder="Cari nama user"
+                className="w-full pl-10"
+                value={searchUser}
+                onChange={(e) => setSearchUser(e.target.value)}
+              />
+            </div>
 
-          <div className="flex flex-col gap-5">
-            {filteredUsers.map((user) => (
-              <UserCard key={user.id} user={user} />
-            ))}
+            <div className="flex items-center">
+              <p className="text-sm text-muted-foreground">
+                Total Data: <span className="font-medium">{filteredUsers.length}</span>
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-5">
+              {filteredUsers.map((user) => (
+                <UserCard key={user.id} user={user} />
+              ))}
+            </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 }

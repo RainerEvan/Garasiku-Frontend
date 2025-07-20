@@ -6,10 +6,10 @@ import { ParamGroup } from "@/models/param-group";
 import { ParamCard } from "../components/param-card";
 import { AddParamDialog } from "../components/add-param-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
-import { useLoading } from "@/lib/loading-context";
+import { LoadingOverlay } from "@/components/shared/loading-overlay";
 
 export default function MaintenanceDetailPage() {
-  const { loading, setLoading } = useLoading();
+  const [loading, setLoading] = useState(false);
 
   const { id: groupCode } = useParams();
   const [paramGroup, setParamGroup] = useState<ParamGroup | null>(null);
@@ -86,42 +86,46 @@ export default function MaintenanceDetailPage() {
   if (!paramGroup) return null;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">{paramGroup.name}</h1>
-          {!paramGroup.isMaintain || !paramGroup.isTotalFixed ? (
-            <AddParamDialog paramGroup={paramGroup} onSave={() => fetchParamsByGroup(groupCode!)} />
-          ) : null}
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center">
-            <p className="text-sm text-muted-foreground">
-              Total Data: <span className="font-medium">{params.length}</span>
-            </p>
+    <>
+      <LoadingOverlay loading={loading} />
+      
+      <div className="min-h-screen flex flex-col">
+        <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">{paramGroup.name}</h1>
+            {!paramGroup.isMaintain || !paramGroup.isTotalFixed ? (
+              <AddParamDialog paramGroup={paramGroup} onSave={() => fetchParamsByGroup(groupCode!)} />
+            ) : null}
           </div>
 
-          <div className="flex flex-col gap-5 overflow-auto">
-            {params.map((param, index) => (
-              <ParamCard
-                key={param.id}
-                param={param}
-                paramGroup={paramGroup}
-                index={index}
-                onDeleted={(id) => setParams((prev) => prev.filter((p) => p.id !== id))}
-                onUpdated={(updatedParam) =>
-                  setParams((prev) =>
-                    prev.map((p) => (p.id === updatedParam.id ? updatedParam : p))
-                  )
-                }
-              />
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center">
+              <p className="text-sm text-muted-foreground">
+                Total Data: <span className="font-medium">{params.length}</span>
+              </p>
+            </div>
 
-            ))}
+            <div className="flex flex-col gap-5 overflow-auto">
+              {params.map((param, index) => (
+                <ParamCard
+                  key={param.id}
+                  param={param}
+                  paramGroup={paramGroup}
+                  index={index}
+                  onDeleted={(id) => setParams((prev) => prev.filter((p) => p.id !== id))}
+                  onUpdated={(updatedParam) =>
+                    setParams((prev) =>
+                      prev.map((p) => (p.id === updatedParam.id ? updatedParam : p))
+                    )
+                  }
+                />
 
+              ))}
+
+            </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 }

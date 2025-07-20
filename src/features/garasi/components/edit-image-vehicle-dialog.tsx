@@ -17,8 +17,8 @@ import {
     DialogTrigger,
 } from "@/components/shadcn/dialog"
 import { ScrollArea } from "@/components/shadcn/scroll-area"
-import { useLoading } from "@/lib/loading-context"
 import { toast } from "sonner"
+import { LoadingOverlay } from "@/components/shared/loading-overlay"
 
 interface EditImageVehicleDialogProps {
     images: string[]
@@ -31,7 +31,7 @@ export function EditImageVehicleDialog({
     vehicleId,
     onSave,
 }: EditImageVehicleDialogProps) {
-    const { setLoading } = useLoading();
+    const [loading, setLoading] = useState(false);
 
     const [open, setOpen] = useState(false)
     const [carImages, setCarImages] = useState<string[]>([...images])
@@ -192,71 +192,75 @@ export function EditImageVehicleDialog({
 
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="absolute top-2 right-2 bg-background hover:bg-background shadow-md">
-                    <ImageIcon />
-                    Ubah
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Foto Kendaraan</DialogTitle>
-                    <DialogDescription>Atur foto kendaraan dan klik button simpan.</DialogDescription>
-                </DialogHeader>
+        <>
+            <LoadingOverlay loading={loading} />
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            <div className="flex-1">Total Foto: {carImages.length}</div>
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                accept="image/*"
-                                multiple
-                                className="hidden"
-                                onChange={handleFileChange}
-                            />
-                            <Button type="button" onClick={handleAddImage}>
-                                <ImagePlus />
-                                Tambah
-                            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="absolute top-2 right-2 bg-background hover:bg-background shadow-md">
+                        <ImageIcon />
+                        Ubah
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Foto Kendaraan</DialogTitle>
+                        <DialogDescription>Atur foto kendaraan dan klik button simpan.</DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <div className="flex-1">Total Foto: {carImages.length}</div>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    accept="image/*"
+                                    multiple
+                                    className="hidden"
+                                    onChange={handleFileChange}
+                                />
+                                <Button type="button" onClick={handleAddImage}>
+                                    <ImagePlus />
+                                    Tambah
+                                </Button>
+                            </div>
+
+                            <ScrollArea className="h-[50vh]">
+                                {carImages.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+                                        {carImages.map((image, index) => (
+                                            <div key={`${image}-${index}`} className="group relative flex items-center gap-4">
+                                                <div className="relative aspect-video w-full overflow-hidden">
+                                                    <img src={image || "/placeholder.svg"} alt={`Car image ${index + 1}`} className="object-cover w-full h-full" />
+                                                    <div className="absolute bottom-2 left-2 flex items-center justify-center bg-background/80 size-8 rounded-full shadow-md">
+                                                        <span className="text-foreground text-sm">{index + 1}</span>
+                                                    </div>
+                                                    <Button type="button" onClick={() => handleDeleteImage(index)} variant="outline" size="icon" className="absolute top-2 right-2 rounded-full bg-background/80 hover:bg-background shadow-md">
+                                                        <Trash />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
+                                        <ImageIcon className="h-5 w-5 text-muted-foreground mb-2" />
+                                        <p className="text-sm text-muted-foreground">Belum ada foto kendaraan</p>
+                                    </div>
+                                )}
+                            </ScrollArea>
                         </div>
 
-                        <ScrollArea className="h-[50vh]">
-                            {carImages.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                                    {carImages.map((image, index) => (
-                                        <div key={`${image}-${index}`} className="group relative flex items-center gap-4">
-                                            <div className="relative aspect-video w-full overflow-hidden">
-                                                <img src={image || "/placeholder.svg"} alt={`Car image ${index + 1}`} className="object-cover w-full h-full" />
-                                                <div className="absolute bottom-2 left-2 flex items-center justify-center bg-background/80 size-8 rounded-full shadow-md">
-                                                    <span className="text-foreground text-sm">{index + 1}</span>
-                                                </div>
-                                                <Button type="button" onClick={() => handleDeleteImage(index)} variant="outline" size="icon" className="absolute top-2 right-2 rounded-full bg-background/80 hover:bg-background shadow-md">
-                                                    <Trash />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
-                                    <ImageIcon className="h-5 w-5 text-muted-foreground mb-2" />
-                                    <p className="text-sm text-muted-foreground">Belum ada foto kendaraan</p>
-                                </div>
-                            )}
-                        </ScrollArea>
-                    </div>
-
-                    <DialogFooter>
-                        <DialogClose asChild>
-                            <Button type="button" variant="outline">Batal</Button>
-                        </DialogClose>
-                        <Button type="submit">Simpan</Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button type="button" variant="outline">Batal</Button>
+                            </DialogClose>
+                            <Button type="submit">Simpan</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+        </>
     )
 }

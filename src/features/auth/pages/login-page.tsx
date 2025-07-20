@@ -13,10 +13,11 @@ import {
 } from "@/components/shadcn/form"
 import { Eye, EyeOff } from "lucide-react"
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Navigate, useNavigate } from "react-router-dom"
 import { supabase } from "@/lib/supabaseClient"
-import { useLoading } from "@/lib/loading-context"
 import { toast } from "sonner"
+import { useAuth } from "@/lib/auth-context"
+import { LoadingOverlay } from "@/components/shared/loading-overlay"
 
 // Form schema
 const formSchema = z.object({
@@ -25,8 +26,9 @@ const formSchema = z.object({
 })
 
 export default function LoginPage() {
-  const { loading, setLoading } = useLoading();
-  
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const [loading, setLoading] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
 
@@ -37,6 +39,10 @@ export default function LoginPage() {
       password: "",
     },
   })
+
+  if (!authLoading && isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const { username, password } = values
@@ -87,67 +93,71 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-5">
-      <h1 className="text-5xl font-bold mb-6">Garasiku</h1>
+    <>
+      <LoadingOverlay loading={loading} />
 
-      <div className="bg-background w-full max-w-md p-6 md:p-8 rounded-lg border shadow-xs">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="font-medium">Username</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Username"
-                      {...field}
-                      className="w-full"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      <div className="flex flex-col items-center justify-center min-h-screen px-5">
+        <h1 className="text-5xl font-bold mb-6">Garasiku</h1>
 
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="font-medium">Password</FormLabel>
-                  <FormControl>
-                    <div className="relative">
+        <div className="bg-background w-full max-w-md p-6 md:p-8 rounded-lg border shadow-xs">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="font-medium">Username</FormLabel>
+                    <FormControl>
                       <Input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Password"
+                        placeholder="Username"
                         {...field}
                         className="w-full"
                       />
-                      <div
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute top-1/2 -translate-y-1/2 right-3 cursor-pointer"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-5 w-5 text-medium" />
-                        ) : (
-                          <Eye className="h-5 w-5 text-medium" />
-                        )}
-                      </div>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              Masuk
-            </Button>
-          </form>
-        </Form>
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="font-medium">Password</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Password"
+                          {...field}
+                          className="w-full"
+                        />
+                        <div
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute top-1/2 -translate-y-1/2 right-3 cursor-pointer"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-5 w-5 text-medium" />
+                          ) : (
+                            <Eye className="h-5 w-5 text-medium" />
+                          )}
+                        </div>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                Masuk
+              </Button>
+            </form>
+          </Form>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

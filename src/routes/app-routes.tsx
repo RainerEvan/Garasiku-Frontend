@@ -13,6 +13,7 @@ import PrivateRoute from "./private-routes";
 
 // Lazy load pages
 const LoginPage = lazy(() => import("@/features/auth/pages/login-page"));
+const ForbiddenPage = lazy(() => import("@/features/auth/pages/forbidden-page"));
 const DashboardPage = lazy(() => import("@/features/dashboard/pages/dashboard-page"));
 const DaftarKendaraanPage = lazy(() => import("@/features/garasi/pages/daftar-kendaraan-page"));
 const CariKendaraanPage = lazy(() => import("@/features/garasi/pages/cari-kendaraan-page"));
@@ -66,10 +67,11 @@ export default function AppRoutes() {
               <Route path="/parameter/detail/:id" element={<MaintenanceDetailPage />} />
               <Route path="/user" element={<UserPage />} />
               <Route path="/user/detail/:id" element={<UserDetailPage />} />
+              <Route path="/forbidden" element={<ForbiddenPage />} />
             </Route>
           </Route>
 
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     </Router>

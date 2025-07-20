@@ -6,9 +6,9 @@ import { useEffect, useMemo, useState } from "react"
 import { AddVehicleDialog } from "../components/add-vehicle-dialog"
 import { Vehicle } from "@/models/vehicle"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
-import { useLoading } from "@/lib/loading-context"
 import { supabase } from "@/lib/supabaseClient"
 import { VEHICLE_CATEGORY_PARAM } from "@/lib/constants"
+import { LoadingOverlay } from "@/components/shared/loading-overlay"
 
 type SelectOption = {
   label: string
@@ -16,7 +16,7 @@ type SelectOption = {
 }
 
 export default function DaftarKendaraanPage() {
-  const { setLoading } = useLoading();
+  const [loading, setLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState("active");
   const [searchQuery, setSearchQuery] = useState("");
@@ -117,76 +117,80 @@ export default function DaftarKendaraanPage() {
   }, [activeTab, searchQuery, selectCategory, listVehicles])
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Daftar Kendaraan</h1>
-          <AddVehicleDialog onSave={() => fetchListVehicles()} />
-        </div>
+    <>
+      <LoadingOverlay loading={loading} />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full md:max-w-sm">
-            <TabsTrigger value="active">Aktif</TabsTrigger>
-            <TabsTrigger value="sold">Terjual</TabsTrigger>
-          </TabsList>
-          <TabsContent value={activeTab}>
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-row flex-wrap md:flex-nowrap gap-3">
-                {/* Search Bar */}
-                <div className="relative w-full flex items-center space-x-2">
-                  <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
-                  <Input
-                    type="text"
-                    placeholder="Filter kendaraan"
-                    className="w-full pl-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
+      <div className="min-h-screen flex flex-col">
+        <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">Daftar Kendaraan</h1>
+            <AddVehicleDialog onSave={() => fetchListVehicles()} />
+          </div>
 
-                {/* Select Category */}
-                <Select onValueChange={setSelectCategory} value={selectCategory}>
-                  <SelectTrigger>
-                    <span className="flex items-center gap-2">
-                      <span className="text-muted-foreground">Kategori:</span>
-                      <SelectValue placeholder="Pilih kategori kendaraan" />
-                    </span>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectCategoryOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center">
-                <p className="text-sm text-muted-foreground">
-                  Total Data: <span className="font-medium">{filteredAndSortedVehicle.length}</span>
-                </p>
-              </div>
-
-              {filteredAndSortedVehicle.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {filteredAndSortedVehicle.map((vehicle) => (
-                    <VehicleCard
-                      key={vehicle.id}
-                      vehicle={vehicle}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full md:max-w-sm">
+              <TabsTrigger value="active">Aktif</TabsTrigger>
+              <TabsTrigger value="sold">Terjual</TabsTrigger>
+            </TabsList>
+            <TabsContent value={activeTab}>
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-row flex-wrap md:flex-nowrap gap-3">
+                  {/* Search Bar */}
+                  <div className="relative w-full flex items-center space-x-2">
+                    <Search className="h-5 w-5 absolute top-1/2 -translate-y-1/2 left-3 text-medium" />
+                    <Input
+                      type="text"
+                      placeholder="Filter kendaraan"
+                      className="w-full pl-10"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                  ))}
+                  </div>
+
+                  {/* Select Category */}
+                  <Select onValueChange={setSelectCategory} value={selectCategory}>
+                    <SelectTrigger>
+                      <span className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Kategori:</span>
+                        <SelectValue placeholder="Pilih kategori kendaraan" />
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectCategoryOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              ) : (
-                <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
-                  <CarFront className="h-5 w-5 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">Data kendaraan tidak ditemukan.</p>
+
+                <div className="flex items-center">
+                  <p className="text-sm text-muted-foreground">
+                    Total Data: <span className="font-medium">{filteredAndSortedVehicle.length}</span>
+                  </p>
                 </div>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div >
+
+                {filteredAndSortedVehicle.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                    {filteredAndSortedVehicle.map((vehicle) => (
+                      <VehicleCard
+                        key={vehicle.id}
+                        vehicle={vehicle}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-[50vh] flex flex-col items-center justify-center text-center p-4">
+                    <CarFront className="h-5 w-5 text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">Data kendaraan tidak ditemukan.</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </main>
+      </div >
+    </>
   )
 }

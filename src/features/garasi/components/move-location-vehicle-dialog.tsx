@@ -30,12 +30,12 @@ import {
   SelectValue,
 } from "@/components/shadcn/select";
 import { Textarea } from "@/components/shadcn/textarea";
-import { useLoading } from "@/lib/loading-context";
 import { LocationVehicle } from "@/models/location-vehicle";
 import { supabase } from "@/lib/supabaseClient";
 import { PARAM_GROUP_LOKASI_KENDARAAN } from "@/lib/constants";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
+import { LoadingOverlay } from "@/components/shared/loading-overlay";
 
 interface MoveLocationVehicleDialogProps {
   vehicleId?: string;
@@ -44,12 +44,11 @@ interface MoveLocationVehicleDialogProps {
 }
 
 const formSchema = (currLocationAddress?: string) =>
-  z
-    .object({
-      vehicleId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
-      name: z.string().min(1, { message: "Nama Lokasi harus terisi" }),
-      address: z.string().min(1, { message: "Alamat Lokasi harus terisi" }),
-    })
+  z.object({
+    vehicleId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
+    name: z.string().min(1, { message: "Nama Lokasi harus terisi" }),
+    address: z.string().min(1, { message: "Alamat Lokasi harus terisi" }),
+  })
     .refine(
       (data) => {
         if (!currLocationAddress) return true;
@@ -67,7 +66,7 @@ export function MoveLocationVehicleDialog({
   currLocationAddress,
   onSave,
 }: MoveLocationVehicleDialogProps) {
-  const { setLoading } = useLoading();
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [locationParams, setLocationParams] = useState<{ name: string; description: string }[]>([]);
 
@@ -177,74 +176,78 @@ export function MoveLocationVehicleDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogTrigger asChild>
-        <Button>Pindah Lokasi</Button>
-      </DialogTrigger>
-      <DialogContent className="max-h-[95vh] md:max-w-xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle>Pindah Lokasi Kendaraan</DialogTitle>
-          <DialogDescription>Pilih lokasi baru kendaraan dan klik button simpan.</DialogDescription>
-        </DialogHeader>
+    <>
+      <LoadingOverlay loading={loading} />
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="flex flex-col gap-5">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel>Nama Lokasi</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+      <Dialog open={open} onOpenChange={handleDialogChange}>
+        <DialogTrigger asChild>
+          <Button>Pindah Lokasi</Button>
+        </DialogTrigger>
+        <DialogContent className="max-h-[95vh] md:max-w-xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Pindah Lokasi Kendaraan</DialogTitle>
+            <DialogDescription>Pilih lokasi baru kendaraan dan klik button simpan.</DialogDescription>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="flex flex-col gap-5">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem className="space-y-1">
+                      <FormLabel>Nama Lokasi</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Pilih nama lokasi kendaraan" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {locationParams.map((option) => (
+                            <SelectItem key={option.name} value={option.name}>
+                              {option.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Alamat Lokasi</FormLabel>
                       <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Pilih nama lokasi kendaraan" />
-                        </SelectTrigger>
+                        <Textarea
+                          {...field}
+                          placeholder="Masukkan alamat lokasi kendaraan"
+                          disabled={!isManualAddress}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        {locationParams.map((option) => (
-                          <SelectItem key={option.name} value={option.name}>
-                            {option.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Alamat Lokasi</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="Masukkan alamat lokasi kendaraan"
-                        disabled={!isManualAddress}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline">
-                  Batal
-                </Button>
-              </DialogClose>
-              <Button type="submit">Simpan</Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">
+                    Batal
+                  </Button>
+                </DialogClose>
+                <Button type="submit">Simpan</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

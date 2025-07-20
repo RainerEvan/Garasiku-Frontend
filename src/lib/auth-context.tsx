@@ -1,11 +1,17 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { ADMIN, DIVISI, DRIVER, OWNER, WSHEAD } from "./constants";
 
 type AuthContextType = {
   user: any;
   role: string | null;
   isAuthenticated: boolean;
   loading: boolean;
+  isOwner: boolean;
+  isDivisi: boolean;
+  isWSHead: boolean;
+  isDriver: boolean;
+  isAdmin: boolean;
 };
 
 const AuthContext = createContext<AuthContextType>({
@@ -13,6 +19,11 @@ const AuthContext = createContext<AuthContextType>({
   role: null,
   isAuthenticated: false,
   loading: true,
+  isOwner: false,
+  isDivisi: false,
+  isWSHead: false,
+  isDriver: false,
+  isAdmin: false,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -46,6 +57,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const isOwner = role === OWNER;
+  const isDivisi = role === DIVISI;
+  const isWSHead = role === WSHEAD;
+  const isDriver = role === DRIVER;
+  const isAdmin = role === ADMIN;
+
   return (
     <AuthContext.Provider
       value={{
@@ -53,6 +70,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role,
         isAuthenticated: !!user,
         loading,
+        isOwner,
+        isDivisi,
+        isWSHead,
+        isDriver,
+        isAdmin
       }}
     >
       {children}

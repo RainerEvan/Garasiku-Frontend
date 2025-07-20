@@ -1,10 +1,11 @@
-import { Loader2 } from "lucide-react"
-import { useLoading } from "@/lib/loading-context"
+import { Loader2 } from "lucide-react";
 
-export function LoadingOverlay() {
-  const { loading } = useLoading()
+type LoadingOverlayProps = {
+  loading: boolean;
+};
 
-  if (!loading) return null
+export function LoadingOverlay({ loading }: LoadingOverlayProps) {
+  if (!loading) return null;
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-foreground/50 backdrop-blur-xs">
@@ -13,5 +14,5 @@ export function LoadingOverlay() {
         <p className="font-medium">Loading...</p>
       </div>
     </div>
-  )
+  );
 }

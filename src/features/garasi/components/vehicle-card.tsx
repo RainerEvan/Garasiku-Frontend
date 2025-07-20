@@ -1,6 +1,7 @@
 import { TASK_TYPE_ICONS } from "@/lib/constants";
 import { formatDate } from "@/lib/utils";
 import { Vehicle } from "@/models/vehicle"
+import { ImageIcon } from "lucide-react";
 import { Link } from "react-router-dom"
 
 type VehicleCardProps = {
@@ -12,16 +13,22 @@ export function VehicleCard({
 }: VehicleCardProps) {
   const variant = vehicle.isSold ? "sold" : "active";
   const Icon = vehicle.isSold ? TASK_TYPE_ICONS["terjual"] : TASK_TYPE_ICONS["lokasi"]
- 
+
   return (
     <Link to={`/kendaraan/detail/${vehicle.id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
       {/* Image Placeholder */}
-      <div className="relative aspect-video w-full overflow-hidden text-[#b3b3b3] bg-[#d9d9d9] flex items-center justify-center">
-      <img
-          src={vehicle.image}
-          alt={`${vehicle.name} - Image`}
-          className="object-cover w-full h-full"
-        />
+      <div className="relative aspect-video w-full overflow-hidden text-muted-foreground bg-muted flex items-center justify-center">
+        {vehicle.image ? (
+          <img
+            src={vehicle.image}
+            alt={`${vehicle.name} - Image`}
+            className="object-cover w-full h-full"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <ImageIcon className="h-12 w-12 text-muted-foreground" />
+          </div>
+        )}
         <div className="absolute top-2 right-2 flex items-center border bg-background px-5 py-1 rounded-xl shadow-md">
           <p className="text-medium text-sm">{vehicle.category}</p>
         </div>

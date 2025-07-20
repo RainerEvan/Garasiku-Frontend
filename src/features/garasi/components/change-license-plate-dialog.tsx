@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Button } from "@/components/shadcn/button"
 import {
   Dialog,
@@ -18,6 +18,7 @@ import { LicensePlateVehicle } from "@/models/license-plate-vehicle"
 import { Input } from "@/components/shadcn/input"
 import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
+import { useAuth } from "@/lib/auth-context"
 
 interface ChangeLicensePlateDialogProps {
   vehicleId?: string
@@ -44,8 +45,9 @@ const formSchema = (currPlateNo?: string) => z.object({
 )
 
 export function ChangeLicensePlateDialog({ vehicleId, currPlateNo, onSave }: ChangeLicensePlateDialogProps) {
-  const [open, setOpen] = useState(false)
+  const { user } = useAuth();
 
+  const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
     resolver: zodResolver(formSchema(currPlateNo)),
@@ -55,18 +57,17 @@ export function ChangeLicensePlateDialog({ vehicleId, currPlateNo, onSave }: Cha
     },
   })
 
+  const userMeta = useMemo(() => {
+    if (!user) return null;
+    const meta = user.user_metadata || {};
+    return {
+      username: meta.username || user.email?.split("@")[0] || "nama pengguna",
+    };
+  }, [user]);
+
   const { reset } = form;
 
   async function onSubmit(values: z.infer<ReturnType<typeof formSchema>>) {
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-    if (userError || !user) {
-      toast.error("Gagal mendapatkan user login");
-      console.error("Gagal mendapatkan user login:", userError);
-      return;
-    }
     if (!vehicleId) return;
 
     const updatedAt = new Date().toISOString();
@@ -75,7 +76,7 @@ export function ChangeLicensePlateDialog({ vehicleId, currPlateNo, onSave }: Cha
       vehicle_id: vehicleId,
       plat_no: values.plateNo,
       updated_by: user.user_metadata?.username || user.email || "unknown",
-      updated_at : updatedAt
+      updated_at: updatedAt
     };
 
     const { data: inserted, error: insertError } = await supabase
@@ -108,7 +109,7 @@ export function ChangeLicensePlateDialog({ vehicleId, currPlateNo, onSave }: Cha
         vehicleId: inserted.vehicle_id,
         plateNo: inserted.plat_no,
         createdAt: updatedAt,
-        createdBy: user.user_metadata?.username || user.email || "unknown",
+        createdBy: userMeta?.username || "unknown",
       });
     }
 
@@ -139,7 +140,7 @@ export function ChangeLicensePlateDialog({ vehicleId, currPlateNo, onSave }: Cha
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Detail Kendaraan */}
+            {/* Plat No Kendaraan */}
             <div className="flex flex-col gap-5">
               <FormField
                 control={form.control}
