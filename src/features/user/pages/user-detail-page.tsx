@@ -16,27 +16,31 @@ import { EmptyState } from "@/components/shared/empty-state";
 
 export default function UserDetailPage() {
   const { loading, setLoading } = useLoading();
-  const { id: userId } = useParams(); // ambil dari URL
+  const { id: userId } = useParams();
 
   const [user, setUser] = useState<User | null>(null);
-
   const [roleParam, setRoleParam] = useState<Param[]>([]);
+
+  // 🟢 Selalu dipanggil, tidak tergantung kondisi
+  const avatarLetter = useMemo(() => {
+    const str = user?.fullname || user?.username || "U";
+    return str.charAt(0).toUpperCase();
+  }, [user]);
+
+  const isActive = useMemo(() => {
+    return user?.isActive ? "active" : "inactive";
+  }, [user]);
 
   useEffect(() => {
     const fetchUser = async () => {
       setLoading(true);
       try {
-        const [
-          roleParamsRes,
-        ] = await Promise.all([
-          // Using static role param for now — replace with API call if needed
+        const [roleParamsRes] = await Promise.all([
           Promise.resolve(ROLE_PARAM),
         ]);
         setRoleParam(roleParamsRes);
 
-        const { data, error } = await supabase
-          .rpc("get_all_users")
-          .select("*");
+        const { data, error } = await supabase.rpc("get_all_users").select("*");
 
         if (error) {
           console.error("Failed to fetch users:", error.message);
@@ -68,21 +72,14 @@ export default function UserDetailPage() {
     fetchUser();
   }, [userId, setLoading]);
 
-  if (!user && !loading) return (
-    <EmptyState title="User Tidak Ditemukan" description="User dengan ID tersebut tidak tersedia." />
-  );
+  // 🛑 Setelah semua hooks dipanggil, baru conditional render
+  if (!user && !loading) {
+    return (
+      <EmptyState title="User Tidak Ditemukan" description="User dengan ID tersebut tidak tersedia." />
+    );
+  }
 
   if (!user) return null;
-
-  const avatarLetter = useMemo(() => {
-    const str = user?.fullname || user?.username || "U";
-    return str.charAt(0).toUpperCase();
-  }, [user]);
-
-  const isActive = useMemo(() => {
-    return user.isActive ? "active" : "inactive";
-  }, [user]);
-
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
