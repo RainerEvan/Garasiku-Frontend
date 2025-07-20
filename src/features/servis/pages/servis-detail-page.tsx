@@ -37,7 +37,7 @@ export default function ServisDetailPage() {
 
     const { id } = useParams<{ id: string }>();
     const [service, setService] = useState<Service | null>(null);
-    const [attachments, setAttachments] = useState<AttachmentService[]>([]);
+    const [serviceAttachments, setServiceAttachments] = useState<AttachmentService[]>([]);
     const [latestLocation, setLatestLocation] = useState<{ id: string; vehicleId: string; name: string; address: string } | null>(null);
 
     const fetchServiceDetail = async (serviceId: string): Promise<string | null> => {
@@ -134,7 +134,7 @@ export default function ServisDetailPage() {
         }
 
         if (data) {
-            setAttachments(data.map(att => ({
+            setServiceAttachments(data.map(att => ({
                 id: att.id,
                 serviceId: att.service_id,
                 fileName: att.file_name,
@@ -295,7 +295,7 @@ export default function ServisDetailPage() {
                             headerAction={
                                 <>
                                     {service.status == "ongoing" && (
-                                        <EditServiceRecordDialog service={service} />
+                                        <EditServiceRecordDialog service={service} onSave={() => fetchServiceDetail(id!)} />
                                     )}
                                 </>
                             }
@@ -318,20 +318,21 @@ export default function ServisDetailPage() {
                         <SectionCard
                             title="Lampiran Dokumen"
                             headerAction={
-                                <AddAttachmentServiceDialog serviceId={service.id} />
+                                <AddAttachmentServiceDialog serviceId={service.id} onSave={() => fetchServiceAttachments(id!)} />
                             }
                         >
-                            {attachments.length > 0 && (
+                            {serviceAttachments.length > 0 && (
                                 <div className="flex flex-col">
                                     {
-                                        attachments.map((attachment, index) => (
+                                        serviceAttachments.map((attachment, index) => (
                                             <div key={attachment.id}>
                                                 <AttachmentItem
                                                     attachment={attachment}
                                                     type="service"
-
+                                                    onAttachmentDelete={() => fetchServiceAttachments(id!)}
+                                                    setLoading={setLoading}
                                                 />
-                                                {index < attachments.length - 1 && (
+                                                {index < serviceAttachments.length - 1 && (
                                                     <Separator className="my-4" />
                                                 )}
                                             </div>
