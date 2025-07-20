@@ -29,6 +29,7 @@ import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient"
 import { EmptyState } from "@/components/shared/empty-state";
 import { useLoading } from "@/lib/loading-context";
+import { formatDate } from "@/lib/utils";
 
 export default function ServisDetailPage() {
     const { loading, setLoading } = useLoading();
@@ -214,9 +215,9 @@ export default function ServisDetailPage() {
                                     <StatusBar status={service.status as Status} />
                                 </div>
                                 <div className="flex items-end justify-between">
-                                    <SectionItem label="Jadwal Servis" value={service.scheduleDate} />
-                                    <SectionItem label="Servis Mulai" value={service.startDate} />
-                                    <SectionItem label="Servis Selesai" value={service.endDate} />
+                                    <SectionItem label="Jadwal Servis" value={formatDate(service.scheduleDate)} />
+                                    <SectionItem label="Servis Mulai" value={formatDate(service.startDate)} />
+                                    <SectionItem label="Servis Selesai" value={formatDate(service.endDate)} />
                                 </div>
                             </div>
 

@@ -22,6 +22,8 @@ import { Switch } from "@/components/shadcn/switch"
 import { useUser } from "@supabase/auth-helpers-react"
 import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
+import { ROLE_PARAM } from "@/lib/constants"
 
 interface AddUserDialogProps {
   onSave?: (newUser: User) => void
@@ -61,8 +63,9 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
     },
   })
 
-  const { reset } = form
+  const roleParam = ROLE_PARAM;
 
+  const { reset } = form
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -119,14 +122,10 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
       if (err instanceof Error) {
         toast.error(err.message)
       } else {
-        toast.error("Terjadi kesalahan tak dikenal")
+        toast.error("Terjadi kesalahan pada sistem")
       }
     }
   }
-
-
-
-
 
   function handleDialogChange(isOpen: boolean) {
     setOpen(isOpen)
@@ -135,19 +134,19 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
     }
   }
 
-  // if (!isAdmin) return null
-
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>
-        <div>
-          <Button className="hidden sm:flex">
-            <PlusCircle /> Tambah User
-          </Button>
-          <Button variant="default" size="icon2" className="fixed z-50 bottom-4 right-4 sm:hidden">
-            <Plus className="size-8" />
-          </Button>
-        </div>
+        {isAdmin && (
+          <div>
+            <Button className="hidden sm:flex">
+              <PlusCircle /> Tambah User
+            </Button>
+            <Button variant="default" size="icon2" className="fixed z-50 bottom-4 right-4 sm:hidden">
+              <Plus className="size-8" />
+            </Button>
+          </div>
+        )}
       </DialogTrigger>
       <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
@@ -239,13 +238,20 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
                   render={({ field }) => (
                     <FormItem className="space-y-1">
                       <FormLabel className="font-medium">Role</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Masukkan role user"
-                          {...field}
-                          className="w-full"
-                        />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Pilih role user" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {roleParam.map((option) => (
+                            <SelectItem key={option.id} value={option.name}>
+                              {option.description}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

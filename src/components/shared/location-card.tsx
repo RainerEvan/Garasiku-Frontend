@@ -1,5 +1,6 @@
 import { MapPin } from "lucide-react"
 import SectionItem from "./section-item"
+import { formatDateTime } from "@/lib/utils"
 
 interface LocationCardProps {
   name?: string
@@ -7,26 +8,6 @@ interface LocationCardProps {
   createdAt?: string
   createdBy?: string
   disabled?: boolean;
-}
-
-// Fungsi untuk format tanggal + jam
-function formatDateTime(dateString?: string) {
-  if (!dateString) return "-"
-
-  const date = new Date(dateString)
-  const tanggal = new Intl.DateTimeFormat("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(date)
-
-  const jam = new Intl.DateTimeFormat("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(date)
-
-  return `${tanggal} pukul ${jam}`
 }
 
 export function LocationCard({

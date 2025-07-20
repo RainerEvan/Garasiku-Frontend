@@ -7,29 +7,11 @@ import { History } from "lucide-react"
 import { useEffect, useState } from "react"
 import { ChangeLicensePlateDialog } from "./change-license-plate-dialog"
 import { supabase } from "@/lib/supabaseClient"
+import { formatDateTime } from "@/lib/utils"
 
 interface LicensePlateDialogProps {
     vehicleId?: string
     currPlateNo?: string
-}
-
-function formatDateTime(dateString?: string) {
-  if (!dateString) return "-"
-
-  const date = new Date(dateString)
-  const tanggal = new Intl.DateTimeFormat("id-ID", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(date)
-
-  const jam = new Intl.DateTimeFormat("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(date)
-
-  return `${tanggal} pukul ${jam}`
 }
 
 export function LicensePlateDialog({ vehicleId, currPlateNo }: LicensePlateDialogProps) {
@@ -38,42 +20,46 @@ export function LicensePlateDialog({ vehicleId, currPlateNo }: LicensePlateDialo
     const [open, setOpen] = useState(false)
     const [listVehicleLicensePlates, setListVehicleLicensePlates] = useState<LicensePlateVehicle[]>([]);
 
+    const fetchVehicleLicensePlates = async (vehicleId: string) => {
+        const { data, error } = await supabase
+            .from("vehicle_plate_history")
+            .select("*")
+            .eq("vehicle_id", vehicleId)
+            .order("updated_at", { ascending: false });
 
+        if (error) {
+            console.error("Vehicle License Plates fetch error:", error);
+        }
+
+        if (data) {
+            setListVehicleLicensePlates(data.map(v => ({
+                id: v.id,
+                vehicleId: v.vehicle_id,
+                plateNo: v.plat_no,
+                createdAt: v.updated_at,
+                createdBy: v.updated_by,
+            })));
+        }
+    }
 
     useEffect(() => {
-    const fetchAll = async () => {
-        if (!vehicleId) return;
+        if (!open) return;
 
-        setLoading(true);
+        const fetchAll = async () => {
+            if (!vehicleId) return;
+            setLoading(true);
 
-        try {
-            const { data, error } = await supabase
-                .from("vehicle_plate_history")
-                .select("*")
-                .eq("vehicle_id", vehicleId)
-                .order("updated_at", { ascending: false });
-
-            if (error) {
-                console.error("Failed to fetch license plate history:", error);
-            } else {
-                const mappedLicensePlates = data.map((v: any) => ({
-                    id: v.id,
-                    vehicleId: v.vehicle_id,
-                    plateNo: v.plat_no,
-                    createdAt: v.updated_at,
-                    createdBy: v.updated_by,
-                }));
-                setListVehicleLicensePlates(mappedLicensePlates);
+            try {
+                await fetchVehicleLicensePlates(vehicleId);
+            } catch (err) {
+                console.error("Failed to fetch data:", err);
+            } finally {
+                setLoading(false);
             }
-        } catch (err) {
-            console.error("Failed to fetch data:", err);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
 
-    fetchAll();
-}, [vehicleId]);
+        fetchAll();
+    }, [vehicleId, open]);
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
@@ -89,7 +75,7 @@ export function LicensePlateDialog({ vehicleId, currPlateNo }: LicensePlateDialo
                 </DialogHeader>
 
                 <div className="w-full flex">
-                    <ChangeLicensePlateDialog vehicleId={vehicleId} currPlateNo={currPlateNo} />
+                    <ChangeLicensePlateDialog vehicleId={vehicleId} currPlateNo={currPlateNo} onSave={() => fetchVehicleLicensePlates(vehicleId!)} />
                 </div>
 
                 {listVehicleLicensePlates.length > 0 ? (

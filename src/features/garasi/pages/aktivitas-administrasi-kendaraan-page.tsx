@@ -7,7 +7,6 @@ import { Button } from "@/components/shadcn/button";
 import { useLoading } from "@/lib/loading-context";
 import { useEffect, useMemo, useState } from "react";
 import { ADMINISTRATION_TYPE_PARAM, STATUS_PARAM } from "@/lib/constants";
-import { Param } from "@/models/param";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient"
 

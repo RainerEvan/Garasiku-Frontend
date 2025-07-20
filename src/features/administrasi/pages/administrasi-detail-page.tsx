@@ -25,6 +25,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useLoading } from "@/lib/loading-context";
 import { EmptyState } from "@/components/shared/empty-state";
 import { toast } from "sonner"
+import { formatDate } from "@/lib/utils";
 
 export default function AdministrasiDetailPage() {
   const { loading, setLoading } = useLoading();
@@ -147,8 +148,8 @@ export default function AdministrasiDetailPage() {
                   <StatusBar status={administration.status as Status} />
                 </div>
                 <div className="flex items-end justify-between">
-                  <SectionItem label="Jatuh Tempo" value={administration.dueDate} />
-                  <SectionItem label="Administrasi Selesai" value={administration.endDate} />
+                  <SectionItem label="Jatuh Tempo" value={formatDate(administration.dueDate)} />
+                  <SectionItem label="Administrasi Selesai" value={formatDate(administration.endDate)} />
                 </div>
               </div>
 

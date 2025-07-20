@@ -29,6 +29,7 @@ import { LocationVehicle } from "@/models/location-vehicle"
 import { toast } from "sonner"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PARAM_GROUP_KELENGKAPAN_KENDARAAN } from "@/lib/constants"
+import { formatDate } from "@/lib/utils"
 
 export default function KendaraanDetailPage() {
     const { loading, setLoading } = useLoading();
@@ -132,7 +133,7 @@ export default function KendaraanDetailPage() {
                 licensePlateColor: base.license_plate_color
             });
 
-            setVehicleEquipments(base.equipments.split("|") || []);
+            setVehicleEquipments(base.equipments ? base.equipments.split("|") : []);
         }
     };
 
@@ -582,7 +583,7 @@ export default function KendaraanDetailPage() {
                             variant="default"
                             type="terjual"
                             label={"Terjual"}
-                            description={vehicle.soldDate}
+                            description={formatDate(vehicle.soldDate)}
                         />
                     )}
 
@@ -592,7 +593,7 @@ export default function KendaraanDetailPage() {
                             variant="default"
                             type="administrasi-stnk-1"
                             label="Jatuh Tempo STNK"
-                            description={vehicleStnkDueDate}
+                            description={formatDate(vehicleStnkDueDate)}
                         />
 
                         {/* Asuransi Bar */}
@@ -600,7 +601,7 @@ export default function KendaraanDetailPage() {
                             variant="default"
                             type="administrasi-asuransi"
                             label="Jatuh Tempo Asuransi"
-                            description={vehicleInsuranceDueDate}
+                            description={formatDate(vehicleInsuranceDueDate)}
                         />
 
                         {/* Servis Bar */}
@@ -608,7 +609,7 @@ export default function KendaraanDetailPage() {
                             variant="default"
                             type="servis-regular"
                             label="Servis Terakhir"
-                            description={vehicleLastServiceDate}
+                            description={formatDate(vehicleLastServiceDate)}
                         />
                     </div>
                 </div>

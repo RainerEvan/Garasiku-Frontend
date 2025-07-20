@@ -38,8 +38,8 @@ const items = [
       { title: "Asuransi", url: "asuransi", roles: [OWNER, DIVISI] },
     ]
   },
-  { title: "User", url: "user", roles: [OWNER, DIVISI, ADMIN] },
-  { title: "Parameter", url: "parameter", roles: [OWNER, DIVISI, ADMIN] },
+  { title: "User", url: "user", roles: [ADMIN] },
+  { title: "Parameter", url: "parameter", roles: [ADMIN] },
 ];
 
 export function AppNavbar() {
