@@ -21,6 +21,7 @@ import { Service } from "@/models/service"
 import { Textarea } from "@/components/shadcn/textarea"
 import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
+import { formatRupiah } from "@/lib/utils"
 
 interface EditServiceRecordDialogProps {
   service: Service
@@ -138,6 +139,11 @@ export function EditServiceRecordDialog({ service, onSave }: EditServiceRecordDi
                         <Input
                           placeholder="Masukkan biaya servis"
                           {...field}
+                          value={formatRupiah(field.value)}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/\D/g, "");
+                            field.onChange(raw);
+                          }}
                           className="w-full"
                         />
                       </FormControl>

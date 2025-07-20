@@ -20,7 +20,7 @@ import { Textarea } from "@/components/shadcn/textarea"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover"
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/shadcn/calendar"
-import { cn } from "@/lib/utils"
+import { cn, formatRupiah } from "@/lib/utils"
 import { addYears, format } from "date-fns"
 import { Switch } from "@/components/shadcn/switch"
 import { Separator } from "@/components/shadcn/separator"
@@ -92,6 +92,7 @@ export function CompleteAdministrationDialog({ administration, dueDate, onSave }
     }
   }
 
+
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>
@@ -162,6 +163,11 @@ export function CompleteAdministrationDialog({ administration, dueDate, onSave }
                         <Input
                           placeholder="Masukkan biaya administrasi"
                           {...field}
+                            value={formatRupiah(field.value)}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/\D/g, "");
+                              field.onChange(raw);
+                            }}
                           className="w-full"
                         />
                       </FormControl>

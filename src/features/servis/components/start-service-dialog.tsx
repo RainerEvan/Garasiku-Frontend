@@ -27,7 +27,7 @@ import { Textarea } from "@/components/shadcn/textarea"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover"
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/shadcn/calendar"
-import { cn } from "@/lib/utils"
+import { cn, formatRupiah } from "@/lib/utils"
 import { format } from "date-fns"
 import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
@@ -103,6 +103,7 @@ export function StartServiceDialog({ service, onSave }: StartServiceDialogProps)
     setOpen(isOpen)
     if (!isOpen) reset()
   }
+
 
   return (
     <Dialog open={open} onOpenChange={handleDialogChange}>
@@ -194,6 +195,11 @@ export function StartServiceDialog({ service, onSave }: StartServiceDialogProps)
                         <Input
                           placeholder="Masukkan biaya servis"
                           {...field}
+                            value={formatRupiah(field.value)}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/\D/g, "");
+                              field.onChange(raw);
+                            }}
                           className="w-full"
                         />
                       </FormControl>

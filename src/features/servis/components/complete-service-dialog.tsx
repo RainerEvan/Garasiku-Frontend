@@ -20,7 +20,7 @@ import { Textarea } from "@/components/shadcn/textarea"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover"
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/shadcn/calendar"
-import { cn } from "@/lib/utils"
+import { cn, formatRupiah } from "@/lib/utils"
 import { addMonths, format } from "date-fns"
 import { Switch } from "@/components/shadcn/switch"
 import { Separator } from "@/components/shadcn/separator"
@@ -99,11 +99,18 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
 
     // insert servis baru kalau isSetNextReminder true
     if (values.isSetNextReminder && values.nextScheduleDate) {
+      const { data: ticketData, error: ticketError } = await supabase.rpc("generate_ticket_number", {
+        task_type_input: "SRV",
+      });
+      if (ticketError || !ticketData) {
+        throw ticketError || new Error("Gagal generate nomor tiket");
+      }
       const insertData = {
         vehicle_id: service.vehicleId,
         type: service.type,
         schedule_date: format(values.nextScheduleDate, "yyyy-MM-dd"),
-        status: 'pending'
+        status: 'pending',
+        ticket_num: ticketData
       }
 
       const { error: insertError } = await supabase.from("service").insert(insertData)
@@ -217,6 +224,11 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
                         <Input
                           placeholder="Masukkan biaya servis"
                           {...field}
+                          value={formatRupiah(field.value)}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/\D/g, "");
+                            field.onChange(raw);
+                          }}
                           className="w-full"
                         />
                       </FormControl>
