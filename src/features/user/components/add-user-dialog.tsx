@@ -19,11 +19,11 @@ import { User } from "@/models/user"
 import { Eye, EyeOff, Plus, PlusCircle } from "lucide-react"
 import { Input } from "@/components/shadcn/input"
 import { Switch } from "@/components/shadcn/switch"
-import { useUser } from "@supabase/auth-helpers-react"
 import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select"
 import { ROLE_PARAM } from "@/lib/constants"
+import { useAuth } from "@/lib/auth-context"
 
 interface AddUserDialogProps {
   onSave?: (newUser: User) => void
@@ -42,7 +42,7 @@ const formSchema = z.object({
 export function AddUserDialog({ onSave }: AddUserDialogProps) {
   const [open, setOpen] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const user = useUser()
+  const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {

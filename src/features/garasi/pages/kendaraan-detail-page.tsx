@@ -49,6 +49,7 @@ export default function KendaraanDetailPage() {
     const [vehicleEquipments, setVehicleEquipments] = useState<string[]>([]);
     const [vehicleImages, setVehicleImages] = useState<AttachmentVehicle[]>([]);
     const [vehicleAttachments, setVehicleAttachments] = useState<AttachmentVehicle[]>([]);
+    
 
     const fetchEquipmentParams = async () => {
         const { data, error } = await supabase
@@ -364,7 +365,6 @@ export default function KendaraanDetailPage() {
         setLoading(true);
 
         try {
-            // 2. Delete from attachment_vehicles
             const { error: attachmentVehicleError } = await supabase
                 .from("attachment_vehicle")
                 .delete()
@@ -374,7 +374,6 @@ export default function KendaraanDetailPage() {
                 throw new Error("Gagal menghapus attachment_vehicles: " + attachmentVehicleError.message);
             }
 
-            // 3. Delete from services
             const { error: servicesError } = await supabase
                 .from("service")
                 .delete()
@@ -384,7 +383,6 @@ export default function KendaraanDetailPage() {
                 throw new Error("Gagal menghapus services: " + servicesError.message);
             }
 
-            // 4. Delete from stnk
             const { error: stnkError } = await supabase
                 .from("stnk")
                 .delete()
@@ -394,7 +392,6 @@ export default function KendaraanDetailPage() {
                 throw new Error("Gagal menghapus STNK: " + stnkError.message);
             }
 
-            // 5. Delete from administration
             const { error: adminError } = await supabase
                 .from("administration")
                 .delete()
@@ -404,7 +401,6 @@ export default function KendaraanDetailPage() {
                 throw new Error("Gagal menghapus administration: " + adminError.message);
             }
 
-            // 6. Delete from vehicles (terakhir)
             const { error: vehicleError } = await supabase
                 .from("vehicles")
                 .delete()

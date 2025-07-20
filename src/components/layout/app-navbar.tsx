@@ -25,7 +25,7 @@ import { ADMIN, DIVISI, DRIVER, OWNER, WSHEAD } from "@/lib/constants";
 const items = [
   { title: "Dashboard", url: "dashboard", roles: [OWNER, DIVISI] },
   {
-    title: "Garasi", url: "garasi", roles: [OWNER, DIVISI, WSHEAD], child: [
+    title: "Garasi", url: "garasi", roles: [OWNER, DIVISI, WSHEAD, DRIVER], child: [
       { title: "Daftar Kendaraan", url: "daftar-kendaraan", roles: [OWNER, DIVISI] },
       { title: "Cari Kendaraan", url: "cari-kendaraan", roles: [OWNER, DIVISI, WSHEAD, DRIVER] },
     ]
