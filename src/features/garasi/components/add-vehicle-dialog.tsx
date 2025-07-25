@@ -34,15 +34,15 @@ interface AddVehicleDialogProps {
 }
 
 const formSchema = z.object({
-  name: z.string().min(1, { message: "Nama harus terisi" }),
-  category: z.string().min(1, { message: "Jenis harus terisi" }),
-  brand: z.string().min(1, { message: "Merk harus terisi" }),
-  model: z.string().min(1, { message: "Model harus terisi" }),
-  year: z.string().min(1, { message: "Tahun harus terisi" }),
-  color: z.string().min(1, { message: "Warna harus terisi" }),
-  licensePlate: z.string().min(1, { message: "Plat No harus terisi" }),
-  stnkDueDate: z.date(),
-  insuranceDueDate: z.date(),
+  name: z.string({ message: "Nama harus terisi" }).min(1, { message: "Nama harus terisi" }),
+  category: z.string({ message: "Jenis harus terisi" }).min(1, { message: "Jenis harus terisi" }),
+  brand: z.string({ message: "Merk harus terisi" }).min(1, { message: "Merk harus terisi" }),
+  model: z.string({ message: "Model harus terisi" }).min(1, { message: "Model harus terisi" }),
+  year: z.string({ message: "Tahun harus terisi" }).min(1, { message: "Tahun harus terisi" }),
+  color: z.string({ message: "Warna harus terisi" }).min(1, { message: "Warna harus terisi" }),
+  licensePlate: z.string({ message: "Plat No harus terisi" }).min(1, { message: "Plat No harus terisi" }),
+  stnkDueDate: z.date().optional(),
+  insuranceDueDate: z.date().optional(),
 })
 
 export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
@@ -200,7 +200,6 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
 
         if (adminStnkError) {
           throw new Error("Gagal menyimpan data administration stnk: " + adminStnkError.message);
-          return;
         }
       }
 
@@ -223,7 +222,6 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
 
         if (adminInsuranceError) {
           throw new Error("Gagal menyimpan data administration insurance: " + adminInsuranceError.message);
-          return;
         }
       }
 

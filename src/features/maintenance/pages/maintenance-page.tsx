@@ -24,13 +24,13 @@ export default function MaintenancePage() {
           .eq("is_maintain", true);
 
         if (error) {
-          console.error("Failed to fetch param groups:", error.message);
+          console.error("List Parameter Group fetch error:", error.message);
           return;
         }
 
         setParamGroups(data || []);
       } catch (err) {
-        console.error("Unexpected error:", err);
+        console.error("Failed to fetch data:", err);
       } finally {
         setLoading(false);
       }

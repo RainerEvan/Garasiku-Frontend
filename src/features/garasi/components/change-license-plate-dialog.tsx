@@ -30,7 +30,7 @@ interface ChangeLicensePlateDialogProps {
 // Define the form schema with validation
 const formSchema = (currPlateNo?: string) => z.object({
   vehicleId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
-  plateNo: z.string().min(1, { message: "Plat No harus terisi" }),
+  plateNo: z.string({ message: "Plat No harus terisi" }).min(1, { message: "Plat No harus terisi" }),
 }).refine(
   (data) => {
     // If currPlateNo is undefined or empty, skip this check

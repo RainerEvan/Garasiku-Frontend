@@ -32,6 +32,7 @@ type ParamCardProps = {
   index: number;
   onDeleted?: (id: string) => void;
   onUpdated?: (updated: Param) => void;
+  setLoading?: (val: boolean) => void;
 };
 
 export function ParamCard({
@@ -40,21 +41,36 @@ export function ParamCard({
   index,
   onDeleted,
   onUpdated,
+  setLoading,
 }: ParamCardProps) {
   const [openDropdown, setOpenDropdown] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   async function handleDelete() {
-    const { error } = await supabase.from("parameter").delete().eq("id", param.id);
+    setLoading?.(true)
 
-    if (error) {
-      toast.error("Gagal menghapus param", { description: error.message });
-      return;
+    try {
+      const { error } = await supabase
+        .from("parameter")
+        .delete()
+        .eq("id", param.id);
+
+      if (error) {
+        throw new Error("Gagal menghapus param: " + error.message);
+      }
+
+      toast.success("Param berhasil dihapus.");
+      if (onDeleted && param.id){
+        onDeleted(param.id);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal menghapus param: " + error);
+    } finally {
+      setOpenDeleteDialog(false)
+      setLoading?.(false)
     }
-
-    toast.success("Param berhasil dihapus");
-    if (onDeleted && param.id) onDeleted(param.id);
   }
 
   return (

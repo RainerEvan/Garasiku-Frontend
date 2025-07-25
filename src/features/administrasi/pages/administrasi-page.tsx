@@ -3,12 +3,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/shadcn/ta
 import { Administration } from "@/models/administration";
 import { ArrowDownNarrowWide, ArrowUpNarrowWide, IdCard, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { AdministrationCard } from "../components/administrasi-card";
+import { AdministrationCard } from "../components/administration-card";
 import { Button } from "@/components/shadcn/button";
 import { Navigate, useParams } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { getCachedReminderDateRange } from "@/lib/reminder-date";
 import { LoadingOverlay } from "@/components/shared/loading-overlay";
+import { AddAdministrationDialog } from "../components/add-administration-dialog";
 
 const validTypes = ["stnk-1", "stnk-5", "asuransi"];
 
@@ -40,8 +41,6 @@ export default function AdministrasiPage() {
         )
       `)
       .eq("type", `administrasi-${type}`);
-
-    console.log("Admin type: ", type);
 
     if (activeTab === "todo") {
       administrationQuery = administrationQuery
@@ -137,6 +136,7 @@ export default function AdministrasiPage() {
         <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Administrasi</h1>
+            <AddAdministrationDialog onSave={() => fetchListAdministrations()} />
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

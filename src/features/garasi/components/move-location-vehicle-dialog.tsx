@@ -46,8 +46,8 @@ interface MoveLocationVehicleDialogProps {
 const formSchema = (currLocationAddress?: string) =>
   z.object({
     vehicleId: z.string().min(1, { message: "Vehicle Id harus terisi" }),
-    name: z.string().min(1, { message: "Nama Lokasi harus terisi" }),
-    address: z.string().min(1, { message: "Alamat Lokasi harus terisi" }),
+    name: z.string({ message: "Nama Lokasi harus terisi" }).min(1, { message: "Nama Lokasi harus terisi" }),
+    address: z.string({ message: "Alamat Lokasi harus terisi" }).min(1, { message: "Alamat Lokasi harus terisi" }),
   })
     .refine(
       (data) => {

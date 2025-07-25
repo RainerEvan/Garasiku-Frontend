@@ -97,7 +97,7 @@ export function AddAttachmentVehicleDialog({ vehicleId, onSave }: AddAttachmentV
         throw new Error("Gagal menambahkan attachment_vehicle: " + insertError.message);
       }
 
-      toast.success("Dokumen kendaraan berhasil ditambahkan")
+      toast.success("Dokumen kendaraan berhasil ditambahkan.")
 
       if (onSave) {
         onSave(inserted);

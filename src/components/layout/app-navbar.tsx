@@ -59,8 +59,12 @@ export function AppNavbar() {
   }, [user]);
 
   const handleLogout = useCallback(async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
+    setOpenMobile(false);
+
+    setTimeout(async () => {
+      await supabase.auth.signOut();
+      navigate("/login");
+    }, 300);
   }, [navigate]);
 
   const handleMenuClick = useCallback(() => {

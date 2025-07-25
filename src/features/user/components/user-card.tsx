@@ -1,4 +1,5 @@
 import StatusBar from "@/components/shared/status-bar";
+import { ACTIVE, INACTIVE } from "@/lib/constants";
 import { User } from "@/models/user"
 import { Link } from "react-router-dom"
 
@@ -10,7 +11,7 @@ export function UserCard({
   user
 }: UserCardProps) {
   const initial = user.fullname.charAt(0).toUpperCase();
-  const isActive = user.isActive ? "active" : "inactive";
+  const isActive = user.isActive ? ACTIVE : INACTIVE;
 
   return (
     <Link to={`/user/detail/${user.id}`} className="bg-background border rounded-lg shadow-xs p-4 hover:shadow-md overflow-hidden">

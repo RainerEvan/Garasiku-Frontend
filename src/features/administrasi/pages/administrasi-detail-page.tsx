@@ -20,7 +20,7 @@ import TaskTypeBar from "@/components/shared/task-type-bar";
 import StatusBar from "@/components/shared/status-bar";
 import { PENDING, Status } from "@/lib/constants";
 import { DataBarCard } from "@/components/shared/data-bar-card";
-import { CompleteAdministrationDialog } from "../components/complete-administrasi-dialog";
+import { CompleteAdministrationDialog } from "../components/complete-administration-dialog";
 import { supabase } from "@/lib/supabaseClient";
 import { EmptyState } from "@/components/shared/empty-state";
 import { toast } from "sonner"
@@ -82,6 +82,23 @@ export default function AdministrasiDetailPage() {
     }
   };
 
+  useEffect(() => {
+    const fetchDetail = async () => {
+      if (!id) return;
+      setLoading(true);
+
+      try {
+        await fetchAdministrationDetail(id);
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetail();
+  }, [id]);
+
   const handleCancelAdministration = async () => {
     if (!administration) return;
     setLoading(true);
@@ -105,24 +122,6 @@ export default function AdministrasiDetailPage() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    const fetchDetail = async () => {
-      if (!id) return;
-      setLoading(true);
-
-      try {
-        await fetchAdministrationDetail(id);
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDetail();
-  }, [id]);
-
 
   if (!administration && !loading) return (
     <EmptyState title="Administrasi Tidak Ditemukan" description="Administrasi dengan ID tersebut tidak tersedia." />
@@ -176,11 +175,8 @@ export default function AdministrasiDetailPage() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                    <CompleteAdministrationDialog
-                      administration={administration}
-                      dueDate={administration.dueDate || ""}
-                      onSave={() => fetchAdministrationDetail(id!)}
-                    />
+
+                    <CompleteAdministrationDialog administration={administration} onSave={() => fetchAdministrationDetail(id!)}/>
                   </div>
                 )}
               </div>

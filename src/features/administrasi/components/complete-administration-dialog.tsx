@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+
 import { Button } from "@/components/shadcn/button"
 import {
   Dialog,
@@ -15,77 +16,72 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Service } from "@/models/service"
 import { Textarea } from "@/components/shadcn/textarea"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/popover"
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/shadcn/calendar"
 import { cn, formatRupiah } from "@/lib/utils"
-import { addMonths, format } from "date-fns"
+import { addYears, format } from "date-fns"
 import { Switch } from "@/components/shadcn/switch"
 import { Separator } from "@/components/shadcn/separator"
-import { toast } from "sonner"
-import { supabase } from "@/lib/supabaseClient"
-import { LoadingOverlay } from "@/components/shared/loading-overlay"
+import { Administration } from "@/models/administration"
 import { COMPLETED } from "@/lib/constants"
+import { supabase } from "@/lib/supabaseClient"
+import { toast } from "sonner"
+import { LoadingOverlay } from "@/components/shared/loading-overlay"
 
-interface CompleteServiceDialogProps {
-  service: Service
-  onSave?: (updatedService: Service) => void
+interface CompleteAdministrationDialogProps {
+  administration: Administration
+  onSave?: (updatedAdministration: Administration) => void
 }
 
+// Define the form schema with validation
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
   endDate: z.date({ required_error: "Tanggal Selesai harus terisi" }),
-  mileage: z.coerce.number({ message: "Kilometer harus terisi" }).min(0, { message: "Kilometer harus terisi" }),
-  totalCost: z.coerce.number({ message: "Biaya harus terisi" }).min(0, { message: "Biaya harus terisi" }),
-  mechanicName: z.string().optional(),
-  task: z.string({ message: "Jasa harus terisi" }).min(1, { message: "Jasa harus terisi" }),
-  sparepart: z.string().optional(),
+  totalCost: z.number({ message: "Biaya harus terisi" }).min(0, { message: "Biaya harus terisi" }),
   notes: z.string().optional(),
   isSetNextReminder: z.boolean(),
-  nextScheduleDate: z.date().optional(),
+  newDueDate: z.date().optional(),
 }).refine(
   (data) => {
     if (data.isSetNextReminder) {
-      return data.nextScheduleDate instanceof Date;
+      return data.newDueDate instanceof Date;
     }
     return true;
   },
   {
-    path: ["nextScheduleDate"],
-    message: "Jadwal Servis Berikutnya harus terisi",
+    path: ["newDueDate"],
+    message: "Jatuh Tempo Baru harus terisi",
   }
 )
 
-export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialogProps) {
+export function CompleteAdministrationDialog({ administration, onSave }: CompleteAdministrationDialogProps) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      id: service.id,
-      endDate: service.endDate ? new Date(service.endDate) : undefined,
-      mileage: service.mileage ?? undefined,
-      totalCost: service.totalCost ?? undefined,
-      mechanicName: service.mechanicName ?? undefined,
-      task: service.task ?? undefined,
-      sparepart: service.sparepart ?? undefined,
-      notes: service.notes ?? undefined,
-      isSetNextReminder: true
+      id: administration.id,
+      endDate: administration.endDate ? new Date(administration.endDate) : undefined,
+      totalCost: administration.totalCost ?? undefined,
+      notes: administration.notes ?? undefined,
+      isSetNextReminder: true,
+      newDueDate: administration.dueDate ? addYears(administration.dueDate, 1) : undefined
     },
   })
 
-  const { watch, setValue, reset } = form
-  const endDate = watch("endDate")
-  const isSetNextReminder = watch("isSetNextReminder")
+  const { watch, setValue, reset } = form;
+
+  const isSetNextReminder = watch("isSetNextReminder");
 
   useEffect(() => {
-    if (isSetNextReminder && endDate) {
-      setValue("nextScheduleDate", addMonths(endDate, 6))
+    if (isSetNextReminder && administration.dueDate) {
+      setValue("newDueDate", addYears(administration.dueDate, 1))
     }
-  }, [endDate, isSetNextReminder, setValue])
+  }, [administration.dueDate, isSetNextReminder, setValue])
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
@@ -93,51 +89,48 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
     try {
       const payload = {
         end_date: format(values.endDate, "yyyy-MM-dd"),
-        mileage: values.mileage,
         total_cost: values.totalCost,
-        mechanic_name: values.mechanicName,
-        task: values.task,
-        sparepart: values.sparepart,
         notes: values.notes,
         status: COMPLETED,
+        new_due_date: values.newDueDate ? format(values.newDueDate, "yyyy-MM-dd") : undefined,
       }
 
       const { data, error } = await supabase
-        .from("service")
+        .from("administration")
         .update(payload)
         .eq("id", values.id)
         .select("*")
-        .single()
+        .single();
 
       if (error) {
-        throw new Error("Gagal mengubah data service: " + error.message);
+        throw new Error("Gagal mengubah data administration: " + error.message);
       }
 
-      // insert servis baru kalau isSetNextReminder true
-      if (values.isSetNextReminder && values.nextScheduleDate) {
+      // insert administrasi baru kalau isSetNextReminder true
+      if (values.isSetNextReminder && values.newDueDate) {
         const { data: ticketData, error: ticketError } = await supabase.rpc("generate_ticket_number", {
-          task_type_input: "SRV",
+          task_type_input: "ADM",
         });
         if (ticketError || !ticketData) {
           throw ticketError || new Error("Gagal generate nomor tiket");
         }
         const insertData = {
-          vehicle_id: service.vehicleId,
-          type: service.type,
-          schedule_date: format(values.nextScheduleDate, "yyyy-MM-dd"),
+          vehicle_id: administration.vehicleId,
+          type: administration.type,
+          schedule_date: format(values.newDueDate, "yyyy-MM-dd"),
           status: 'pending',
           ticket_num: ticketData
         }
 
-        const { error: insertError } = await supabase.from("service").insert(insertData)
+        const { error: insertError } = await supabase.from("administration").insert(insertData)
 
         if (insertError) {
-          throw new Error("Servis selesai, tapi gagal membuat reminder servis berikutnya: " + insertError.message);
+          throw new Error("Administrasi selesai, tapi gagal membuat reminder administrasi berikutnya: " + insertError.message);
         } else {
-          toast.success("Servis selesai & reminder servis berikutnya berhasil dibuat.")
+          toast.success("Administrasi selesai & reminder administrasi berikutnya berhasil dibuat.")
         }
       } else {
-        toast.success("Servis berhasil diselesaikan.")
+        toast.success("Administrasi berhasil diselesaikan.")
       }
 
       if (onSave) {
@@ -156,15 +149,12 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
     setOpen(isOpen);
     if (isOpen) {
       reset({
-        id: service.id,
-        endDate: service.endDate ? new Date(service.endDate) : undefined,
-        mileage: service.mileage ?? undefined,
-        totalCost: service.totalCost ?? undefined,
-        mechanicName: service.mechanicName ?? undefined,
-        task: service.task ?? undefined,
-        sparepart: service.sparepart ?? undefined,
-        notes: service.notes ?? undefined,
-        isSetNextReminder: true
+        id: administration.id,
+        endDate: administration.endDate ? new Date(administration.endDate) : undefined,
+        totalCost: administration.totalCost ?? undefined,
+        notes: administration.notes ?? undefined,
+        isSetNextReminder: true,
+        newDueDate: administration.dueDate ? addYears(administration.dueDate, 1) : undefined
       });
     } else {
       reset();
@@ -177,17 +167,17 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
 
       <Dialog open={open} onOpenChange={handleDialogChange}>
         <DialogTrigger asChild>
-          <Button variant="default">Selesaikan Servis</Button>
+          <Button variant="default">Selesaikan Administrasi</Button>
         </DialogTrigger>
         <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle>Selesaikan Servis</DialogTitle>
-            <DialogDescription>Tambah informasi rincian servis dan klik button simpan.</DialogDescription>
+            <DialogTitle>Selesaikan Administrasi</DialogTitle>
+            <DialogDescription>Tambah informasi rincian administrasi dan klik button simpan.</DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Detail Servis */}
+              {/* Detail Administrasi */}
               <div className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 gap-5">
                   <FormField
@@ -209,7 +199,7 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
                                 {field.value ? (
                                   format(field.value, "dd MMM yyyy")
                                 ) : (
-                                  <span>Pilih tanggal selesai servis</span>
+                                  <span>Pilih tanggal selesai administrasi</span>
                                 )}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
@@ -233,26 +223,6 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
                       </FormItem>
                     )}
                   />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <FormField
-                    control={form.control}
-                    name="mileage"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Kilometer</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Masukkan kilometer kendaraan"
-                            {...field}
-                            className="w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
 
                   <FormField
                     control={form.control}
@@ -262,69 +232,13 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
                         <FormLabel className="font-medium">Biaya</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Masukkan biaya servis"
+                            placeholder="Masukkan biaya administrasi"
                             {...field}
                             value={formatRupiah(field.value)}
                             onChange={(e) => {
                               const raw = e.target.value.replace(/\D/g, "");
                               field.onChange(raw);
                             }}
-                            className="w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-5">
-                  <FormField
-                    control={form.control}
-                    name="mechanicName"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Nama Mekanik</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Masukkan nama mekanik servis"
-                            {...field}
-                            className="w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="task"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Jasa</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Masukkan jasa servis"
-                            {...field}
-                            className="w-full"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="sparepart"
-                    render={({ field }) => (
-                      <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Sparepart</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Masukkan sparepart servis"
-                            {...field}
                             className="w-full"
                           />
                         </FormControl>
@@ -341,7 +255,7 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
                         <FormLabel className="font-medium">Catatan</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Masukkan catatan servis"
+                            placeholder="Masukkan catatan administrasi"
                             {...field}
                             className="w-full"
                           />
@@ -358,7 +272,7 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
                     name="isSetNextReminder"
                     render={({ field }) => (
                       <FormItem className="flex items-center justify-between">
-                        <FormLabel className="font-medium">Buat Reminder Servis Berikutnya</FormLabel>
+                        <FormLabel className="font-medium">Buat Reminder Administrasi Berikutnya</FormLabel>
                         <FormControl>
                           <Switch
                             checked={field.value}
@@ -372,10 +286,10 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
                   {isSetNextReminder && (
                     <FormField
                       control={form.control}
-                      name="nextScheduleDate"
+                      name="newDueDate"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="font-medium">Jadwal Servis Berikutnya</FormLabel>
+                          <FormLabel className="font-medium">Jatuh Tempo Berikutnya</FormLabel>
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>
@@ -389,7 +303,7 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
                                   {field.value ? (
                                     format(field.value, "dd MMM yyyy")
                                   ) : (
-                                    <span>Pilih tanggal servis berikutnya</span>
+                                    <span>Pilih tanggal administrasi berikutnya</span>
                                   )}
                                   <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                 </Button>
@@ -429,6 +343,7 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
               </DialogFooter>
             </form>
           </Form>
+
         </DialogContent>
       </Dialog>
     </>

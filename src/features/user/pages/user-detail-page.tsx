@@ -10,7 +10,7 @@ import SectionItem from "@/components/shared/section-item";
 import { Separator } from "@/components/shadcn/separator";
 import { EditUserDialog } from "../components/edit-user-dialog";
 import { ChangePasswordDialog } from "../components/change-password-dialog";
-import { ROLE_PARAM } from "@/lib/constants";
+import { ACTIVE, INACTIVE, ROLE_PARAM } from "@/lib/constants";
 import { EmptyState } from "@/components/shared/empty-state";
 import { LoadingOverlay } from "@/components/shared/loading-overlay";
 
@@ -27,49 +27,71 @@ export default function UserDetailPage() {
   }, [user]);
 
   const isActive = useMemo(() => {
-    return user?.isActive ? "active" : "inactive";
+    return user?.isActive ? ACTIVE : INACTIVE;
   }, [user]);
 
+  const fetchRoleParams = async () => {
+    // Using static param for now — replace with API call if needed
+    const { data, error } = await Promise.resolve(
+      {
+        data: ROLE_PARAM,
+        error: null,
+      }
+    );
+
+    if (error) {
+      console.error("Service Type params fetch error:", error)
+    }
+
+    if (data) {
+      setRoleParam(data);
+    }
+  };
+
+  const fetchUserDetail = async (userId: string) => {
+    const { data, error } = await supabase
+      .rpc("get_all_users")
+      .eq("id", userId)
+      .limit(1);
+
+    if (error) {
+      console.error("Users fetch error:", error.message);
+    }
+
+    if (data.length > 0) {
+      const mapped: User = {
+        id: data[0].id,
+        username: data[0].username,
+        fullname: data[0].fullname,
+        email: data[0].email ?? undefined,
+        phone: data[0].phone_no ? `+${data[0].phone_no}` : undefined,
+        role: data[0].role,
+        isActive: data[0].status === ACTIVE,
+      };
+      setUser(mapped);
+    }
+  };
+
   useEffect(() => {
-    const fetchUser = async () => {
+    fetchRoleParams();
+  }, []);
+
+  useEffect(() => {
+    const fetchDetail = async () => {
+      if (!userId) return;
       setLoading(true);
+
       try {
-        const [roleParamsRes] = await Promise.all([
-          Promise.resolve(ROLE_PARAM),
-        ]);
-        setRoleParam(roleParamsRes);
-
-        const { data, error } = await supabase.rpc("get_all_users").select("*");
-
-        if (error) {
-          console.error("Failed to fetch users:", error.message);
-          return;
-        }
-
-        const found = (data || []).find((u: any) => u.id === userId);
-
-        if (found) {
-          const mapped: User = {
-            id: found.id,
-            username: found.username ?? found.email,
-            fullname: found.fullname ?? "-",
-            email: found.email,
-            phone: found.phone_no ?? "-",
-            role: found.role ?? "-",
-            isActive: found.status === "active",
-          };
-
-          setUser(mapped);
-        }
+        await fetchUserDetail(userId);
       } catch (err) {
-        console.error("Unexpected error:", err);
+        console.error("Failed to fetch data:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUser();
-  }, [userId, setLoading]);
+    fetchDetail();
+  }, [userId]);
 
   if (!user && !loading) {
     return (
@@ -78,10 +100,11 @@ export default function UserDetailPage() {
   }
 
   if (!user) return null;
+
   return (
     <>
       <LoadingOverlay loading={loading} />
-      
+
       <div className="min-h-screen flex flex-col">
         <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
           <div className="flex items-center justify-between">
@@ -124,7 +147,7 @@ export default function UserDetailPage() {
                 </div>
 
                 <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2">
-                  <EditUserDialog user={user} />
+                  <EditUserDialog user={user} onSave={() => fetchUserDetail(userId!)} />
                   <ChangePasswordDialog user={user} />
                 </div>
               </div>

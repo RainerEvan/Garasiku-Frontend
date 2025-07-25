@@ -303,7 +303,7 @@ export default function ServisDetailPage() {
                             {service && (
                                 <div className="grid grid-cols-1 gap-3 py-1">
                                     <div className="grid grid-cols-2 gap-3">
-                                        <SectionItem label="Kilometer" value={`${service.mileage} KM`} />
+                                        <SectionItem label="Kilometer" value={service.mileage ? `${service.mileage} KM` : undefined} />
                                         <SectionItem label="Biaya" value={service.totalCost ? `Rp ${formatRupiah(service.totalCost)}` : undefined} />
                                     </div>
                                     <SectionItem label="Nama Mekanik" value={service.mechanicName} />

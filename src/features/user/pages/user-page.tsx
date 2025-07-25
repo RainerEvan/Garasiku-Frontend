@@ -6,41 +6,48 @@ import { AddUserDialog } from "../components/add-user-dialog"
 import { supabase } from "@/lib/supabaseClient"
 import { User } from "@/models/user"
 import { LoadingOverlay } from "@/components/shared/loading-overlay"
+import { ACTIVE } from "@/lib/constants"
 
 export default function UserPage() {
   const [loading, setLoading] = useState(false);
   const [searchUser, setSearchUser] = useState("")
   const [users, setUsers] = useState<User[]>([])
 
+  const fetchUsers = async () => {
+    const { data, error } = await supabase
+      .rpc("get_all_users")
+      .select("*");
+
+    if (error) {
+      console.error("Users fetch error:", error)
+    }
+
+    if (data) {
+      const mappedUsers: User[] = (data || []).map((u: any) => ({
+        id: u.id,
+        username: u.username,
+        fullname: u.fullname,
+        email: u.email,
+        role: u.role,
+        isActive: u.status === ACTIVE,
+      }));
+      setUsers(mappedUsers);
+    }
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchAll = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase.rpc("get_all_users");
-
-        if (error) {
-          console.error("Failed to fetch users:", error.message);
-          return;
-        }
-
-        const mappedUsers: User[] = (data || []).map((u: any) => ({
-          id: u.id,
-          username: u.username || u.email,
-          fullname: u.username || "", // kamu bisa pakai fullname kalau ada field-nya
-          email: u.email,
-          role: u.role || "-",
-          isActive: u.status === "active", // asumsi field `status` ada: "active"/"inactive"
-        }));
-
-        setUsers(mappedUsers);
+        await fetchUsers();
       } catch (err) {
-        console.error("Unexpected error:", err);
+        console.error("Failed to fetch data:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUsers();
+    fetchAll();
   }, []);
 
   const filteredUsers = users.filter((user) =>
@@ -55,7 +62,7 @@ export default function UserPage() {
         <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">User</h1>
-            <AddUserDialog />
+            <AddUserDialog onSave={() => fetchUsers()} />
           </div>
 
           <div className="flex flex-col gap-3">

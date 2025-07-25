@@ -45,7 +45,7 @@ import { cn } from "@/lib/utils";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Service } from "@/models/service";
+import { Administration } from "@/models/administration";
 import { Vehicle } from "@/models/vehicle";
 import {
   Command,
@@ -55,23 +55,23 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/shadcn/command";
-import { SERVICE_TYPE_PARAM } from "@/lib/constants";
+import { ADMINISTRATION_TYPE_PARAM } from "@/lib/constants";
 import { supabase } from "@/lib/supabaseClient"
 import { LoadingOverlay } from "@/components/shared/loading-overlay";
 
-interface AddServiceDialogProps {
-  onSave?: (newService: Service) => void;
+interface AddAdministrationDialogProps {
+  onSave?: (newAdministration: Administration) => void;
 }
 
 const formSchema = z.object({
   vehicleId: z.string().min(1, { message: "Kendaraan harus terisi" }),
-  type: z.string({ message: "Tipe Servis harus terisi" }).min(1, { message: "Tipe Servis harus terisi" }),
-  scheduleDate: z.date({ required_error: "Jadwal Servis harus terisi" }),
+  type: z.string({ message: "Tipe Administrasi harus terisi" }).min(1, { message: "Tipe Administrasi harus terisi" }),
+  dueDate: z.date({ required_error: "Jatuh Tempo Administrasi harus terisi" }),
 });
-const typeServiceParam = SERVICE_TYPE_PARAM;
+const typeAdministrationParam = ADMINISTRATION_TYPE_PARAM;
 
 
-export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
+export function AddAdministrationDialog({ onSave }: AddAdministrationDialogProps) {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [listVehicle, setListVehicle] = useState<Vehicle[]>([]);
@@ -81,7 +81,7 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
     defaultValues: {
       vehicleId: "",
       type: "",
-      scheduleDate: new Date(),
+      dueDate: new Date(),
     },
   });
 
@@ -127,7 +127,7 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
 
     try {
       const { data: ticketData, error: ticketError } = await supabase.rpc("generate_ticket_number", {
-        task_type_input: "SRV",
+        task_type_input: "ADM",
       });
 
       if (ticketError || !ticketData) {
@@ -137,29 +137,29 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
       const formattedValues = {
         vehicle_id: values.vehicleId,
         type: values.type,
-        schedule_date: format(values.scheduleDate, "yyyy-MM-dd"),
+        due_date: format(values.dueDate, "yyyy-MM-dd"),
         ticket_num: ticketData,
       };
 
       const { data, error } = await supabase
-        .from("service")
+        .from("administration")
         .insert(formattedValues)
         .select("*")
         .single();
 
       if (error) {
-        throw new Error("Gagal menyimpan data servis: " + error.message);
+        throw new Error("Gagal menyimpan data administrasi: " + error.message);
       }
 
-      toast.success("Data servis berhasil ditambahkan.");
+      toast.success("Data administrasi berhasil ditambahkan.");
       if (onSave) {
-        onSave(data as Service);
+        onSave(data as Administration);
       }
       setOpen(false);
       reset();
     } catch (error) {
       console.error(error);
-      toast.error("Terjadi kesalahan pada sistem: " + error);
+      toast.error("Gagal menambahkan data administrasi: " + error);
     } finally {
       setLoading(false);
     }
@@ -181,7 +181,7 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
         <DialogTrigger asChild>
           <div>
             <Button className="hidden sm:flex">
-              <PlusCircle /> Tambah Servis
+              <PlusCircle /> Tambah Administrasi
             </Button>
             <Button
               variant="default"
@@ -198,23 +198,23 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <DialogHeader>
-            <DialogTitle>Tambah Servis</DialogTitle>
+            <DialogTitle>Tambah Administrasi</DialogTitle>
             <DialogDescription>
-              Tambah servis baru dan klik button simpan.
+              Tambah administrasi baru dan klik button simpan.
             </DialogDescription>
           </DialogHeader>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Detail Servis */}
+              {/* Detail Administrasi */}
               <div className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 gap-5">
                   <FormField
                     control={form.control}
-                    name="scheduleDate"
+                    name="dueDate"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Jadwal Servis</FormLabel>
+                        <FormLabel className="font-medium">Jatuh Tempo Administrasi</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
@@ -228,7 +228,7 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
                                 {field.value ? (
                                   format(field.value, "dd MMM yyyy")
                                 ) : (
-                                  <span>Pilih tanggal jadwal servis</span>
+                                  <span>Pilih tanggal jatuh Tempo administrasi</span>
                                 )}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
@@ -328,15 +328,15 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
                     name="type"
                     render={({ field }) => (
                       <FormItem className="space-y-1">
-                        <FormLabel className="font-medium">Tipe Servis</FormLabel>
+                        <FormLabel className="font-medium">Tipe Administrasi</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Pilih tipe servis" />
+                              <SelectValue placeholder="Pilih tipe administrasi" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {typeServiceParam.map((option) => (
+                            {typeAdministrationParam.map((option) => (
                               <SelectItem key={option.id} value={option.name}>
                                 {option.description}
                               </SelectItem>

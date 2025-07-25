@@ -1,6 +1,6 @@
 import { ArrowDownNarrowWide, ArrowUpNarrowWide, IdCard, Search } from "lucide-react";
 import { Administration } from "@/models/administration";
-import { AdministrationCard } from "@/features/administrasi/components/administrasi-card";
+import { AdministrationCard } from "@/features/administrasi/components/administration-card";
 import { Input } from "@/components/shadcn/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Button } from "@/components/shadcn/button";

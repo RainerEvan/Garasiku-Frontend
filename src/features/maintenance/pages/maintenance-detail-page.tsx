@@ -50,7 +50,7 @@ export default function MaintenanceDetailPage() {
       .order("name", { ascending: true })
 
     if (error) {
-      console.error("Parameter Group detail fetch error:", error)
+      console.error("List Parameter fetch error:", error)
     }
 
     if (data) {
@@ -112,14 +112,9 @@ export default function MaintenanceDetailPage() {
                   param={param}
                   paramGroup={paramGroup}
                   index={index}
-                  onDeleted={(id) => setParams((prev) => prev.filter((p) => p.id !== id))}
-                  onUpdated={(updatedParam) =>
-                    setParams((prev) =>
-                      prev.map((p) => (p.id === updatedParam.id ? updatedParam : p))
-                    )
-                  }
+                  onDeleted={() => fetchParamsByGroup(groupCode!)}
+                  onUpdated={() => fetchParamsByGroup(groupCode!)}
                 />
-
               ))}
 
             </div>

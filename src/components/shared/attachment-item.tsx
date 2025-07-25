@@ -42,13 +42,13 @@ export default function AttachmentItem({
                 .eq("id", attachment.id)
             if (dbError) throw dbError
 
+            toast.success("Dokumen berhasil dihapus.")
             if (onAttachmentDelete && attachment.id) {
                 onAttachmentDelete(attachment.id)
             }
-            toast.success("Dokumen berhasil dihapus")
         } catch (error) {
-            toast.error("Gagal menghapus dokumen")
             console.error("Gagal menghapus dokumen:", error)
+            toast.error("Gagal menghapus dokumen")
         } finally {
             setOpenDeleteDialog(false)
             setLoading?.(false)

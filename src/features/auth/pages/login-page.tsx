@@ -18,11 +18,12 @@ import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
 import { LoadingOverlay } from "@/components/shared/loading-overlay"
+import { ACTIVE } from "@/lib/constants"
 
 // Form schema
 const formSchema = z.object({
-  username: z.string().min(1, { message: "Username harus terisi" }),
-  password: z.string().min(1, { message: "Password harus terisi" }),
+  username: z.string({ message: "Username harus terisi" }).min(1, { message: "Username harus terisi" }),
+  password: z.string({ message: "Password harus terisi" }).min(1, { message: "Password harus terisi" }),
 })
 
 export default function LoginPage() {
@@ -72,8 +73,7 @@ export default function LoginPage() {
         return
       }
 
-      // ❌ Check status
-      if (userRow.status !== "active") {
+      if (userRow.status !== ACTIVE) {
         await supabase.auth.signOut()
         form.setError("username", {
           message: "Akun nonaktif, hubungi admin.",

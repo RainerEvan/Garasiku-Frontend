@@ -22,6 +22,7 @@ import { Textarea } from "@/components/shadcn/textarea"
 import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
 import { formatRupiah } from "@/lib/utils"
+import { LoadingOverlay } from "@/components/shared/loading-overlay"
 
 interface EditServiceRecordDialogProps {
   service: Service
@@ -31,31 +32,34 @@ interface EditServiceRecordDialogProps {
 // Define the form schema with validation
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
-  mileage: z.coerce.number().min(0, { message: "Kilometer harus terisi" }),
+  mileage: z.coerce.number({ message: "Kilometer harus terisi" }).min(0, { message: "Kilometer harus terisi" }),
   totalCost: z.coerce.number().optional(),
   mechanicName: z.string().optional(),
-  task: z.string().min(1, { message: "Jasa harus terisi" }),
+  task: z.string({ message: "Jasa harus terisi" }).min(1, { message: "Jasa harus terisi" }),
   sparepart: z.string().optional(),
   notes: z.string().optional(),
 });
 
 export function EditServiceRecordDialog({ service, onSave }: EditServiceRecordDialogProps) {
-  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: service.id,
-      mileage: service.mileage,
-      totalCost: service.totalCost,
-      mechanicName: service.mechanicName,
-      task: service.task,
-      sparepart: service.sparepart,
-      notes: service.notes
+      mileage: service.mileage ?? undefined,
+      totalCost: service.totalCost ?? undefined,
+      mechanicName: service.mechanicName ?? undefined,
+      task: service.task ?? undefined,
+      sparepart: service.sparepart ?? undefined,
+      notes: service.notes ?? undefined,
     },
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setLoading(true);
+
     try {
       const { data, error } = await supabase
         .from("service")
@@ -72,176 +76,197 @@ export function EditServiceRecordDialog({ service, onSave }: EditServiceRecordDi
         .single();
 
       if (error) {
-        toast.error("Gagal update servis.")
-
-        console.error("Gagal update service:", error.message);
-        return;
+        throw new Error("Gagal mengubah data service: " + error.message);
       }
 
-      toast.success("Servis berhasil diupdate.")
+      toast.success("Data servis berhasil diperbarui.")
 
       if (onSave) {
-        onSave(data); // kirim service yang sudah diupdate ke parent
+        onSave(data);
       }
 
       setOpen(false);
-    } catch (err) {
-      console.error("Unexpected error:", err);
-      alert("Terjadi kesalahan tak terduga.");
+    } catch (error) {
+      console.error(error);
+      toast.error("Terjadi kesalahan pada sistem: " + error);
+    } finally {
+      setLoading(false);
     }
   }
 
+  const { reset } = form
+
+  function handleDialogChange(isOpen: boolean) {
+    setOpen(isOpen);
+    if (isOpen) {
+      reset({
+        id: service.id,
+        mileage: service.mileage ?? undefined,
+        totalCost: service.totalCost ?? undefined,
+        mechanicName: service.mechanicName ?? undefined,
+        task: service.task ?? undefined,
+        sparepart: service.sparepart ?? undefined,
+        notes: service.notes ?? undefined,
+      });
+    } else {
+      reset();
+    }
+  }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Edit />
-          Ubah
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle>Ubah Rincian Servis</DialogTitle>
-          <DialogDescription>Atur informasi rincian servis dan klik button simpan.</DialogDescription>
-        </DialogHeader>
+    <>
+      <LoadingOverlay loading={loading} />
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Detail Servis */}
-            <div className="flex flex-col gap-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <FormField
-                  control={form.control}
-                  name="mileage"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Kilometer</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="Masukkan kilometer kendaraan"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+      <Dialog open={open} onOpenChange={handleDialogChange}>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Edit />
+            Ubah
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Ubah Rincian Servis</DialogTitle>
+            <DialogDescription>Atur informasi rincian servis dan klik button simpan.</DialogDescription>
+          </DialogHeader>
 
-                <FormField
-                  control={form.control}
-                  name="totalCost"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Biaya</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Masukkan biaya servis"
-                          {...field}
-                          value={formatRupiah(field.value)}
-                          onChange={(e) => {
-                            const raw = e.target.value.replace(/\D/g, "");
-                            field.onChange(raw);
-                          }}
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Detail Servis */}
+              <div className="flex flex-col gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <FormField
+                    control={form.control}
+                    name="mileage"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="font-medium">Kilometer</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="Masukkan kilometer kendaraan"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="totalCost"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="font-medium">Biaya</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Masukkan biaya servis"
+                            {...field}
+                            value={formatRupiah(field.value)}
+                            onChange={(e) => {
+                              const raw = e.target.value.replace(/\D/g, "");
+                              field.onChange(raw);
+                            }}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 gap-5">
+                  <FormField
+                    control={form.control}
+                    name="mechanicName"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="font-medium">Nama Mekanik</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Masukkan nama mekanik servis"
+                            {...field}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="task"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="font-medium">Jasa</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Masukkan jasa servis"
+                            {...field}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="sparepart"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="font-medium">Sparepart</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Masukkan sparepart servis"
+                            {...field}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem className="space-y-1">
+                        <FormLabel className="font-medium">Catatan</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Masukkan catatan servis"
+                            {...field}
+                            className="w-full"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-5">
-                <FormField
-                  control={form.control}
-                  name="mechanicName"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Nama Mekanik</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Masukkan nama mekanik servis"
-                          {...field}
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="task"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Jasa</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Masukkan jasa servis"
-                          {...field}
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="sparepart"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Sparepart</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Masukkan sparepart servis"
-                          {...field}
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem className="space-y-1">
-                      <FormLabel className="font-medium">Catatan</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Masukkan catatan servis"
-                          {...field}
-                          className="w-full"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline">
-                  Batal
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">
+                    Batal
+                  </Button>
+                </DialogClose>
+                <Button type="submit">
+                  Simpan
                 </Button>
-              </DialogClose>
-              <Button type="submit">
-                Simpan
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
+              </DialogFooter>
+            </form>
+          </Form>
 
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

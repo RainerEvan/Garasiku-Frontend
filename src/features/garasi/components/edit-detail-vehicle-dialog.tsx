@@ -32,12 +32,12 @@ interface EditDetailVehicleDialogProps {
 
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
-  name: z.string().min(1, { message: "Nama harus terisi" }),
-  category: z.string().min(1, { message: "Jenis harus terisi" }),
-  brand: z.string().min(1, { message: "Merk harus terisi" }),
-  type: z.string().min(1, { message: "Tipe harus terisi" }),
-  year: z.coerce.number().min(1900, { message: "Tahun tidak valid" }),
-  color: z.string().min(1, { message: "Warna harus terisi" }),
+  name: z.string({ message: "Nama harus terisi" }).min(1, { message: "Nama harus terisi" }),
+  category: z.string({ message: "Jenis harus terisi" }).min(1, { message: "Jenis harus terisi" }),
+  brand: z.string({ message: "Merk harus terisi" }).min(1, { message: "Merk harus terisi" }),
+  type: z.string({ message: "Tipe harus terisi" }).min(1, { message: "Tipe harus terisi" }),
+  year: z.coerce.number({ message: "Tahun harus terisi" }).min(1900, { message: "Tahun tidak valid" }),
+  color: z.string({ message: "Warna harus terisi" }).min(1, { message: "Warna harus terisi" }),
 })
 
 export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDialogProps) {

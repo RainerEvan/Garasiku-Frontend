@@ -7,7 +7,7 @@ import { Service } from "@/models/service";
 import { AddServiceDialog } from "../components/add-service-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/select";
 import { Button } from "@/components/shadcn/button";
-import { SERVICE_TYPE_PARAM } from "@/lib/constants";
+import { CANCELLED, COMPLETED, ONGOING, PENDING, SERVICE_TYPE_PARAM } from "@/lib/constants";
 import { supabase } from "@/lib/supabaseClient"
 import { getCachedReminderDateRange } from "@/lib/reminder-date";
 import { LoadingOverlay } from "@/components/shared/loading-overlay";
@@ -67,17 +67,17 @@ export default function ServisPage() {
 
     if (activeTab === "todo") {
       serviceQuery = serviceQuery
-        .eq("status", "pending")
+        .eq("status", PENDING)
         .lte("schedule_date", futureDate.toISOString());
     } else if (activeTab === "pending") {
       serviceQuery = serviceQuery
-        .eq("status", "pending");
+        .eq("status", PENDING);
     } else if (activeTab === "proses") {
       serviceQuery = serviceQuery
-        .eq("status", "ongoing");
+        .eq("status", ONGOING);
     } else {
       serviceQuery = serviceQuery
-        .in("status", ["completed", "cancelled"]);
+        .in("status", [COMPLETED, CANCELLED]);
     }
 
     const { data, error } = await serviceQuery
@@ -108,14 +108,18 @@ export default function ServisPage() {
   };
 
   useEffect(() => {
+    fetchServiceTypeParams();
+  }, []);
+
+  useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
+      setSearchQuery("");
+      setSelectType("all");
+      setSortOrder("asc");
 
       try {
-        await Promise.all([
-          fetchServiceTypeParams(),
-          fetchListServices(),
-        ]);
+        await fetchListServices();
       } catch (err) {
         console.error("Failed to fetch data:", err);
       } finally {
@@ -126,10 +130,6 @@ export default function ServisPage() {
     fetchAll();
   }, [activeTab]);
 
-  useEffect(() => {
-    setSearchQuery("");
-    setSelectType("all");
-  }, [activeTab]);
 
   const filteredAndSortedService = useMemo(() => {
     const filtered = listServices.filter((service) => {
@@ -156,17 +156,17 @@ export default function ServisPage() {
     });
 
     return filtered;
-  }, [activeTab, searchQuery, selectType, listServices, sortOrder]);
+  }, [searchQuery, selectType, sortOrder, listServices]);
 
   return (
     <>
       <LoadingOverlay loading={loading} />
-      
+
       <div className="min-h-screen flex flex-col">
         <main className="flex-1 p-4 md:p-6 flex flex-col gap-5 md:max-w-6xl md:mx-auto md:w-full">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold">Servis</h1>
-            <AddServiceDialog />
+            <AddServiceDialog onSave={() => fetchListServices()} />
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

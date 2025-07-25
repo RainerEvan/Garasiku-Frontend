@@ -26,6 +26,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/shadcn/input";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
+import { LoadingOverlay } from "@/components/shared/loading-overlay";
 
 interface ChangePasswordDialogProps {
   user: User;
@@ -34,10 +35,11 @@ interface ChangePasswordDialogProps {
 
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
-  password: z.string().min(1, { message: "Password harus terisi" }),
+  password: z.string({ message: "Password harus terisi" }).min(1, { message: "Password harus terisi" }),
 });
 
 export function ChangePasswordDialog({ user, onSave }: ChangePasswordDialogProps) {
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -52,6 +54,8 @@ export function ChangePasswordDialog({ user, onSave }: ChangePasswordDialogProps
   const { reset } = form;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    setLoading(true);
+
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token || "";
@@ -88,6 +92,8 @@ export function ChangePasswordDialog({ user, onSave }: ChangePasswordDialogProps
       } else {
         toast.error("Terjadi kesalahan tak dikenal");
       }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -99,59 +105,63 @@ export function ChangePasswordDialog({ user, onSave }: ChangePasswordDialogProps
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogChange}>
-      <DialogTrigger asChild>
-        <Button variant="secondary">Ganti Password</Button>
-      </DialogTrigger>
-      <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle>Ganti Password</DialogTitle>
-          <DialogDescription>Masukkan password baru lalu klik simpan.</DialogDescription>
-        </DialogHeader>
+    <>
+      <LoadingOverlay loading={loading} />
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem className="space-y-1">
-                  <FormLabel className="font-medium">Password Baru</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Masukkan password baru user"
-                        {...field}
-                      />
-                      <div
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute top-1/2 -translate-y-1/2 right-3 cursor-pointer"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-5 w-5 text-medium" />
-                        ) : (
-                          <Eye className="h-5 w-5 text-medium" />
-                        )}
+      <Dialog open={open} onOpenChange={handleDialogChange}>
+        <DialogTrigger asChild>
+          <Button variant="secondary">Ganti Password</Button>
+        </DialogTrigger>
+        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle>Ganti Password</DialogTitle>
+            <DialogDescription>Masukkan password baru lalu klik simpan.</DialogDescription>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <FormLabel className="font-medium">Password Baru</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Masukkan password baru user"
+                          {...field}
+                        />
+                        <div
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute top-1/2 -translate-y-1/2 right-3 cursor-pointer"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-5 w-5 text-medium" />
+                          ) : (
+                            <Eye className="h-5 w-5 text-medium" />
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline">
-                  Batal
-                </Button>
-              </DialogClose>
-              <Button type="submit">Simpan</Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">
+                    Batal
+                  </Button>
+                </DialogClose>
+                <Button type="submit">Simpan</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
