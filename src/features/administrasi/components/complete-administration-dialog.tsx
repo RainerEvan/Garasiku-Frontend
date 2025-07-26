@@ -39,7 +39,7 @@ interface CompleteAdministrationDialogProps {
 const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
   endDate: z.date({ required_error: "Tanggal Selesai harus terisi" }),
-  totalCost: z.number({ message: "Biaya harus terisi" }).min(0, { message: "Biaya harus terisi" }),
+  totalCost: z.coerce.number({ message: "Biaya harus terisi" }).min(0, { message: "Biaya harus terisi" }),
   notes: z.string().optional(),
   isSetNextReminder: z.boolean(),
   newDueDate: z.date().optional(),
@@ -117,7 +117,7 @@ export function CompleteAdministrationDialog({ administration, onSave }: Complet
         const insertData = {
           vehicle_id: administration.vehicleId,
           type: administration.type,
-          schedule_date: format(values.newDueDate, "yyyy-MM-dd"),
+          due_date: format(values.newDueDate, "yyyy-MM-dd"),
           status: PENDING,
           ticket_num: ticketData
         }

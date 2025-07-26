@@ -28,7 +28,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Stnk } from "@/models/stnk"
 import { supabase } from "@/lib/supabaseClient"
 import { LoadingOverlay } from "@/components/shared/loading-overlay";
-import { format } from "date-fns";
 
 interface EditDetailStnkDialogProps {
   stnk: Stnk | null
@@ -69,25 +68,25 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
     defaultValues: {
       id: stnk?.id ?? "",
       vehicleId: stnk?.vehicleId ?? "",
-      licensePlate: stnk?.licensePlate || undefined,
-      stnkNumber: stnk?.stnkNumber || undefined,
-      ownerName: stnk?.ownerName || undefined,
-      ownerAddress: stnk?.ownerAddress || undefined,
-      brand: stnk?.brand || undefined,
-      type: stnk?.type || undefined,
-      category: stnk?.category || undefined,
-      model: stnk?.model || undefined,
-      manufacturedYear: stnk?.manufacturedYear || undefined,
-      chassisNumber: stnk?.chassisNumber || undefined,
-      engineNumber: stnk?.engineNumber || undefined,
-      color: stnk?.color || undefined,
-      fuelType: stnk?.fuelType || undefined,
-      licensePlateColor: stnk?.licensePlateColor || undefined,
-      registrationYear: stnk?.registrationYear || undefined,
-      cylinderCapacity: stnk?.cylinderCapacity || undefined,
-      bpkbNumber: stnk?.bpkbNumber || undefined,
-      registrationNumber: stnk?.registrationNumber || undefined,
-      validUntil: stnk?.validUntil ?? format(new Date(), "yyyy-MM-dd"),
+      licensePlate: stnk?.licensePlate ?? undefined,
+      stnkNumber: stnk?.stnkNumber ?? undefined,
+      ownerName: stnk?.ownerName ?? undefined,
+      ownerAddress: stnk?.ownerAddress ?? undefined,
+      brand: stnk?.brand ?? undefined,
+      type: stnk?.type ?? undefined,
+      category: stnk?.category ?? undefined,
+      model: stnk?.model ?? undefined,
+      manufacturedYear: stnk?.manufacturedYear ?? undefined,
+      chassisNumber: stnk?.chassisNumber ?? undefined,
+      engineNumber: stnk?.engineNumber ?? undefined,
+      color: stnk?.color ?? undefined,
+      fuelType: stnk?.fuelType ?? undefined,
+      licensePlateColor: stnk?.licensePlateColor ?? undefined,
+      registrationYear: stnk?.registrationYear ?? undefined,
+      cylinderCapacity: stnk?.cylinderCapacity ?? undefined,
+      bpkbNumber: stnk?.bpkbNumber ?? undefined,
+      registrationNumber: stnk?.registrationNumber ?? undefined,
+      validUntil: stnk?.validUntil ?? undefined,
     },
   })
 
@@ -128,19 +127,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
         throw new Error("Gagal mengubah data stnk: " + error.message);
       }
 
-      const { error: vehicleError } = await supabase
-        .from("vehicles")
-        .update({
-          stnk_due_date: values.validUntil || null,
-        })
-        .eq("id", values.vehicleId);
-
-      if (vehicleError) {
-        throw new Error("Gagal mengubah stnk due date vehicle: " + vehicleError.message);
-      }
-
       toast.success("Data STNK berhasil diperbarui.")
-
       if (onSave) {
         onSave(data as Stnk)
       }
@@ -161,25 +148,25 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
       reset({
         id: stnk?.id ?? "",
         vehicleId: stnk?.vehicleId ?? "",
-        licensePlate: stnk?.licensePlate || undefined,
-        stnkNumber: stnk?.stnkNumber || undefined,
-        ownerName: stnk?.ownerName || undefined,
-        ownerAddress: stnk?.ownerAddress || undefined,
-        brand: stnk?.brand || undefined,
-        type: stnk?.type || undefined,
-        category: stnk?.category || undefined,
-        model: stnk?.model || undefined,
-        manufacturedYear: stnk?.manufacturedYear || undefined,
-        chassisNumber: stnk?.chassisNumber || undefined,
-        engineNumber: stnk?.engineNumber || undefined,
-        color: stnk?.color || undefined,
-        fuelType: stnk?.fuelType || undefined,
-        licensePlateColor: stnk?.licensePlateColor || undefined,
-        registrationYear: stnk?.registrationYear || undefined,
-        cylinderCapacity: stnk?.cylinderCapacity || undefined,
-        bpkbNumber: stnk?.bpkbNumber || undefined,
-        registrationNumber: stnk?.registrationNumber || undefined,
-        validUntil: stnk?.validUntil ?? format(new Date(), "yyyy-MM-dd"),
+        licensePlate: stnk?.licensePlate ?? undefined,
+        stnkNumber: stnk?.stnkNumber ?? undefined,
+        ownerName: stnk?.ownerName ?? undefined,
+        ownerAddress: stnk?.ownerAddress ?? undefined,
+        brand: stnk?.brand ?? undefined,
+        type: stnk?.type ?? undefined,
+        category: stnk?.category ?? undefined,
+        model: stnk?.model ?? undefined,
+        manufacturedYear: stnk?.manufacturedYear ?? undefined,
+        chassisNumber: stnk?.chassisNumber ?? undefined,
+        engineNumber: stnk?.engineNumber ?? undefined,
+        color: stnk?.color ?? undefined,
+        fuelType: stnk?.fuelType ?? undefined,
+        licensePlateColor: stnk?.licensePlateColor ?? undefined,
+        registrationYear: stnk?.registrationYear ?? undefined,
+        cylinderCapacity: stnk?.cylinderCapacity ?? undefined,
+        bpkbNumber: stnk?.bpkbNumber ?? undefined,
+        registrationNumber: stnk?.registrationNumber ?? undefined,
+        validUntil: stnk?.validUntil ?? undefined,
       });
     } else {
       reset();

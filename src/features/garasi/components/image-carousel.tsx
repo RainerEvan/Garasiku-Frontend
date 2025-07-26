@@ -11,6 +11,7 @@ import {
 } from "@/components/shadcn/carousel";
 import { EditImageVehicleDialog } from "./edit-image-vehicle-dialog";
 import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/lib/supabaseClient";
 
 interface ImageCarouselProps {
     images: string[];
@@ -24,6 +25,8 @@ export function ImageCarousel({ images, vehicleId, onSave }: ImageCarouselProps)
     const [api, setApi] = useState<CarouselApi>()
     const [current, setCurrent] = useState(0)
     const [count, setCount] = useState(0)
+
+    const [displayImages, setDisplayImages] = useState<string[]>([]);
 
     useEffect(() => {
         if (!api) return;
@@ -43,6 +46,14 @@ export function ImageCarousel({ images, vehicleId, onSave }: ImageCarouselProps)
             api.off("select", handleSelect);
         };
     }, [api, images.length]);
+
+    useEffect(() => {
+        const urls = images.map((img) => {
+            if (img.startsWith("blob:")) return img;
+            return supabase.storage.from("vehicle").getPublicUrl(img).data.publicUrl ?? "/placeholder.svg";
+        });
+        setDisplayImages(urls);
+    }, [images]);
 
     if (!images || images.length === 0) {
         return (
@@ -70,10 +81,10 @@ export function ImageCarousel({ images, vehicleId, onSave }: ImageCarouselProps)
             >
                 <CarouselContent>
                     {images.map((image, index) => (
-                        <CarouselItem key={index}>
+                        <CarouselItem key={image}>
                             <div className="aspect-video w-full overflow-hidden">
                                 <img
-                                    src={image || "/placeholder.svg"}
+                                    src={displayImages[index]}
                                     alt={`Image ${index + 1}`}
                                     className="object-cover w-full h-full"
                                 />

@@ -21,6 +21,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
 import { AttachmentService } from "@/models/attachment-service"
 import { LoadingOverlay } from "@/components/shared/loading-overlay"
+import { MAX_FILE_SIZE } from "@/lib/constants"
 
 interface AddAttachmentServiceDialogProps {
   serviceId?: string
@@ -33,6 +34,9 @@ const formSchema = z.object({
     .instanceof(File)
     .refine((file) => file.type === "application/pdf" || file.type.startsWith("image/"), {
       message: "File harus berupa PDF atau gambar",
+    })
+    .refine((file) => file.size <= MAX_FILE_SIZE, {
+      message: "Ukuran file maksimal 1 MB",
     }),
 })
 

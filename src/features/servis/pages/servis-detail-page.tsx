@@ -130,7 +130,7 @@ export default function ServisDetailPage() {
             .from("attachment_service")
             .select("id, created_at, service_id, file_name, file_type, file_size, file_link, created_by")
             .eq("service_id", serviceId)
-            .order("created_at", { ascending: false });
+            .order("created_at", { ascending: true });
 
         if (error) {
             console.error("Service attachments fetch error:", error);

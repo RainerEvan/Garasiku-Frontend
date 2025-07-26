@@ -22,7 +22,7 @@ export default function AktivitasAdministrasiKendaraanPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectType, setSelectType] = useState("all");
     const [selectStatus, setSelectStatus] = useState("all");
-    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
 
     const [selectTypeOptions, setSelectTypeOptions] = useState<SelectOption[]>([])
     const [selectStatusOptions, setSelectStatusOptions] = useState<SelectOption[]>([])

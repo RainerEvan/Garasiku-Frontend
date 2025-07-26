@@ -100,12 +100,12 @@ export default function KendaraanDetailPage() {
                 image: base.image_url,
                 stnkDueDate: base.stnk_due_date,
                 insuranceDueDate: base.insurance_due_date,
-                lastServiceDate: base.schedule_date
+                lastServiceDate: base.last_service_date
             });
 
             setVehicleStnkDueDate(base.stnk_due_date ?? undefined);
             setVehicleInsuranceDueDate(base.insurance_due_date ?? undefined);
-            setVehicleLastServiceDate(base.schedule_date ?? undefined);
+            setVehicleLastServiceDate(base.last_service_date ?? undefined);
 
             setVehicleLatestLocation({
                 id: base.location_id,
@@ -169,7 +169,7 @@ export default function KendaraanDetailPage() {
             .from("vehicle_service_history")
             .select("*")
             .eq("vehicle_id", vehicleId)
-            .order("schedule_date", { ascending: true })
+            .order("schedule_date", { ascending: false })
             .limit(3);
 
         if (error) {
@@ -200,7 +200,7 @@ export default function KendaraanDetailPage() {
             .from("vehicle_administration_history")
             .select("*")
             .eq("vehicle_id", vehicleId)
-            .order("due_date", { ascending: true })
+            .order("due_date", { ascending: false })
             .limit(3);
 
         if (error) {
@@ -228,7 +228,7 @@ export default function KendaraanDetailPage() {
             .select("*")
             .eq("vehicle_id", vehicleId)
             .eq("attachment_type", "document")
-            .order("sort", { ascending: true });
+            .order("created_at", { ascending: true });
 
         if (error) {
             console.error("Vehicle attachments fetch error:", error);

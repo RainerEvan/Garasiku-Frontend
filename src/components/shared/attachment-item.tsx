@@ -6,6 +6,7 @@ import { useState } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { AttachmentVehicle } from "@/models/attachment-vehicle"
 import { toast } from "sonner"
+import { formatBytes } from "@/lib/utils"
 
 interface AttachmentItemProps {
     attachment: AttachmentVehicle;
@@ -23,8 +24,8 @@ export default function AttachmentItem({
     const [openDropdown, setOpenDropdown] = useState(false)
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false)
 
-    const bucketName = type === "vehicle" ? "kendaraan" : "service"
-    const tableName = type === "vehicle" ? "attachment_vehicle" : "attachment_service"
+    const bucketName = type === "vehicle" ? "vehicle" : "service";
+    const tableName = type === "vehicle" ? "attachment_vehicle" : "attachment_service";
 
     async function handleDelete() {
         setLoading?.(true)
@@ -59,12 +60,12 @@ export default function AttachmentItem({
         const { data } = supabase
             .storage
             .from(bucketName)
-            .getPublicUrl(attachment.fileLink ?? ""); 
+            .getPublicUrl(attachment.fileLink ?? "");
 
         if (data?.publicUrl) {
             window.open(data.publicUrl, "_blank");
         } else {
-            console.error("Gagal mendapatkan public URL untuk file:", attachment.fileLink);
+            toast.error("Failed to generate public URL");
         }
     }
 
@@ -75,7 +76,7 @@ export default function AttachmentItem({
             </div>
             <div className="w-full">
                 <div className="text-sm font-medium">{attachment.fileName}</div>
-                <div className="text-xs text-medium">{attachment.fileSize}</div>
+                <div className="text-xs text-medium">{formatBytes(Number(attachment.fileSize || 0))}</div>
             </div>
             <div className="flex items-center justify-center">
                 <DropdownMenu open={openDropdown} onOpenChange={setOpenDropdown}>

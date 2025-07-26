@@ -70,13 +70,13 @@ export default function DaftarKendaraanPage() {
         licensePlate: v.license_plate,
         image: v.image_url,
         isSold: v.is_sold,
+        soldDate: v.sold_date ?? undefined,
         location: {
           id: v.location_id ?? "",
           vehicleId: v.id ?? "",
           name: v.location_name ?? "Belum ada lokasi",
           address: v.location_address ?? "Belum ada alamat",
         },
-        soldDate: v.sold_date ?? undefined,
       })));
     }
   };

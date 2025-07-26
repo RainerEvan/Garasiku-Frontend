@@ -1,4 +1,5 @@
 import { TASK_TYPE_ICONS } from "@/lib/constants";
+import { supabase } from "@/lib/supabaseClient";
 import { formatDate } from "@/lib/utils";
 import { Vehicle } from "@/models/vehicle"
 import { ImageIcon } from "lucide-react";
@@ -12,7 +13,11 @@ export function VehicleCard({
   vehicle
 }: VehicleCardProps) {
   const variant = vehicle.isSold ? "sold" : "active";
-  const Icon = vehicle.isSold ? TASK_TYPE_ICONS["terjual"] : TASK_TYPE_ICONS["lokasi"]
+  const Icon = vehicle.isSold ? TASK_TYPE_ICONS["terjual"] : TASK_TYPE_ICONS["lokasi"];
+
+  const imageUrl = vehicle.image?.startsWith("http")
+    ? vehicle.image
+    : supabase.storage.from("vehicle").getPublicUrl(vehicle.image || "").data.publicUrl ?? "/placeholder.svg";
 
   return (
     <Link to={`/kendaraan/detail/${vehicle.id}`} className="bg-background border rounded-lg shadow-xs hover:shadow-md overflow-hidden">
@@ -20,7 +25,7 @@ export function VehicleCard({
       <div className="relative aspect-video w-full overflow-hidden text-muted-foreground bg-muted flex items-center justify-center">
         {vehicle.image ? (
           <img
-            src={vehicle.image}
+            src={imageUrl}
             alt={`${vehicle.name} - Image`}
             className="object-cover w-full h-full"
           />

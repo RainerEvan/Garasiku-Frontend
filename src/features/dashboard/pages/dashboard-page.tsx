@@ -166,7 +166,7 @@ export default function DashboardPage() {
               <DashboardCard
                 title="To-do Administrasi"
                 count={todoAdministrationCount}
-                urlLink="administrasi"
+                urlLink="administrasi/stnk-1"
                 icon={Notebook}
                 className="col-span-1"
                 background="bg-quarternary"

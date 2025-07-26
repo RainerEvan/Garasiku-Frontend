@@ -37,7 +37,7 @@ const formSchema = z.object({
   name: z.string({ message: "Nama harus terisi" }).min(1, { message: "Nama harus terisi" }),
   category: z.string({ message: "Jenis harus terisi" }).min(1, { message: "Jenis harus terisi" }),
   brand: z.string({ message: "Merk harus terisi" }).min(1, { message: "Merk harus terisi" }),
-  model: z.string({ message: "Model harus terisi" }).min(1, { message: "Model harus terisi" }),
+  type: z.string({ message: "Type harus terisi" }).min(1, { message: "Type harus terisi" }),
   year: z.string({ message: "Tahun harus terisi" }).min(1, { message: "Tahun harus terisi" }),
   color: z.string({ message: "Warna harus terisi" }).min(1, { message: "Warna harus terisi" }),
   licensePlate: z.string({ message: "Plat No harus terisi" }).min(1, { message: "Plat No harus terisi" }),
@@ -57,7 +57,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
       name: "",
       category: "",
       brand: "",
-      model: "",
+      type: "",
       year: "",
       color: "",
       licensePlate: "",
@@ -111,16 +111,16 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
   const { watch, setValue, reset } = form;
 
   const brand = watch("brand");
-  const model = watch("model");
+  const type = watch("type");
   const color = watch("color");
   const year = watch("year");
 
   useEffect(() => {
-    if (brand || model || color || year) {
-      const updatedName = `${brand} ${model} ${color} ${year}`;
+    if (brand || type || color || year) {
+      const updatedName = `${brand} ${type} ${color} ${year}`;
       setValue("name", updatedName);
     }
-  }, [brand, model, color, year, setValue]);
+  }, [brand, type, color, year, setValue]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setLoading(true);
@@ -135,7 +135,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
           name: values.name,
           category: values.category,
           brand: values.brand,
-          type: values.model,
+          type: values.type,
           year: values.year || new Date().getFullYear(),
           color: values.color,
           license_plate: values.licensePlate,
@@ -169,10 +169,10 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
         .from("stnk")
         .insert({
           vehicle_id: vehicle.id,
-          model: values.model,
-          brand: values.brand,
-          type: values.model,
           category: values.category,
+          brand: values.brand,
+          type: values.type,
+          manufactured_year: values.year,
           color: values.color,
           license_plate: values.licensePlate,
         });
@@ -347,13 +347,13 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
 
                     <FormField
                       control={form.control}
-                      name="model"
+                      name="type"
                       render={({ field }) => (
                         <FormItem className="space-y-1">
-                          <FormLabel className="font-medium">Model</FormLabel>
+                          <FormLabel className="font-medium">Tipe</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Masukkan model kendaraan"
+                              placeholder="Masukkan tipe kendaraan"
                               {...field}
                               className="w-full"
                             />

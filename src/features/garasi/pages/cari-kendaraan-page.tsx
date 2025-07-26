@@ -28,23 +28,23 @@ export default function CariKendaraanPage() {
 
       if (data.length > 0) {
         setVehicle({
-          id: data[0].vehicleid,
+          id: data[0].id,
           name: data[0].name,
-          type: data[0].vehicle_type,
-          year: data[0].vehicle_year,
-          brand: data[0].vehicle_brand,
-          color: data[0].vehicle_color,
-          category: data[0].vehicle_category,
+          type: data[0].type,
+          year: data[0].year,
+          brand: data[0].brand,
+          color: data[0].color,
+          category: data[0].category,
           licensePlate: data[0].license_plate,
           image: data[0].image_url,
           isSold: data[0].is_sold,
+          soldDate: data[0].sold_date ?? undefined,
           location: {
             id: data[0].location_id ?? "",
             vehicleId: data[0].vehicleid ?? "",
             name: data[0].location_name ?? "Belum ada lokasi",
             address: data[0].location_address ?? "Belum ada alamat",
           },
-          soldDate: data[0].sold_date ?? undefined,
         });
       } else {
         throw new Error("Kendaraan tidak ditemukan");

@@ -21,6 +21,7 @@ import { AttachmentVehicle } from "@/models/attachment-vehicle"
 import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
 import { LoadingOverlay } from "@/components/shared/loading-overlay"
+import { MAX_FILE_SIZE } from "@/lib/constants"
 
 interface AddAttachmentVehicleDialogProps {
   vehicleId?: string
@@ -33,6 +34,9 @@ const formSchema = z.object({
     .instanceof(File)
     .refine((file) => file.type === "application/pdf" || file.type.startsWith("image/"), {
       message: "File harus berupa PDF atau gambar",
+    })
+    .refine((file) => file.size <= MAX_FILE_SIZE, {
+      message: "Ukuran file maksimal 1 MB",
     }),
 })
 
@@ -61,7 +65,7 @@ export function AddAttachmentVehicleDialog({ vehicleId, onSave }: AddAttachmentV
       const filePath = `${vehicleId}/documents/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("kendaraan")
+        .from("vehicle")
         .upload(filePath, file, {
           cacheControl: "3600",
           upsert: true,
@@ -71,18 +75,12 @@ export function AddAttachmentVehicleDialog({ vehicleId, onSave }: AddAttachmentV
         throw new Error("Gagal mengupload dokumen: " + uploadError.message);
       }
 
-      const { data: publicUrlData } = supabase.storage
-        .from("attachment")
-        .getPublicUrl(filePath);
-
-      const publicUrl = publicUrlData.publicUrl;
-
       const insertPayload = {
         vehicle_id: vehicleId,
         file_name: file.name,
         file_type: file.type,
         file_size: file.size.toString(),
-        file_link: publicUrl,
+        file_link: filePath,
         created_by: "system",
         attachment_type: "document",
       }

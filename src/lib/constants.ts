@@ -71,6 +71,8 @@ export const ROLE_PARAM = [
   { id: "5", group: "0005", name: "admin", description: "Admin" },
 ]
 
+export const MAX_FILE_SIZE = 1 * 1024 * 1024; //1 MB
+
 export const OWNER = "owner";
 export const DIVISI = "divisi";
 export const WSHEAD = "wshead";

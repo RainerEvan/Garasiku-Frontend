@@ -36,7 +36,7 @@ const formSchema = z.object({
   category: z.string({ message: "Jenis harus terisi" }).min(1, { message: "Jenis harus terisi" }),
   brand: z.string({ message: "Merk harus terisi" }).min(1, { message: "Merk harus terisi" }),
   type: z.string({ message: "Tipe harus terisi" }).min(1, { message: "Tipe harus terisi" }),
-  year: z.coerce.number({ message: "Tahun harus terisi" }).min(1900, { message: "Tahun tidak valid" }),
+  year: z.string({ message: "Tahun harus terisi" }).min(1, { message: "Tahun harus terisi" }),
   color: z.string({ message: "Warna harus terisi" }).min(1, { message: "Warna harus terisi" }),
 })
 
@@ -52,7 +52,7 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
       category: vehicle.category,
       brand: vehicle.brand,
       type: vehicle.type,
-      year: vehicle.year ? Number(vehicle.year) : new Date().getFullYear(),
+      year: vehicle.year,
       color: vehicle.color,
     },
   })
@@ -152,7 +152,7 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
         category: vehicle.category,
         brand: vehicle.brand,
         type: vehicle.type,
-        year: vehicle.year ? Number(vehicle.year) : new Date().getFullYear(),
+        year: vehicle.year,
         color: vehicle.color,
       });
     } else {

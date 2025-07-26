@@ -1,5 +1,5 @@
 import type React from "react"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ImageIcon, ImagePlus, Trash } from "lucide-react"
 import imageCompression from "browser-image-compression"
 import { v4 as uuidv4 } from "uuid"
@@ -34,21 +34,54 @@ export function EditImageVehicleDialog({
     const [loading, setLoading] = useState(false);
 
     const [open, setOpen] = useState(false)
-    const [VehicleImages, setVehicleImages] = useState<string[]>([...images])
+    const [vehicleImages, setVehicleImages] = useState<string[]>([...images])
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [deletedImages, setDeletedImages] = useState<string[]>([])
+
+    const [publicUrls, setPublicUrls] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        const map: Record<string, string> = {};
+        vehicleImages.forEach((img) => {
+            if (img.startsWith("blob:")) {
+                map[img] = img;
+            } else {
+                const url = supabase.storage.from("vehicle").getPublicUrl(img).data.publicUrl;
+                map[img] = url ?? "/placeholder.svg";
+            }
+        });
+        setPublicUrls(map);
+    }, [vehicleImages]);
+
+    useEffect(() => {
+        return () => {
+            vehicleImages.forEach((img) => {
+                if (img.startsWith("blob:")) {
+                    URL.revokeObjectURL(img);
+                }
+            });
+        };
+    }, []);
 
     const handleAddImage = () => {
         fileInputRef.current?.click()
     }
 
     const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files
-        if (!files || files.length === 0) return
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+
+        const remainingSlots = 6 - vehicleImages.length;
+        if (remainingSlots <= 0) {
+            toast.warning("Maksimum 6 foto kendaraan diperbolehkan.");
+            return;
+        }
+
+        const filesToProcess = Array.from(files).slice(0, remainingSlots);
 
         const compressedImages: string[] = []
 
-        for (let i = 0; i < files.length; i++) {
+        for (let i = 0; i < filesToProcess.length; i++) {
             try {
                 const options = {
                     maxSizeMB: 0.5,
@@ -56,7 +89,7 @@ export function EditImageVehicleDialog({
                     useWebWorker: true,
                     fileType: "image/webp",
                 }
-                const compressedFile = await imageCompression(files[i], options)
+                const compressedFile = await imageCompression(filesToProcess[i], options)
                 const url = URL.createObjectURL(compressedFile)
                 compressedImages.push(url)
             } catch (error) {
@@ -68,8 +101,8 @@ export function EditImageVehicleDialog({
     }
 
     const handleDeleteImage = (index: number) => {
-        const removed = VehicleImages[index];
-        const updated = [...VehicleImages];
+        const removed = vehicleImages[index];
+        const updated = [...vehicleImages];
         updated.splice(index, 1);
         setVehicleImages(updated);
 
@@ -82,15 +115,11 @@ export function EditImageVehicleDialog({
     async function deleteImagesFromStorageAndDB(urls: string[]) {
         for (const url of urls) {
             try {
-                // Extract the path relative to bucket
-                const [_, path] = url.split("/object/public/kendaraan/"); // 'kendaraan' adalah nama bucket
-                if (!path) continue;
-
                 // 1. Hapus dari storage
                 const { error: storageError } = await supabase
                     .storage
-                    .from("kendaraan")
-                    .remove([path]);
+                    .from("vehicle")
+                    .remove([url]);
 
                 if (storageError) {
                     throw new Error("Gagal hapus file dari storage: " + storageError.message);
@@ -120,26 +149,21 @@ export function EditImageVehicleDialog({
             const filePath = `${vehicleId}/gallery/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
-                .from("kendaraan")
+                .from("vehicle")
                 .upload(filePath, file, { upsert: true });
 
             if (uploadError) {
                 throw new Error("Gagal upload image: " + uploadError.message);
             }
 
-            const { data: publicUrlData } = supabase.storage
-                .from("kendaraan")
-                .getPublicUrl(filePath);
-
-            const publicUrl = publicUrlData.publicUrl;
-            uploadedUrls.push(publicUrl);
+            uploadedUrls.push(filePath);
 
             await supabase.from("attachment_vehicle").insert({
                 vehicle_id: vehicleId,
                 file_name: file.name,
                 file_type: file.type,
                 file_size: file.size.toString(),
-                file_link: publicUrl,
+                file_link: filePath,
                 created_by: "system",
                 attachment_type: "gallery",
             });
@@ -148,15 +172,14 @@ export function EditImageVehicleDialog({
         return uploadedUrls;
     }
 
-
-    const handleSubmit = async (e: React.FormEvent) => {        
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (loading) return;
 
         setLoading(true);
 
         try {
-            const newBlobs = VehicleImages.filter((img) => img.startsWith("blob:"));
+            const newBlobs = vehicleImages.filter((img) => img.startsWith("blob:"));
             const filesToUpload: File[] = [];
 
             for (const blobUrl of newBlobs) {
@@ -169,7 +192,7 @@ export function EditImageVehicleDialog({
             const uploadedUrls = await uploadImagesToStorage(filesToUpload, vehicleId);
 
             // Gabung yang lama (selain blob) + hasil upload
-            const finalImages = VehicleImages.filter((img) => !img.startsWith("blob:")).concat(uploadedUrls);
+            const finalImages = vehicleImages.filter((img) => !img.startsWith("blob:")).concat(uploadedUrls);
 
             // Hapus gambar yang ditandai
             if (deletedImages.length > 0) {
@@ -201,7 +224,7 @@ export function EditImageVehicleDialog({
         <>
             <LoadingOverlay loading={loading} />
 
-            <Dialog open={open} onOpenChange={handleDialogChange}>
+            <Dialog open={open && !loading} onOpenChange={handleDialogChange}>
                 <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="absolute top-2 right-2 bg-background hover:bg-background shadow-md">
                         <ImageIcon />
@@ -217,7 +240,7 @@ export function EditImageVehicleDialog({
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-4">
                             <div className="flex items-center gap-2">
-                                <div className="flex-1">Total Foto: {VehicleImages.length}</div>
+                                <div className="flex-1">Total Foto: {vehicleImages.length}</div>
                                 <input
                                     type="file"
                                     ref={fileInputRef}
@@ -226,19 +249,19 @@ export function EditImageVehicleDialog({
                                     className="hidden"
                                     onChange={handleFileChange}
                                 />
-                                <Button type="button" onClick={handleAddImage}>
+                                <Button type="button" onClick={handleAddImage} disabled={vehicleImages.length >= 6}>
                                     <ImagePlus />
                                     Tambah
                                 </Button>
                             </div>
 
                             <ScrollArea className="h-[50vh]">
-                                {VehicleImages.length > 0 ? (
+                                {vehicleImages.length > 0 ? (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-                                        {VehicleImages.map((image, index) => (
-                                            <div key={`${image}-${index}`} className="group relative flex items-center gap-4">
+                                        {vehicleImages.map((image, index) => (
+                                            <div key={image} className="group relative flex items-center gap-4">
                                                 <div className="relative aspect-video w-full overflow-hidden">
-                                                    <img src={image || "/placeholder.svg"} alt={`Car image ${index + 1}`} className="object-cover w-full h-full" />
+                                                    <img src={publicUrls[image]} alt={`Car image ${index + 1}`} className="object-cover w-full h-full" />
                                                     <div className="absolute bottom-2 left-2 flex items-center justify-center bg-background/80 size-8 rounded-full shadow-md">
                                                         <span className="text-foreground text-sm">{index + 1}</span>
                                                     </div>
