@@ -22,7 +22,7 @@ export default function AktivitasAdministrasiKendaraanPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectType, setSelectType] = useState("all");
     const [selectStatus, setSelectStatus] = useState("all");
-    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
     const [selectTypeOptions, setSelectTypeOptions] = useState<SelectOption[]>([])
     const [selectStatusOptions, setSelectStatusOptions] = useState<SelectOption[]>([])
@@ -57,7 +57,8 @@ export default function AktivitasAdministrasiKendaraanPage() {
                         id, ticket_num, vehicle_id, type, due_date, end_date, status,
                         vehicles:vehicle_id (id, name, category, license_plate)
                     `)
-                    .eq("vehicle_id", vehicleId);
+                    .eq("vehicle_id", vehicleId)
+                    .order("due_date", { ascending: sortOrder === "asc" });
 
                 if (error) {
                     console.error("Failed to fetch administrations:", error);
@@ -81,8 +82,8 @@ export default function AktivitasAdministrasiKendaraanPage() {
                     setListAdministrations(mapped);
                 }
 
-            } catch (err) {
-                console.error("Failed to fetch data:", err);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
             } finally {
                 setLoading(false);
             }

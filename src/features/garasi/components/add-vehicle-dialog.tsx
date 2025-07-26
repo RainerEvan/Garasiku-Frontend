@@ -23,7 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/pop
 import { Calendar } from "@/components/shadcn/calendar"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
-import { VEHICLE_CATEGORY_PARAM, PARAM_GROUP_MERK_KENDARAAN } from "@/lib/constants"
+import { VEHICLE_CATEGORY_PARAM, PARAM_GROUP_MERK_KENDARAAN, PENDING } from "@/lib/constants"
 import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
 import { LoadingOverlay } from "@/components/shared/loading-overlay"
@@ -98,8 +98,8 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
       setLoading(true);
       try {
         await fetchBrandParams();
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }
@@ -136,11 +136,11 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
           category: values.category,
           brand: values.brand,
           type: values.model,
-          year: values.year || new Date().getFullYear(), // fallback kalau null
+          year: values.year || new Date().getFullYear(),
           color: values.color,
           license_plate: values.licensePlate,
-          stnk_due_date: stnkDate ? stnkDate.toISOString() : null,
-          insurance_due_date: insuranceDate ? insuranceDate.toISOString() : null,
+          stnk_due_date: stnkDate ? format(stnkDate, "yyyy-MM-dd") : null,
+          insurance_due_date: insuranceDate ? format(insuranceDate, "yyyy-MM-dd") : null,
         })
         .select()
         .single();
@@ -193,8 +193,8 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
           .insert({
             vehicle_id: vehicle.id,
             type: "administrasi-stnk-1",
-            status: "pending",
-            due_date: stnkDate.toISOString(),
+            status: PENDING,
+            due_date: format(stnkDate, "yyyy-MM-dd"),
             ticket_num: ticketData
           });
 
@@ -215,8 +215,8 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
           .insert({
             vehicle_id: vehicle.id,
             type: "administrasi-asuransi",
-            status: "pending",
-            due_date: insuranceDate.toISOString(),
+            status: PENDING,
+            due_date: format(insuranceDate, "yyyy-MM-dd"),
             ticket_num: ticketDataAs
           });
 

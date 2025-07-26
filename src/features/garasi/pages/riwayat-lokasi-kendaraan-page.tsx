@@ -63,8 +63,8 @@ export default function RiwayatLokasiKendaraanPage() {
                     fetchVehicleIsSold(id),
                     fetchVehicleLocations(id)
                 ]);
-            } catch (err) {
-                console.error("Failed to fetch data:", err);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
             } finally {
                 setLoading(false);
             }

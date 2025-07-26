@@ -34,7 +34,7 @@ const formSchema = z.object({
   id: z.string().min(1, { message: "Id harus terisi" }),
   username: z.string({ message: "Username harus terisi" }).min(1, { message: "Username harus terisi" }),
   fullname: z.string({ message: "Nama Lengkap harus terisi" }).min(1, { message: "Nama Lengkap harus terisi" }),
-  email: z.string().optional(),
+  email: z.string({ message: "Email harus terisi" }).min(1, { message: "Email harus terisi" }),
   phone: z.string().optional(),
   role: z.string({ message: "Role harus terisi" }).min(1, { message: "Role harus terisi" }),
   isActive: z.boolean()
@@ -113,9 +113,9 @@ export function EditUserDialog({ user, onSave }: EditUserDialogProps) {
       }
 
       setOpen(false)
-    } catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message)
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message)
       } else {
         toast.error("Terjadi kesalahan pada sistem")
       }

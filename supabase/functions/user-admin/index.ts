@@ -35,7 +35,7 @@ serve(async (req) => {
   let body;
   try {
     body = await req.json();
-  } catch (err) {
+  } catch (error) {
     return new Response(JSON.stringify({ error: "Invalid JSON" }), {
       status: 400,
       headers: corsHeaders(),
@@ -45,75 +45,81 @@ serve(async (req) => {
   try {
     if (method === "POST") {
       const { email, password, fullname, username, role, status, phone } = body;
-
-      const { data: user, error } = await supabase.auth.admin.createUser({
-        email,
+      if (!email) {
+        return new Response(JSON.stringify({
+          error: "Email harus terisi"
+        }), {
+          status: 400,
+          headers: corsHeaders()
+        });
+      }
+      const payload = {
         password,
+        email,
+        email_confirm: true,
+        phone,
         user_metadata: {
           fullname,
           username,
           role,
-          status,
-        },
-        phone,
-        email_confirm: true,
-      });
-
-      if (error) throw error;
-
-      return new Response(JSON.stringify({ message: "User created", user }), {
+          status
+        }
+      };
+      // Try creating user
+      const { data: user, error } = await supabase.auth.admin.createUser(payload);
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
+      return new Response(JSON.stringify({
+        message: "User berhasil ditambahkan",
+        user
+      }), {
         status: 200,
-        headers: corsHeaders(),
+        headers: corsHeaders()
       });
-
     }
-
-
     if (method === "PUT") {
       const { id, username, fullname, email, phone, role, status, password } = body;
-
-      const updateData: any = {
+      const updateData = {
         email,
         phone,
+        password,
         user_metadata: {
           username,
           fullname,
           role,
-          status,
-        },
+          status
+        }
       };
-
       // Hanya update password jika disediakan
       if (password) {
         updateData.password = password;
       }
-
       const { data, error } = await supabase.auth.admin.updateUserById(id, updateData);
-
       if (error) throw error;
-
-      return new Response(JSON.stringify({ message: "User updated", data }), {
+      return new Response(JSON.stringify({
+        message: "User berhasil diperbarui",
+        data
+      }), {
         status: 200,
-        headers: corsHeaders(),
+        headers: corsHeaders()
       });
     }
-
-
     if (method === "DELETE") {
       const { id } = body;
-
       const { error } = await supabase.auth.admin.deleteUser(id);
       if (error) throw error;
-
-      return new Response(JSON.stringify({ message: "User deleted" }), {
+      return new Response(JSON.stringify({
+        message: "User berhasil dihapus"
+      }), {
         status: 200,
-        headers: corsHeaders(),
+        headers: corsHeaders()
       });
     }
-
     return new Response("Method not allowed", {
       status: 405,
-      headers: corsHeaders(),
+      headers: corsHeaders()
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

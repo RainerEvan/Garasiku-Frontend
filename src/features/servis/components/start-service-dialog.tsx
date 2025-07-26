@@ -58,7 +58,7 @@ export function StartServiceDialog({ service, onSave }: StartServiceDialogProps)
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: service.id,
-      startDate: service.startDate ? new Date(service.startDate) : undefined,
+      startDate: new Date(),
       mileage: service.mileage ?? undefined,
       totalCost: service.totalCost ?? undefined,
       mechanicName: service.mechanicName ?? undefined,
@@ -114,7 +114,7 @@ export function StartServiceDialog({ service, onSave }: StartServiceDialogProps)
     if (isOpen) {
       reset({
         id: service.id,
-        startDate: service.startDate ? new Date(service.startDate) : undefined,
+        startDate: new Date(),
         mileage: service.mileage ?? undefined,
         totalCost: service.totalCost ?? undefined,
         mechanicName: service.mechanicName ?? undefined,

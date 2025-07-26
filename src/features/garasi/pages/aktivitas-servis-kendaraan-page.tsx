@@ -22,7 +22,7 @@ export default function AktivitasServisKendaraanPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectType, setSelectType] = useState("all");
     const [selectStatus, setSelectStatus] = useState("all");
-    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
     const [selectTypeOptions, setSelectTypeOptions] = useState<SelectOption[]>([])
     const [selectStatusOptions, setSelectStatusOptions] = useState<SelectOption[]>([])
@@ -45,12 +45,12 @@ export default function AktivitasServisKendaraanPage() {
                 const { data: servicesData, error: servicesError } = await supabase
                     .from("service")
                     .select(`
-                    id, ticket_num, vehicle_id, type, schedule_date, start_date, end_date,
-                    status, task, sparepart,
-                    vehicles:vehicle_id(id, name, category, license_plate)
-                `)
+                        id, ticket_num, vehicle_id, type, schedule_date, start_date, end_date,
+                        status, task, sparepart,
+                        vehicles:vehicle_id(id, name, category, license_plate)
+                    `)
                     .eq("vehicle_id", vehicleId)
-                    .order("schedule_date", { ascending: false });
+                    .order("schedule_date", { ascending: sortOrder === "asc" });
 
                 if (servicesError) {
                     console.error("Failed to fetch services:", servicesError);
@@ -82,8 +82,8 @@ export default function AktivitasServisKendaraanPage() {
 
                 const optionsStatus = statusParams.map(p => ({ label: p.description || p.name, value: p.name }));
                 setSelectStatusOptions([{ label: "Semua", value: "all" }, ...optionsStatus]);
-            } catch (err) {
-                console.error("Failed to fetch data:", err);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
             } finally {
                 setLoading(false);
             }

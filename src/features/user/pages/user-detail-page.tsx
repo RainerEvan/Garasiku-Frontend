@@ -16,7 +16,7 @@ import { LoadingOverlay } from "@/components/shared/loading-overlay";
 
 export default function UserDetailPage() {
   const [loading, setLoading] = useState(false);
-  const { id: userId } = useParams();
+  const { id } = useParams<{ id: string }>();
 
   const [user, setUser] = useState<User | null>(null);
   const [roleParam, setRoleParam] = useState<Param[]>([]);
@@ -78,26 +78,24 @@ export default function UserDetailPage() {
 
   useEffect(() => {
     const fetchDetail = async () => {
-      if (!userId) return;
+      if (!id) return;
       setLoading(true);
 
       try {
-        await fetchUserDetail(userId);
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
+        await fetchUserDetail(id);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchDetail();
-  }, [userId]);
+  }, [id]);
 
-  if (!user && !loading) {
-    return (
-      <EmptyState title="User Tidak Ditemukan" description="User dengan ID tersebut tidak tersedia." />
-    );
-  }
+  if (!user && !loading) return (
+    <EmptyState title="User Tidak Ditemukan" description="User dengan ID tersebut tidak tersedia." />
+  );
 
   if (!user) return null;
 
@@ -147,7 +145,7 @@ export default function UserDetailPage() {
                 </div>
 
                 <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2">
-                  <EditUserDialog user={user} onSave={() => fetchUserDetail(userId!)} />
+                  <EditUserDialog user={user} onSave={() => fetchUserDetail(id!)} />
                   <ChangePasswordDialog user={user} />
                 </div>
               </div>

@@ -86,9 +86,9 @@ export function ChangePasswordDialog({ user, onSave }: ChangePasswordDialogProps
       }
 
       setOpen(false);
-    } catch (err) {
-      if (err instanceof Error) {
-        toast.error(err.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
       } else {
         toast.error("Terjadi kesalahan tak dikenal");
       }

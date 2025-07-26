@@ -56,10 +56,12 @@ export default function LoginPage() {
       const userRow = Array.isArray(result) ? result[0] : null
 
       if (rpcError || !userRow?.email) {
-        form.setError("username", {
-          message: "Username tidak ditemukan atau tidak memiliki email",
-        })
-        return
+        throw new Error("User tidak ditemukan");
+      }
+
+      if (userRow.status !== ACTIVE) {
+        await supabase.auth.signOut();
+        throw new Error("User tidak aktif, hubungi admin");
       }
 
       // 🔐 Attempt login
@@ -69,23 +71,14 @@ export default function LoginPage() {
       })
 
       if (loginError) {
-        form.setError("password", { message: "Login gagal: " + loginError.message })
-        return
-      }
-
-      if (userRow.status !== ACTIVE) {
-        await supabase.auth.signOut()
-        form.setError("username", {
-          message: "Akun nonaktif, hubungi admin.",
-        })
-        return
+        throw new Error("Kredensial tidak valid");
       }
 
       // ✅ Navigate on success
       navigate("/")
-    } catch (err) {
-      toast.error("Terjadi kesalahan saat login.")
-      console.error("Login error:", err)
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal saat login: " + error);
     } finally {
       setLoading(false)
     }

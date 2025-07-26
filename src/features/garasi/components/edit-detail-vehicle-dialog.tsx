@@ -83,8 +83,8 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
       setLoading(true);
       try {
         await fetchBrandParams();
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }

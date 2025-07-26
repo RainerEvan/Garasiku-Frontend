@@ -27,7 +27,7 @@ import { Separator } from "@/components/shadcn/separator"
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabaseClient"
 import { LoadingOverlay } from "@/components/shared/loading-overlay"
-import { COMPLETED } from "@/lib/constants"
+import { COMPLETED, PENDING } from "@/lib/constants"
 
 interface CompleteServiceDialogProps {
   service: Service
@@ -66,7 +66,7 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: service.id,
-      endDate: service.endDate ? new Date(service.endDate) : undefined,
+      endDate: new Date(),
       mileage: service.mileage ?? undefined,
       totalCost: service.totalCost ?? undefined,
       mechanicName: service.mechanicName ?? undefined,
@@ -125,7 +125,7 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
           vehicle_id: service.vehicleId,
           type: service.type,
           schedule_date: format(values.nextScheduleDate, "yyyy-MM-dd"),
-          status: 'pending',
+          status: PENDING,
           ticket_num: ticketData
         }
 
@@ -157,7 +157,7 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
     if (isOpen) {
       reset({
         id: service.id,
-        endDate: service.endDate ? new Date(service.endDate) : undefined,
+        endDate: new Date(),
         mileage: service.mileage ?? undefined,
         totalCost: service.totalCost ?? undefined,
         mechanicName: service.mechanicName ?? undefined,

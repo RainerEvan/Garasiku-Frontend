@@ -105,8 +105,8 @@ export function EditImageVehicleDialog({
                 if (dbError) {
                     throw new Error("Gagal hapus data attachment_vehicle: " + dbError.message);
                 }
-            } catch (err) {
-                console.error("Error deleting file:", err);
+            } catch (error) {
+                console.error("Error deleting file:", error);
             }
         }
     }

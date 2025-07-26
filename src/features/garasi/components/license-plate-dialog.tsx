@@ -8,6 +8,7 @@ import { ChangeLicensePlateDialog } from "./change-license-plate-dialog"
 import { supabase } from "@/lib/supabaseClient"
 import { formatDateTime } from "@/lib/utils"
 import { LoadingOverlay } from "@/components/shared/loading-overlay"
+import { useAuth } from "@/lib/auth-context"
 
 interface LicensePlateDialogProps {
     vehicleId?: string;
@@ -16,8 +17,8 @@ interface LicensePlateDialogProps {
 }
 
 export function LicensePlateDialog({ vehicleId, currPlateNo, onLicensePlateChange }: LicensePlateDialogProps) {
+    const { isOwner, isDivisi } = useAuth();
     const [loading, setLoading] = useState(false);
-
     const [open, setOpen] = useState(false)
     const [listVehicleLicensePlates, setListVehicleLicensePlates] = useState<LicensePlateVehicle[]>([]);
 
@@ -67,11 +68,17 @@ export function LicensePlateDialog({ vehicleId, currPlateNo, onLicensePlateChang
             <LoadingOverlay loading={loading} />
 
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
-                    <Button asChild variant="outline">
+                {(isOwner || isDivisi) ? (
+                    <DialogTrigger asChild>
+                        <Button asChild variant="outline">
+                            <span className="font-medium">{currPlateNo}</span>
+                        </Button>
+                    </DialogTrigger>
+                ) : (
+                    <Button variant="outline">
                         <span className="font-medium">{currPlateNo}</span>
                     </Button>
-                </DialogTrigger>
+                )}
                 <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
                     <DialogHeader>
                         <DialogTitle>Riwayat Plat No Kendaraan</DialogTitle>
@@ -79,9 +86,9 @@ export function LicensePlateDialog({ vehicleId, currPlateNo, onLicensePlateChang
                     </DialogHeader>
 
                     <div className="w-full flex">
-                        <ChangeLicensePlateDialog 
-                            vehicleId={vehicleId} 
-                            currPlateNo={currPlateNo} 
+                        <ChangeLicensePlateDialog
+                            vehicleId={vehicleId}
+                            currPlateNo={currPlateNo}
                             onSave={(newPlateNo) => {
                                 fetchVehicleLicensePlates(vehicleId!)
                                 if (onLicensePlateChange) {

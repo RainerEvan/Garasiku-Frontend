@@ -55,7 +55,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/shadcn/command";
-import { SERVICE_TYPE_PARAM } from "@/lib/constants";
+import { PENDING, SERVICE_TYPE_PARAM } from "@/lib/constants";
 import { supabase } from "@/lib/supabaseClient"
 import { LoadingOverlay } from "@/components/shared/loading-overlay";
 
@@ -112,8 +112,8 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
       setLoading(true);
       try {
         await fetchListVehicles();
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }
@@ -137,6 +137,7 @@ export function AddServiceDialog({ onSave }: AddServiceDialogProps) {
       const formattedValues = {
         vehicle_id: values.vehicleId,
         type: values.type,
+        status: PENDING,
         schedule_date: format(values.scheduleDate, "yyyy-MM-dd"),
         ticket_num: ticketData,
       };

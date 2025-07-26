@@ -19,7 +19,7 @@ import AttachmentItem from "@/components/shared/attachment-item";
 import { AttachmentService } from "@/models/attachment-service";
 import TaskTypeBar from "@/components/shared/task-type-bar";
 import StatusBar from "@/components/shared/status-bar";
-import { ONGOING, PENDING, Status } from "@/lib/constants";
+import { CANCELLED, ONGOING, PENDING, Status } from "@/lib/constants";
 import { EditServiceRecordDialog } from "../components/edit-service-record-dialog";
 import { AddAttachmentServiceDialog } from "../components/add-attachment-service-dialog";
 import { StartServiceDialog } from "../components/start-service-dialog";
@@ -31,8 +31,11 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { formatDate, formatRupiah } from "@/lib/utils";
 import { LoadingOverlay } from "@/components/shared/loading-overlay";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth-context";
 
 export default function ServisDetailPage() {
+    const { isOwner, isDivisi } = useAuth();
+
     const [loading, setLoading] = useState(false);
 
     const { id } = useParams<{ id: string }>();
@@ -160,8 +163,8 @@ export default function ServisDetailPage() {
                 }
 
                 await fetchServiceAttachments(id);
-            } catch (err) {
-                console.error("Failed to fetch data:", err);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
             } finally {
                 setLoading(false);
             }
@@ -177,7 +180,7 @@ export default function ServisDetailPage() {
         try {
             const { error } = await supabase
                 .from("service")
-                .update({ status: "cancelled" })
+                .update({ status: CANCELLED })
                 .eq("id", service.id);
 
             if (error) {
@@ -275,7 +278,7 @@ export default function ServisDetailPage() {
                         </Link >
 
                         {/* Lokasi Bar */}
-                        {latestLocation && (
+                        {(isOwner || isDivisi) && latestLocation && (
                             <Link to={`/kendaraan/detail/${service.vehicleId}/riwayat-lokasi`}>
                                 <DataBarCard
                                     variant="button"
@@ -287,34 +290,34 @@ export default function ServisDetailPage() {
                         )}
                     </div>
 
-                    {/* Sections */}
-                    <div className="flex flex-col gap-5 overflow-auto">
-                        {/* Rincian Servis */}
-                        <SectionCard
-                            title="Rincian Servis"
-                            headerAction={
-                                <>
-                                    {service.status == "ongoing" && (
-                                        <EditServiceRecordDialog service={service} onSave={() => fetchServiceDetail(id!)} />
-                                    )}
-                                </>
-                            }
-                        >
-                            {service && (
-                                <div className="grid grid-cols-1 gap-3 py-1">
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <SectionItem label="Kilometer" value={service.mileage ? `${service.mileage} KM` : undefined} />
-                                        <SectionItem label="Biaya" value={service.totalCost ? `Rp ${formatRupiah(service.totalCost)}` : undefined} />
-                                    </div>
-                                    <SectionItem label="Nama Mekanik" value={service.mechanicName} />
-                                    <SectionItem label="Jasa" value={service.task} />
-                                    <SectionItem label="Sparepart" value={service.sparepart} />
-                                    <SectionItem label="Catatan" value={service.notes} />
-                                </div>
-                            )}
-                        </SectionCard>
 
-                        {/* Lampiran Dokumen */}
+                    {/* Rincian Servis */}
+                    <SectionCard
+                        title="Rincian Servis"
+                        headerAction={
+                            <>
+                                {service.status == ONGOING && (
+                                    <EditServiceRecordDialog service={service} onSave={() => fetchServiceDetail(id!)} />
+                                )}
+                            </>
+                        }
+                    >
+                        {service && (
+                            <div className="grid grid-cols-1 gap-3 py-1">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <SectionItem label="Kilometer" value={service.mileage ? `${service.mileage} KM` : undefined} />
+                                    <SectionItem label="Biaya" value={service.totalCost ? `Rp ${formatRupiah(service.totalCost)}` : undefined} />
+                                </div>
+                                <SectionItem label="Nama Mekanik" value={service.mechanicName} />
+                                <SectionItem label="Jasa" value={service.task} />
+                                <SectionItem label="Sparepart" value={service.sparepart} />
+                                <SectionItem label="Catatan" value={service.notes} />
+                            </div>
+                        )}
+                    </SectionCard>
+
+                    {/* Lampiran Dokumen */}
+                    {(isOwner || isDivisi) && (
                         <SectionCard
                             title="Lampiran Dokumen"
                             headerAction={
@@ -341,7 +344,7 @@ export default function ServisDetailPage() {
                                 </div>
                             )}
                         </SectionCard>
-                    </div>
+                    )}
                 </main>
             </div>
         </>

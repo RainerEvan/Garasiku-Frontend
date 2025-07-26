@@ -120,8 +120,8 @@ export default function ServisPage() {
 
       try {
         await fetchListServices();
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }

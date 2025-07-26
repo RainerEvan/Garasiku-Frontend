@@ -18,7 +18,7 @@ import {
 import { Administration } from "@/models/administration";
 import TaskTypeBar from "@/components/shared/task-type-bar";
 import StatusBar from "@/components/shared/status-bar";
-import { PENDING, Status } from "@/lib/constants";
+import { CANCELLED, PENDING, Status } from "@/lib/constants";
 import { DataBarCard } from "@/components/shared/data-bar-card";
 import { CompleteAdministrationDialog } from "../components/complete-administration-dialog";
 import { supabase } from "@/lib/supabaseClient";
@@ -89,8 +89,8 @@ export default function AdministrasiDetailPage() {
 
       try {
         await fetchAdministrationDetail(id);
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }
@@ -106,7 +106,7 @@ export default function AdministrasiDetailPage() {
     try {
       const { error } = await supabase
         .from("administration")
-        .update({ status: "cancelled" })
+        .update({ status: CANCELLED })
         .eq("id", administration.id);
 
       if (error) {
@@ -117,7 +117,7 @@ export default function AdministrasiDetailPage() {
       await fetchAdministrationDetail(administration.id!);
     } catch (error) {
       console.error(error);
-      toast.error("Gagal membatalkan administrasi: " + error);
+      toast.error("Terjadi kesalahan pada sistem: " + error);
     } finally {
       setLoading(false);
     }

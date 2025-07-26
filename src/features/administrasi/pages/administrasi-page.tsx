@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { getCachedReminderDateRange } from "@/lib/reminder-date";
 import { LoadingOverlay } from "@/components/shared/loading-overlay";
 import { AddAdministrationDialog } from "../components/add-administration-dialog";
+import { CANCELLED, COMPLETED, PENDING } from "@/lib/constants";
 
 const validTypes = ["stnk-1", "stnk-5", "asuransi"];
 
@@ -44,14 +45,14 @@ export default function AdministrasiPage() {
 
     if (activeTab === "todo") {
       administrationQuery = administrationQuery
-        .eq("status", "pending")
+        .eq("status", PENDING)
         .lte("due_date", futureDate.toISOString());
     } else if (activeTab === "pending") {
       administrationQuery = administrationQuery
-        .eq("status", "pending");
+        .eq("status", PENDING);
     } else {
       administrationQuery = administrationQuery
-        .in("status", ["completed", "cancelled"])
+        .in("status", [COMPLETED, CANCELLED])
     }
 
     const { data, error } = await administrationQuery
@@ -86,8 +87,8 @@ export default function AdministrasiPage() {
 
       try {
         await fetchListAdministrations();
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }

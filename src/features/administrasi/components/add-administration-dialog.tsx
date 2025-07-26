@@ -55,7 +55,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/shadcn/command";
-import { ADMINISTRATION_TYPE_PARAM } from "@/lib/constants";
+import { ADMINISTRATION_TYPE_PARAM, PENDING } from "@/lib/constants";
 import { supabase } from "@/lib/supabaseClient"
 import { LoadingOverlay } from "@/components/shared/loading-overlay";
 
@@ -112,8 +112,8 @@ export function AddAdministrationDialog({ onSave }: AddAdministrationDialogProps
       setLoading(true);
       try {
         await fetchListVehicles();
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }
@@ -137,6 +137,7 @@ export function AddAdministrationDialog({ onSave }: AddAdministrationDialogProps
       const formattedValues = {
         vehicle_id: values.vehicleId,
         type: values.type,
+        status: PENDING,
         due_date: format(values.dueDate, "yyyy-MM-dd"),
         ticket_num: ticketData,
       };
@@ -148,7 +149,7 @@ export function AddAdministrationDialog({ onSave }: AddAdministrationDialogProps
         .single();
 
       if (error) {
-        throw new Error("Gagal menyimpan data administrasi: " + error.message);
+        throw new Error("Gagal menambahkan data administrasi: " + error.message);
       }
 
       toast.success("Data administrasi berhasil ditambahkan.");
@@ -159,7 +160,7 @@ export function AddAdministrationDialog({ onSave }: AddAdministrationDialogProps
       reset();
     } catch (error) {
       console.error(error);
-      toast.error("Gagal menambahkan data administrasi: " + error);
+      toast.error("Terjadi kesalahan pada sistem: " + error);
     } finally {
       setLoading(false);
     }

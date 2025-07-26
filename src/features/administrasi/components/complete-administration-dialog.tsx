@@ -25,7 +25,7 @@ import { addYears, format } from "date-fns"
 import { Switch } from "@/components/shadcn/switch"
 import { Separator } from "@/components/shadcn/separator"
 import { Administration } from "@/models/administration"
-import { COMPLETED } from "@/lib/constants"
+import { COMPLETED, PENDING } from "@/lib/constants"
 import { supabase } from "@/lib/supabaseClient"
 import { toast } from "sonner"
 import { LoadingOverlay } from "@/components/shared/loading-overlay"
@@ -64,7 +64,7 @@ export function CompleteAdministrationDialog({ administration, onSave }: Complet
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: administration.id,
-      endDate: administration.endDate ? new Date(administration.endDate) : undefined,
+      endDate: new Date(),
       totalCost: administration.totalCost ?? undefined,
       notes: administration.notes ?? undefined,
       isSetNextReminder: true,
@@ -118,7 +118,7 @@ export function CompleteAdministrationDialog({ administration, onSave }: Complet
           vehicle_id: administration.vehicleId,
           type: administration.type,
           schedule_date: format(values.newDueDate, "yyyy-MM-dd"),
-          status: 'pending',
+          status: PENDING,
           ticket_num: ticketData
         }
 
@@ -150,7 +150,7 @@ export function CompleteAdministrationDialog({ administration, onSave }: Complet
     if (isOpen) {
       reset({
         id: administration.id,
-        endDate: administration.endDate ? new Date(administration.endDate) : undefined,
+        endDate: new Date(),
         totalCost: administration.totalCost ?? undefined,
         notes: administration.notes ?? undefined,
         isSetNextReminder: true,

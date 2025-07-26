@@ -28,6 +28,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Stnk } from "@/models/stnk"
 import { supabase } from "@/lib/supabaseClient"
 import { LoadingOverlay } from "@/components/shared/loading-overlay";
+import { format } from "date-fns";
 
 interface EditDetailStnkDialogProps {
   stnk: Stnk | null
@@ -86,7 +87,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
       cylinderCapacity: stnk?.cylinderCapacity || undefined,
       bpkbNumber: stnk?.bpkbNumber || undefined,
       registrationNumber: stnk?.registrationNumber || undefined,
-      validUntil: stnk?.validUntil ?? new Date().toISOString().split("T")[0],
+      validUntil: stnk?.validUntil ?? format(new Date(), "yyyy-MM-dd"),
     },
   })
 
@@ -178,7 +179,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
         cylinderCapacity: stnk?.cylinderCapacity || undefined,
         bpkbNumber: stnk?.bpkbNumber || undefined,
         registrationNumber: stnk?.registrationNumber || undefined,
-        validUntil: stnk?.validUntil ?? new Date().toISOString().split("T")[0],
+        validUntil: stnk?.validUntil ?? format(new Date(), "yyyy-MM-dd"),
       });
     } else {
       reset();

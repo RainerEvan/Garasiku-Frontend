@@ -30,8 +30,12 @@ import { EmptyState } from "@/components/shared/empty-state"
 import { PARAM_GROUP_KELENGKAPAN_KENDARAAN } from "@/lib/constants"
 import { formatDate } from "@/lib/utils"
 import { LoadingOverlay } from "@/components/shared/loading-overlay"
+import { useAuth } from "@/lib/auth-context"
+import { format } from "date-fns"
 
 export default function KendaraanDetailPage() {
+    const { isOwner, isDivisi, isWSHead, isDriver } = useAuth();
+
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
@@ -165,7 +169,8 @@ export default function KendaraanDetailPage() {
             .from("vehicle_service_history")
             .select("*")
             .eq("vehicle_id", vehicleId)
-            .order("created_at", { ascending: false });
+            .order("schedule_date", { ascending: true })
+            .limit(3);
 
         if (error) {
             console.error("Service history fetch error:", error);
@@ -195,7 +200,8 @@ export default function KendaraanDetailPage() {
             .from("vehicle_administration_history")
             .select("*")
             .eq("vehicle_id", vehicleId)
-            .order("created_at", { ascending: false });
+            .order("due_date", { ascending: true })
+            .limit(3);
 
         if (error) {
             console.error("Administration history fetch error:", error);
@@ -345,8 +351,8 @@ export default function KendaraanDetailPage() {
                     fetchVehicleAdministrationHistory(id),
                     fetchVehicleAttachments(id)
                 ]);
-            } catch (err) {
-                console.error("Failed to fetch data:", err);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
             } finally {
                 setLoading(false);
             }
@@ -422,7 +428,7 @@ export default function KendaraanDetailPage() {
         setLoading(true);
 
         try {
-            const todayDateOnly = new Date().toISOString().split("T")[0]; // Format: "YYYY-MM-DD"
+            const todayDateOnly = format(new Date(), "yyyy-MM-dd");
             const isSelling = !vehicle.isSold;
 
             const { error } = await supabase
@@ -480,15 +486,17 @@ export default function KendaraanDetailPage() {
                             )}
                         </div>
 
-                        <div className="col-span-1 md:col-span-3 w-full flex flex-col justify-between gap-3 p-5">
+                        <div className="col-span-1 md:col-span-3 w-full flex flex-col justify-start gap-3 p-5">
                             {/* License Plate */}
-                            <LicensePlateDialog vehicleId={vehicle.id} currPlateNo={vehicle.licensePlate} onLicensePlateChange={handleLicensePlateChange}/>
+                            <LicensePlateDialog vehicleId={vehicle.id} currPlateNo={vehicle.licensePlate} onLicensePlateChange={handleLicensePlateChange} />
 
                             {/* Details */}
                             <div className="flex flex-col gap-3">
                                 <div className="flex gap-5 items-center justify-between">
                                     <h1 className="font-semibold">Detail Kendaraan</h1>
-                                    <EditDetailVehicleDialog vehicle={vehicle} onSave={() => fetchVehicleDetails(id!)} />
+                                    {(isOwner || isDivisi) && (
+                                        <EditDetailVehicleDialog vehicle={vehicle} onSave={() => fetchVehicleDetails(id!)} />
+                                    )}
                                 </div>
 
                                 <Separator />
@@ -503,92 +511,98 @@ export default function KendaraanDetailPage() {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="destructive">Hapus Kendaraan</Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Hapus Kendaraan?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Apakah Anda yakin ingin menghapus kendaraan {vehicle.name}?
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Tidak</AlertDialogCancel>
-                                            <AlertDialogAction onClick={handleDeleteVehicle}>Hapus</AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-
-                                {!vehicle.isSold && (
+                            {(isOwner || isDivisi) && (
+                                <div className="flex flex-col-reverse gap-3 sm:grid sm:grid-cols-2">
                                     <AlertDialog>
                                         <AlertDialogTrigger asChild>
-                                            <Button variant="default">Jual Kendaraan</Button>
+                                            <Button variant="destructive">Hapus Kendaraan</Button>
                                         </AlertDialogTrigger>
                                         <AlertDialogContent>
                                             <AlertDialogHeader>
-                                                <AlertDialogTitle>Jual Kendaraan?</AlertDialogTitle>
+                                                <AlertDialogTitle>Hapus Kendaraan?</AlertDialogTitle>
                                                 <AlertDialogDescription>
-                                                    Apakah Anda yakin ingin menjual kendaraan {vehicle.name}?
+                                                    Apakah Anda yakin ingin menghapus kendaraan {vehicle.name}?
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
                                                 <AlertDialogCancel>Tidak</AlertDialogCancel>
-                                                <AlertDialogAction onClick={handleSellVehicle}>Jual</AlertDialogAction>
+                                                <AlertDialogAction onClick={handleDeleteVehicle}>Hapus</AlertDialogAction>
                                             </AlertDialogFooter>
                                         </AlertDialogContent>
                                     </AlertDialog>
-                                )}
 
-                                {vehicle.isSold && (
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="default">Aktifkan Kendaraan</Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Aktifkan Kendaraan?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    Apakah Anda yakin ingin mengaktifkan kendaraan {vehicle.name} kembali?
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Tidak</AlertDialogCancel>
-                                                <AlertDialogAction onClick={handleSellVehicle}>Aktifkan</AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
-                                )}
-                            </div>
+                                    {!vehicle.isSold && (
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="default">Jual Kendaraan</Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Jual Kendaraan?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Apakah Anda yakin ingin menjual kendaraan {vehicle.name}?
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Tidak</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={handleSellVehicle}>Jual</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    )}
+
+                                    {vehicle.isSold && (
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="default">Aktifkan Kendaraan</Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Aktifkan Kendaraan?</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Apakah Anda yakin ingin mengaktifkan kendaraan {vehicle.name} kembali?
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Tidak</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={handleSellVehicle}>Aktifkan</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     {/* Info Bar */}
-                    <div className="flex flex-col gap-5">
-                        {/* Lokasi Bar */}
-                        {(!vehicle.isSold) && (
-                            <Link to={`/kendaraan/detail/${vehicle.id}/riwayat-lokasi`}>
+                    {(isOwner || isDivisi || isDriver) && (
+                        <div className="flex flex-col gap-5">
+                            {/* Lokasi Bar */}
+                            {(!vehicle.isSold) && (
+                                <Link to={`/kendaraan/detail/${vehicle.id}/riwayat-lokasi`}>
+                                    <DataBarCard
+                                        variant="button"
+                                        type="lokasi"
+                                        label={vehicleLatestLocation?.name || "Belum ada lokasi"}
+                                        description={vehicleLatestLocation?.address || "Belum ada alamat"}
+                                    />
+                                </Link >
+                            )}
+
+                            {/* Terjual Bar */}
+                            {(vehicle.isSold && vehicle.soldDate) && (
                                 <DataBarCard
-                                    variant="button"
-                                    type="lokasi"
-                                    label={vehicleLatestLocation?.name || "Belum ada lokasi"}
-                                    description={vehicleLatestLocation?.address || "Belum ada alamat"}
+                                    variant="default"
+                                    type="terjual"
+                                    label={"Terjual"}
+                                    description={formatDate(vehicle.soldDate)}
                                 />
-                            </Link >
-                        )}
+                            )}
+                        </div>
+                    )}
 
-                        {/* Terjual Bar */}
-                        {(vehicle.isSold && vehicle.soldDate) && (
-                            <DataBarCard
-                                variant="default"
-                                type="terjual"
-                                label={"Terjual"}
-                                description={formatDate(vehicle.soldDate)}
-                            />
-                        )}
-
+                    {(isOwner || isDivisi) && (
                         <div className="flex flex-col gap-5 md:flex-row">
                             {/* STNK Bar */}
                             <DataBarCard
@@ -614,11 +628,10 @@ export default function KendaraanDetailPage() {
                                 description={formatDate(vehicleLastServiceDate)}
                             />
                         </div>
-                    </div>
+                    )}
 
-                    {/* Sections */}
-                    <div className="flex flex-col gap-5 overflow-auto">
-                        {/* STNK Details */}
+                    {/* STNK Details */}
+                    {(isOwner || isDivisi) && (
                         <SectionCard
                             title="Detail STNK"
                             headerAction={
@@ -656,9 +669,11 @@ export default function KendaraanDetailPage() {
                                 </div>
                             )}
                         </SectionCard>
+                    )}
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            {/* Aktivitas Servis */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        {/* Aktivitas Servis */}
+                        {(isOwner || isDivisi || isWSHead) && (
                             <SectionCard
                                 title="Aktivitas Servis"
                                 headerAction={
@@ -686,8 +701,10 @@ export default function KendaraanDetailPage() {
                                     </div>
                                 )}
                             </SectionCard>
+                        )}
 
-                            {/* Aktivitas Administrasi */}
+                        {/* Aktivitas Administrasi */}
+                        {(isOwner || isDivisi) && (
                             <SectionCard
                                 title="Aktivitas Administrasi"
                                 headerAction={
@@ -715,9 +732,11 @@ export default function KendaraanDetailPage() {
                                     </div>
                                 )}
                             </SectionCard>
-                        </div>
+                        )}
+                    </div>
 
-                        {/* Kelengkapan Kendaraan */}
+                    {/* Kelengkapan Kendaraan */}
+                    {(isOwner || isDivisi) && (
                         <SectionCard
                             title="Kelengkapan Kendaraan"
                             headerAction={
@@ -743,9 +762,10 @@ export default function KendaraanDetailPage() {
                                 </div>
                             )}
                         </SectionCard>
+                    )}
 
-
-                        {/* Lampiran Dokumen */}
+                    {/* Lampiran Dokumen */}
+                    {(isOwner || isDivisi) && (
                         <SectionCard
                             title="Lampiran Dokumen"
                             headerAction={
@@ -772,9 +792,9 @@ export default function KendaraanDetailPage() {
                                 </div>
                             )}
                         </SectionCard>
-                    </div>
-                </main>
-            </div>
+                    )}
+                </main >
+            </div >
         </>
     )
 }

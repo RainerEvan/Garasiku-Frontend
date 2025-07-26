@@ -27,8 +27,8 @@ export async function getCachedReminderDateRange() {
         days = intervalDays;
       }
     }
-  } catch (err) {
-    console.error("Unexpected failure fetching reminder interval param:", err);
+  } catch (error) {
+    console.error("Unexpected failure fetching reminder interval param:", error);
   }
 
   const futureDate = new Date();

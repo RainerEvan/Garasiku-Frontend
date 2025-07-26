@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { getCachedReminderDateRange } from "@/lib/reminder-date";
 import { useAuth } from "@/lib/auth-context";
 import { LoadingOverlay } from "@/components/shared/loading-overlay";
+import { PENDING } from "@/lib/constants";
 
 export default function DashboardPage() {
   const { user, isOwner, isDivisi, isWSHead } = useAuth();
@@ -13,7 +14,7 @@ export default function DashboardPage() {
   const [activeVehicleCount, setActiveVehicleCount] = useState(0);
   const [soldVehicleCount, setSoldVehicleCount] = useState(0);
   const [todoServiceCount, setTodoServiceCount] = useState(0);
-  const [todoAdminCount, setTodoAdminCount] = useState(0);
+  const [todoAdministrationCount, setTodoAdministrationCount] = useState(0);
 
   const userMeta = useMemo(() => {
     if (!user) return null;
@@ -23,40 +24,97 @@ export default function DashboardPage() {
     };
   }, [user]);
 
+  const fetchActiveVehicleCount = async () => {
+    const { count, error } = await supabase
+      .from("vehicles")
+      .select("*", { count: "exact", head: true })
+      .eq("is_sold", false);
+
+    if (error) {
+      console.error("Active Vehicle Count fetch error:", error)
+    }
+
+    if (count) {
+      setActiveVehicleCount(count || 0);
+    }
+  };
+
+  const fetchSoldVehicleCount = async () => {
+    const { count, error } = await supabase
+      .from("vehicles")
+      .select("*", { count: "exact", head: true })
+      .eq("is_sold", true);
+
+    if (error) {
+      console.error("Sold Vehicle Count fetch error:", error)
+    }
+
+    if (count) {
+      setSoldVehicleCount(count || 0);
+    }
+  };
+
+  const fetchTodoServiceCount = async (futureDate: Date) => {
+    const { count, error } = await supabase
+      .from("service").select("*", { count: "exact", head: true })
+      .eq("status", PENDING)
+      .lte("schedule_date", futureDate.toISOString());
+
+    if (error) {
+      console.error("Todo Service Count fetch error:", error)
+    }
+
+    if (count) {
+      setTodoServiceCount(count || 0);
+    }
+  };
+
+  const fetchTodoAdministrationCount = async (futureDate: Date) => {
+    const { count, error } = await supabase
+      .from("administration")
+      .select("*", { count: "exact", head: true })
+      .eq("status", PENDING)
+      .lte("due_date", futureDate.toISOString());
+
+    if (error) {
+      console.error("Todo Administration Count fetch error:", error)
+    }
+
+    if (count) {
+      setTodoAdministrationCount(count || 0);
+    }
+  };
+
   useEffect(() => {
     const fetchCounts = async () => {
+      if (!(isOwner || isDivisi || isWSHead)) return;
       setLoading(true);
 
       try {
         const { futureDate } = await getCachedReminderDateRange();
 
-        const [active, sold, service, admin] = await Promise.all([
-          supabase.from("vehicles").select("*", { count: "exact", head: true }).eq("is_sold", false),
-          supabase.from("vehicles").select("*", { count: "exact", head: true }).eq("is_sold", true),
-          supabase.from("service").select("*", { count: "exact", head: true }).eq("status", "pending").lte("schedule_date", futureDate.toISOString()),
-          supabase.from("administration").select("*", { count: "exact", head: true }).eq("status", "pending").lte("due_date", futureDate.toISOString()),
-        ]);
+        const promises: Promise<any>[] = [];
 
-        if (active.error) console.error("Error fetching active vehicles:", active.error);
-        if (sold.error) console.error("Error fetching sold vehicles:", sold.error);
-        if (service.error) console.error("Error fetching todo services:", service.error);
-        if (admin.error) console.error("Error fetching todo admin:", admin.error);
+        if (isOwner || isDivisi) {
+          promises.push(fetchActiveVehicleCount());
+          promises.push(fetchSoldVehicleCount());
+          promises.push(fetchTodoAdministrationCount(futureDate));
+        }
 
-        if (!active.error) setActiveVehicleCount(active.count || 0);
-        if (!sold.error) setSoldVehicleCount(sold.count || 0);
-        if (!service.error) setTodoServiceCount(service.count || 0);
-        if (!admin.error) setTodoAdminCount(admin.count || 0);
-      } catch (err) {
-        console.error("Unexpected error fetching dashboard counts:", err);
+        if (isOwner || isDivisi || isWSHead) {
+          promises.push(fetchTodoServiceCount(futureDate));
+        }
+
+        await Promise.all(promises);
+      } catch (error) {
+        console.error("Terjadi kesalahan pada sistem: ", error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (isOwner || isDivisi || isWSHead) {
-      fetchCounts();
-    }
-  }, []);
+    fetchCounts();
+  }, [isOwner, isDivisi, isWSHead]);
 
   return (
     <>
@@ -107,7 +165,7 @@ export default function DashboardPage() {
             {(isOwner || isDivisi) && (
               <DashboardCard
                 title="To-do Administrasi"
-                count={todoAdminCount}
+                count={todoAdministrationCount}
                 urlLink="administrasi"
                 icon={Notebook}
                 className="col-span-1"
