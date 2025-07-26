@@ -1,6 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
+export const config = {
+  // schedule: "0 8 * * 1", // Every Monday at 08:00 UTC
+  schedule: "*/5 * * * *"
+};
+
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
