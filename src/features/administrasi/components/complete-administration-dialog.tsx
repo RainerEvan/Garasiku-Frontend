@@ -169,7 +169,7 @@ export function CompleteAdministrationDialog({ administration, onSave }: Complet
         <DialogTrigger asChild>
           <Button variant="default">Selesaikan Administrasi</Button>
         </DialogTrigger>
-        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-h-[90vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Selesaikan Administrasi</DialogTitle>
             <DialogDescription>Tambah informasi rincian administrasi dan klik button simpan.</DialogDescription>

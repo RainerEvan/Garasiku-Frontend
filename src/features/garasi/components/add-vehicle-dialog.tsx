@@ -263,7 +263,7 @@ export function AddVehicleDialog({ onSave }: AddVehicleDialogProps) {
             </Button>
           </div>
         </DialogTrigger>
-        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-h-[90vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Tambah Kendaraan</DialogTitle>
             <DialogDescription>Tambah kendaraan baru dan klik button simpan.</DialogDescription>

@@ -43,7 +43,9 @@ export function DataBarCard({
               <p className="text-xs text-medium">{description ?? "-"}</p>
             </div>
           </div>
-          <ChevronRight className="w-4 h-4" />
+          <div>
+            <ChevronRight className="w-4 h-4" />
+          </div>
         </div>
       )}
     </>

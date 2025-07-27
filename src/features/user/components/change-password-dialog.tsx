@@ -112,7 +112,7 @@ export function ChangePasswordDialog({ user, onSave }: ChangePasswordDialogProps
         <DialogTrigger asChild>
           <Button variant="secondary">Ganti Password</Button>
         </DialogTrigger>
-        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-h-[90vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Ganti Password</DialogTitle>
             <DialogDescription>Masukkan password baru lalu klik simpan.</DialogDescription>

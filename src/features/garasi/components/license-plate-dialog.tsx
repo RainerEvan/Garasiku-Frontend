@@ -79,7 +79,7 @@ export function LicensePlateDialog({ vehicleId, currPlateNo, onLicensePlateChang
                         <span className="font-medium">{currPlateNo}</span>
                     </Button>
                 )}
-                <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+                <DialogContent className="max-h-[90vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
                     <DialogHeader>
                         <DialogTitle>Riwayat Plat No Kendaraan</DialogTitle>
                         <DialogDescription>Klik button ubah plat no untuk mengubah plat no kendaraan.</DialogDescription>

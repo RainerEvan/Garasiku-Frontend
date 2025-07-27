@@ -179,7 +179,7 @@ export function CompleteServiceDialog({ service, onSave }: CompleteServiceDialog
         <DialogTrigger asChild>
           <Button variant="default">Selesaikan Servis</Button>
         </DialogTrigger>
-        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-h-[90vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Selesaikan Servis</DialogTitle>
             <DialogDescription>Tambah informasi rincian servis dan klik button simpan.</DialogDescription>

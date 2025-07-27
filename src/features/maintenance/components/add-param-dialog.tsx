@@ -38,7 +38,7 @@ interface AddParamDialogProps {
 const formSchema = z.object({
   group: z.string().min(1, { message: "Group harus terisi" }),
   name: z.string({ message: "Nama harus terisi" }).min(1, { message: "Nama harus terisi" }),
-  description: z.string().max(255, { message: "Deskripsi maksimal 255 karakter" }).optional(),
+  description: z.string().optional(),
 });
 
 export function AddParamDialog({ paramGroup, onSave }: AddParamDialogProps) {

@@ -171,7 +171,7 @@ export function EditDetailVehicleDialog({ vehicle, onSave }: EditDetailVehicleDi
             Ubah
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-h-[90vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Ubah Detail Kendaraan</DialogTitle>
             <DialogDescription>Atur informasi detail kendaraan dan klik button simpan.</DialogDescription>

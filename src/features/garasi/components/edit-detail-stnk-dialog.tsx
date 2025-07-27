@@ -185,7 +185,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
           </Button>
         </DialogTrigger>
         <DialogContent
-          className="max-h-[95vh] md:max-w-3xl overflow-y-auto"
+          className="max-h-[90vh] md:max-w-3xl overflow-y-auto"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <DialogHeader>

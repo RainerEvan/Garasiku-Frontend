@@ -149,7 +149,7 @@ export function EditUserDialog({ user, onSave }: EditUserDialogProps) {
         <DialogTrigger asChild>
           <Button variant="default">Ubah Detail</Button>
         </DialogTrigger>
-        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-h-[90vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Ubah Detail User</DialogTitle>
             <DialogDescription>Ubah detail user dan klik button simpan.</DialogDescription>

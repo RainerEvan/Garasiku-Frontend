@@ -124,7 +124,7 @@ export function EditServiceRecordDialog({ service, onSave }: EditServiceRecordDi
             Ubah
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-h-[90vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Ubah Rincian Servis</DialogTitle>
             <DialogDescription>Atur informasi rincian servis dan klik button simpan.</DialogDescription>

@@ -136,7 +136,7 @@ export function ChangeLicensePlateDialog({ vehicleId, currPlateNo, onSave, setLo
           Ubah Plat No
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[95vh] md:max-w-xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DialogContent className="max-h-[90vh] md:max-w-xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Ubah Plat No Kendaraan</DialogTitle>
           <DialogDescription>Masukkan plat no baru kendaraan dan klik button simpan.</DialogDescription>

@@ -129,7 +129,7 @@ export function AddAttachmentServiceDialog({ serviceId, onSave }: AddAttachmentS
             </Button>
           </div>
         </DialogTrigger>
-        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-h-[90vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Tambah Dokumen</DialogTitle>
             <DialogDescription>Tambah lampiran dokumen baru dan klik button simpan.</DialogDescription>

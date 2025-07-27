@@ -98,7 +98,7 @@ export function EditEquipmentVehicleDialog({ vehicleId, equipmentParam, vehicleE
             Ubah
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-h-[90vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Ubah Kelengkapan Kendaraan</DialogTitle>
             <DialogDescription>Atur informasi kelengkapan kendaraan dan klik button simpan.</DialogDescription>

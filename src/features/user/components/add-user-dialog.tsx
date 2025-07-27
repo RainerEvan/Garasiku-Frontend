@@ -149,7 +149,7 @@ export function AddUserDialog({ onSave }: AddUserDialogProps) {
             </div>
           )}
         </DialogTrigger>
-        <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="max-h-[90vh] md:max-w-3xl overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Tambah User</DialogTitle>
             <DialogDescription>Tambah user baru dan klik button simpan.</DialogDescription>

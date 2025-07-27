@@ -231,7 +231,7 @@ export function EditImageVehicleDialog({
                         Ubah
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="max-h-[95vh] md:max-w-3xl overflow-y-auto">
+                <DialogContent className="max-h-[90vh] md:max-w-3xl overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Foto Kendaraan</DialogTitle>
                         <DialogDescription>Atur foto kendaraan dan klik button simpan.</DialogDescription>

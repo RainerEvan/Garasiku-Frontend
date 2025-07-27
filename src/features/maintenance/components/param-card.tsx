@@ -80,9 +80,9 @@ export function ParamCard({
           <p className="font-medium">{index + 1}</p>
         </div>
 
-        <div className="w-full grid grid-cols-2 gap-2">
-          <SectionItem label="Name" value={param.name} />
-          <SectionItem label="Description" value={param.description} />
+        <div className="w-full grid grid-cols-2 gap-2 items-center">
+          <SectionItem label="Nama" value={param.name} />
+          <SectionItem label="Deskripsi" value={param.description} />
         </div>
 
         <div className="flex items-center justify-center">
