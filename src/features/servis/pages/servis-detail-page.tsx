@@ -128,7 +128,7 @@ export default function ServisDetailPage() {
     const fetchServiceAttachments = async (serviceId: string) => {
         const { data, error } = await supabase
             .from("attachment_service")
-            .select("id, created_at, service_id, file_name, file_type, file_size, file_link, created_by")
+            .select("id, service_id, file_name, file_type, file_size, file_link, created_at, created_by")
             .eq("service_id", serviceId)
             .order("created_at", { ascending: true });
 

@@ -224,8 +224,8 @@ export default function KendaraanDetailPage() {
 
     const fetchVehicleAttachments = async (vehicleId: string) => {
         const { data, error } = await supabase
-            .from("vehicle_attachments")
-            .select("*")
+            .from("attachment_vehicle")
+            .select("id, vehicle_id, attachment_type, file_name, file_type, file_size, file_link, created_at, created_by")
             .eq("vehicle_id", vehicleId)
             .eq("attachment_type", "document")
             .order("created_at", { ascending: true });
@@ -236,7 +236,7 @@ export default function KendaraanDetailPage() {
 
         if (data) {
             setVehicleAttachments(data.map(att => ({
-                id: att.attachment_id,
+                id: att.id,
                 vehicleId: att.vehicle_id,
                 attachmentType: att.attachment_type,
                 fileName: att.file_name,
