@@ -166,8 +166,8 @@ export default function KendaraanDetailPage() {
 
     const fetchVehicleServiceHistory = async (vehicleId: string) => {
         const { data, error } = await supabase
-            .from("vehicle_service_history")
-            .select("*")
+            .from("service")
+            .select("id, ticket_num, vehicle_id, type, status, schedule_date, start_date, end_date")
             .eq("vehicle_id", vehicleId)
             .order("schedule_date", { ascending: false })
             .limit(3);
@@ -178,27 +178,22 @@ export default function KendaraanDetailPage() {
 
         if (data) {
             setVehicleServices(data.map(svc => ({
-                id: svc.service_id || svc.id,
+                id: svc.id,
                 ticketNum: svc.ticket_num,
-                type: svc.service_type || svc.type,
-                mechanicName: svc.mechanic_name,
-                status: svc.service_status || svc.status,
-                mileage: svc.mileage,
-                totalCost: svc.total_cost,
+                vehicleId: svc.vehicle_id,
+                type: svc.type,
+                status: svc.status,
+                scheduleDate: svc.schedule_date,
                 startDate: svc.start_date,
                 endDate: svc.end_date,
-                notes: svc.notes,
-                task: svc.task,
-                sparepart: svc.sparepart,
-                scheduleDate: svc.schedule_date
             })));
         }
     };
 
     const fetchVehicleAdministrationHistory = async (vehicleId: string) => {
         const { data, error } = await supabase
-            .from("vehicle_administration_history")
-            .select("*")
+            .from("administration")
+            .select("id, ticket_num, vehicle_id, type, status, due_date, end_date")
             .eq("vehicle_id", vehicleId)
             .order("due_date", { ascending: false })
             .limit(3);
@@ -209,15 +204,13 @@ export default function KendaraanDetailPage() {
 
         if (data) {
             setVehicleAdministrations(data.map(adm => ({
-                id: adm.administration_id,
+                id: adm.id,
                 ticketNum: adm.ticket_num,
+                vehicleId: adm.vehicle_id,
                 type: adm.type,
                 status: adm.status,
                 dueDate: adm.due_date,
-                newDueDate: adm.new_due_date,
                 endDate: adm.end_date,
-                totalCost: adm.total_cost,
-                notes: adm.notes
             })));
         }
     };
