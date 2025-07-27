@@ -360,13 +360,31 @@ export default function KendaraanDetailPage() {
         setLoading(true);
 
         try {
+            const filePathsToDelete: string[] = [];
+
+            vehicleImages.forEach((item) => {
+                if (item.fileLink) filePathsToDelete.push(item.fileLink);
+            });
+
+            vehicleAttachments.forEach((item) => {
+                if (item.fileLink) filePathsToDelete.push(item.fileLink);
+            });
+
+            if (filePathsToDelete.length > 0) {
+                const { error: storageError } = await supabase.storage
+                    .from("vehicle")
+                    .remove(filePathsToDelete);
+
+                if (storageError) throw storageError
+            }
+
             const { error: attachmentVehicleError } = await supabase
                 .from("attachment_vehicle")
                 .delete()
                 .eq("vehicle_id", vehicleId);
 
             if (attachmentVehicleError) {
-                throw new Error("Gagal menghapus attachment_vehicles: " + attachmentVehicleError.message);
+                throw new Error("Gagal menghapus attachment vehicles: " + attachmentVehicleError.message);
             }
 
             const { error: servicesError } = await supabase
@@ -376,15 +394,6 @@ export default function KendaraanDetailPage() {
 
             if (servicesError) {
                 throw new Error("Gagal menghapus service: " + servicesError.message);
-            }
-
-            const { error: stnkError } = await supabase
-                .from("stnk")
-                .delete()
-                .eq("vehicle_id", vehicleId);
-
-            if (stnkError) {
-                throw new Error("Gagal menghapus stnk: " + stnkError.message);
             }
 
             const { error: adminError } = await supabase
