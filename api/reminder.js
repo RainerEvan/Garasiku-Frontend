@@ -8,6 +8,15 @@ const supabase = createClient(
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+const TASK_TYPE_LABEL = {
+  "servis-regular": "Servis Regular",
+  "servis-berat": "Servis Berat",
+  "servis-lainnya": "Servis Lainnya",
+  "administrasi-stnk-1": "STNK 1 Tahun",
+  "administrasi-stnk-5": "STNK 5 Tahun",
+  "administrasi-asuransi": "Asuransi",
+};
+
 function buildReminderEmail(serviceTasks = [], adminTasks = []) {
   const formatDate = (dateStr) =>
     new Intl.DateTimeFormat("id-ID", {
@@ -22,7 +31,7 @@ function buildReminderEmail(serviceTasks = [], adminTasks = []) {
         (task) => `
         <tr>
           <td style="padding: 8px 12px; border: 1px solid #ddd;">${task.ticket_num}</td>
-          <td style="padding: 8px 12px; border: 1px solid #ddd;">${task.type}</td>
+          <td style="padding: 8px 12px; border: 1px solid #ddd;">${TASK_TYPE_LABEL[task.type] || task.type}</td>
           <td style="padding: 8px 12px; border: 1px solid #ddd;">${task.vehicles.name} - ${task.vehicles.license_plate}</td>
           <td style="padding: 8px 12px; border: 1px solid #ddd;">${formatDate(task.schedule_date)}</td>
         </tr>`
@@ -35,7 +44,7 @@ function buildReminderEmail(serviceTasks = [], adminTasks = []) {
         (task) => `
         <tr>
           <td style="padding: 8px 12px; border: 1px solid #ddd;">${task.ticket_num}</td>
-          <td style="padding: 8px 12px; border: 1px solid #ddd;">${task.type}</td>
+          <td style="padding: 8px 12px; border: 1px solid #ddd;">${TASK_TYPE_LABEL[task.type] || task.type}</td>
           <td style="padding: 8px 12px; border: 1px solid #ddd;">${task.vehicles.name} - ${task.vehicles.license_plate}</td>
           <td style="padding: 8px 12px; border: 1px solid #ddd;">${formatDate(task.due_date)}</td>
         </tr>`
