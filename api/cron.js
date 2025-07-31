@@ -9,6 +9,13 @@ const supabase = createClient(
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 function buildReminderEmail(serviceTasks = [], adminTasks = []) {
+  const formatDate = (dateStr) =>
+    new Intl.DateTimeFormat("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(new Date(dateStr));
+
   const formatServiceTasks = (tasks) =>
     tasks
       .map(
@@ -17,7 +24,7 @@ function buildReminderEmail(serviceTasks = [], adminTasks = []) {
           <td style="padding: 8px 12px; border: 1px solid #ddd;">${task.ticket_num}</td>
           <td style="padding: 8px 12px; border: 1px solid #ddd;">${task.type}</td>
           <td style="padding: 8px 12px; border: 1px solid #ddd;">${task.vehicles.name} - ${task.vehicles.license_plate}</td>
-          <td style="padding: 8px 12px; border: 1px solid #ddd;">${new Date(task.schedule_date).toLocaleDateString("id-ID")}</td>
+          <td style="padding: 8px 12px; border: 1px solid #ddd;">${formatDate(task.schedule_date)}</td>
         </tr>`
       )
       .join("");
@@ -30,7 +37,7 @@ function buildReminderEmail(serviceTasks = [], adminTasks = []) {
           <td style="padding: 8px 12px; border: 1px solid #ddd;">${task.ticket_num}</td>
           <td style="padding: 8px 12px; border: 1px solid #ddd;">${task.type}</td>
           <td style="padding: 8px 12px; border: 1px solid #ddd;">${task.vehicles.name} - ${task.vehicles.license_plate}</td>
-          <td style="padding: 8px 12px; border: 1px solid #ddd;">${new Date(task.due_date).toLocaleDateString("id-ID")}</td>
+          <td style="padding: 8px 12px; border: 1px solid #ddd;">${formatDate(task.due_date)}</td>
         </tr>`
       )
       .join("");
@@ -125,9 +132,17 @@ export default async function handler(req, res) {
 
     const html = buildReminderEmail(serviceTasks ?? [], adminTasks ?? []);
 
+    const recipients = process.env.REMINDER_RECEIVER_EMAIL
+      ? process.env.REMINDER_RECEIVER_EMAIL.split(",").map((e) => e.trim())
+      : [];
+
+    if (recipients.length === 0) {
+      return res.status(500).json({ message: "No recipient email defined" });
+    }
+
     await resend.emails.send({
-      from: "Garasiku Reminder <onboarding@resend.dev>",
-      to: ["rainerevan@gmail.com"],
+      from: process.env.RESEND_FROM_EMAIL,
+      to: recipients,
       subject: "Weekly Task Reminder - Garasiku",
       html: html,
     });
