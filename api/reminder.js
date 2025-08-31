@@ -51,7 +51,7 @@ function buildServiceEmail(tasks = []) {
       <h2 style="color: #1a1a1a;">🔔 Weekly Reminder Garasiku</h2>
       <h3>🚗 To-do Servis</h3>
       <p style="margin-bottom: 24px;">
-        Berikut adalah ringkasan tugas servis yang akan mulai dalam 30 hari ke depan.
+        Berikut adalah ringkasan tugas servis yang telah dijadwalkan dalam 30 hari ke depan.
       </p>
       ${
         tasks.length
@@ -66,7 +66,7 @@ function buildServiceEmail(tasks = []) {
               </thead>
               <tbody>${rows}</tbody>
             </table>`
-          : "<p>Tidak ada to-do servis yang akan mulai dalam 30 hari ke depan.</p>"
+          : "<p>Tidak ada to-do servis yang telah dijadwalkan dalam 30 hari ke depan.</p>"
       }
       <p style="font-size: 13px; color: #999; margin-top: 48px;">
         Email ini dikirim secara otomatis oleh sistem Garasiku. Harap tidak membalas email ini.
