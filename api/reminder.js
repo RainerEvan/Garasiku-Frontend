@@ -68,7 +68,11 @@ function buildReminderEmail(serviceTasks = [], adminTasks = []) {
         <tbody>${formatServiceTasks(serviceTasks)}</tbody>
       </table>
     `
-    : "<p>Tidak ada to-do servis yang jatuh tempo dalam 30 hari ke depan.</p>";
+    : `
+      <h3 style="margin-bottom: 4px;">🚗 To-do Servis</h3>
+      <p>Tidak ada to-do servis yang jatuh tempo dalam 30 hari ke depan.</p>
+      `
+    ;
 
   const adminHTML = adminTasks.length
     ? `
@@ -85,7 +89,11 @@ function buildReminderEmail(serviceTasks = [], adminTasks = []) {
         <tbody>${formatAdminTasks(adminTasks)}</tbody>
       </table>
     `
-    : "<p>Tidak ada to-do administrasi yang jatuh tempo dalam 30 hari ke depan.</p>";
+    : `
+      <h3 style="margin-bottom: 4px;">📄 To-do Administrasi</h3>
+      <p>Tidak ada to-do administrasi yang jatuh tempo dalam 30 hari ke depan.</p>
+      `
+    ;
 
   return `
     <div style="font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 16px; background: #ffffff; color: #333;">
