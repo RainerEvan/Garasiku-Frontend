@@ -160,7 +160,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ message: "Failed to fetch tasks" });
     }
 
-    const sender = process.env.GMAIL_USER;
+    const sender = `Garasiku Reminder <${process.env.GMAIL_USER}>`;
 
     // recipients split by comma
     const serviceRecipients = process.env.SERVICE_RECEIVER_EMAIL
