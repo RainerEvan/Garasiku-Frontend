@@ -47,24 +47,30 @@ function buildServiceEmail(tasks = []) {
     .join("");
 
   return `
-    <div style="font-family: sans-serif; max-width: 800px; margin: 0 auto;">
-      <h2>🔔 Weekly Reminder Garasiku</h2>
+    <div style="font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 8px; background: #ffffff; color: #333;">
+      <h2 style="color: #1a1a1a;">🔔 Weekly Reminder Garasiku</h2>
       <h3>🚗 To-do Servis</h3>
+      <p style="margin-bottom: 24px;">
+        Berikut adalah ringkasan tugas servis yang akan mulai dalam 30 hari ke depan.
+      </p>
       ${
         tasks.length
-          ? `<table style="border-collapse: collapse; width: 100%;">
+          ? `<table style="border-collapse: collapse; width: 100%; margin-bottom: 24px;">
               <thead>
                 <tr>
-                  <th>Nomor Tiket</th>
-                  <th>Tipe Servis</th>
-                  <th>Kendaraan</th>
-                  <th>Jadwal Servis</th>
+                  <th style="text-align: left; padding: 8px 12px; background: #f5f5f5;">Nomor Tiket</th>
+                  <th style="text-align: left; padding: 8px 12px; background: #f5f5f5;">Tipe Servis</th>
+                  <th style="text-align: left; padding: 8px 12px; background: #f5f5f5;">Kendaraan</th>
+                  <th style="text-align: left; padding: 8px 12px; background: #f5f5f5;">Jadwal Servis</th>
                 </tr>
               </thead>
               <tbody>${rows}</tbody>
             </table>`
-          : "<p>Tidak ada to-do servis yang jatuh tempo dalam 30 hari ke depan.</p>"
+          : "<p>Tidak ada to-do servis yang akan mulai dalam 30 hari ke depan.</p>"
       }
+      <p style="font-size: 13px; color: #999; margin-top: 48px;">
+        Email ini dikirim secara otomatis oleh sistem Garasiku. Harap tidak membalas email ini.
+      </p>
     </div>
   `;
 }
@@ -90,24 +96,30 @@ function buildAdminEmail(tasks = []) {
     .join("");
 
   return `
-    <div style="font-family: sans-serif; max-width: 800px; margin: 0 auto;">
-      <h2>🔔 Weekly Reminder Garasiku</h2>
+    <div style="font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 8px; background: #ffffff; color: #333;">
+      <h2 style="color: #1a1a1a;">🔔 Weekly Reminder Garasiku</h2>
       <h3>📄 To-do Administrasi</h3>
+      <p style="margin-bottom: 24px;">
+        Berikut adalah ringkasan tugas administrasi yang akan jatuh tempo dalam 30 hari ke depan.
+      </p>
       ${
         tasks.length
-          ? `<table style="border-collapse: collapse; width: 100%;">
+          ? `<table style="border-collapse: collapse; width: 100%; margin-bottom: 24px;">
               <thead>
                 <tr>
-                  <th>Nomor Tiket</th>
-                  <th>Tipe Administrasi</th>
-                  <th>Kendaraan</th>
-                  <th>Jatuh Tempo</th>
+                  <th style="text-align: left; padding: 8px 12px; background: #f5f5f5;">Nomor Tiket</th>
+                  <th style="text-align: left; padding: 8px 12px; background: #f5f5f5;">Tipe Administrasi</th>
+                  <th style="text-align: left; padding: 8px 12px; background: #f5f5f5;">Kendaraan</th>
+                  <th style="text-align: left; padding: 8px 12px; background: #f5f5f5;">Jatuh Tempo</th>
                 </tr>
               </thead>
               <tbody>${rows}</tbody>
             </table>`
           : "<p>Tidak ada to-do administrasi yang jatuh tempo dalam 30 hari ke depan.</p>"
       }
+      <p style="font-size: 13px; color: #999; margin-top: 48px;">
+        Email ini dikirim secara otomatis oleh sistem Garasiku. Harap tidak membalas email ini.
+      </p>
     </div>
   `;
 }
