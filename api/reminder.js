@@ -17,6 +17,8 @@ const TASK_TYPE_LABEL = {
   "administrasi-asuransi": "Asuransi",
 };
 
+const PENDING = "pending";
+
 function buildReminderEmail(serviceTasks = [], adminTasks = []) {
   const formatDate = (dateStr) =>
     new Intl.DateTimeFormat("id-ID", {
@@ -104,8 +106,9 @@ function buildReminderEmail(serviceTasks = [], adminTasks = []) {
 export default async function handler(req, res) {
   try {
     const today = new Date();
-    const oneMonthLater = new Date();
-    oneMonthLater.setMonth(today.getMonth() + 1);
+    let days = 30;
+    const futureDate = new Date();
+    futureDate.setDate(today.getDate() + days);
 
     const { data: serviceTasks, error: serviceError } = await supabase
       .from("service")
@@ -119,6 +122,8 @@ export default async function handler(req, res) {
           license_plate
         )
       `)
+      .eq("status", PENDING)
+      .lte("schedule_date", futureDate.toISOString())
       .order("schedule_date", { ascending: true });
 
     const { data: adminTasks, error: adminError } = await supabase
@@ -133,6 +138,8 @@ export default async function handler(req, res) {
           license_plate
         )
       `)
+      .eq("status", PENDING)
+      .lte("due_date", futureDate.toISOString())
       .order("due_date", { ascending: true });
 
     if (serviceError || adminError) {
