@@ -103,12 +103,10 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
       const { data, error } = await supabase
         .from("stnk")
         .update({
-          license_plate: values.licensePlate,
           stnk_number: values.stnkNumber,
           fuel_type: values.fuelType,
           license_plate_color: values.licensePlateColor,
           registration_year: values.registrationYear,
-          manufactured_year: values.manufacturedYear,
           bpkb_number: values.bpkbNumber,
           cylinder_capacity: values.cylinderCapacity,
           registration_number: values.registrationNumber,
@@ -116,12 +114,8 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
           engine_number: values.engineNumber,
           valid_until: values.validUntil ? format(values.validUntil, "yyyy-MM-dd") : null,
           model: values.model,
-          brand: values.brand,
           owner_name: values.ownerName,
-          owner_address: values.ownerAddress,
-          type: values.type,
-          category: values.category,
-          color: values.color
+          owner_address: values.ownerAddress
         })
         .eq("id", values.id)
         .select("*")
@@ -199,7 +193,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* Detail Kendaraan */}
+              {/* Detail STNK Kendaraan */}
               <div className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <FormField
@@ -213,6 +207,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
                             placeholder="Masukkan no polisi kendaraan"
                             {...field}
                             className="w-full"
+                            disabled
                           />
                         </FormControl>
                         <FormMessage />
@@ -288,6 +283,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
                               placeholder="Masukkan merk kendaraan"
                               {...field}
                               className="w-full"
+                              disabled
                             />
                           </FormControl>
                           <FormMessage />
@@ -306,6 +302,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
                               placeholder="Masukkan tipe kendaraan"
                               {...field}
                               className="w-full"
+                              disabled
                             />
                           </FormControl>
                           <FormMessage />
@@ -324,6 +321,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
                               placeholder="Masukkan jenis kendaraan"
                               {...field}
                               className="w-full"
+                              disabled
                             />
                           </FormControl>
                           <FormMessage />
@@ -360,6 +358,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
                               placeholder="Masukkan tahun pembuatan kendaraan"
                               {...field}
                               className="w-full"
+                              disabled
                             />
                           </FormControl>
                           <FormMessage />
@@ -434,6 +433,7 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
                               placeholder="Masukkan warna kendaraan"
                               {...field}
                               className="w-full"
+                              disabled
                             />
                           </FormControl>
                           <FormMessage />
@@ -562,8 +562,8 @@ export function EditDetailStnkDialog({ stnk, onSave }: EditDetailStnkDialogProps
                                 selected={field.value}
                                 captionLayout="dropdown"
                                 onSelect={field.onChange}
-                                startMonth={new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1)}
-                                endMonth={new Date(new Date().getFullYear() + 5, new Date().getMonth(), 1)}
+                                startMonth={new Date(new Date().getFullYear() - 100, new Date().getMonth(), 1)}
+                                endMonth={new Date(new Date().getFullYear() + 100, new Date().getMonth(), 1)}
                                 disabled={(date: Date) =>
                                   date < new Date("1900-01-01")
                                 }
