@@ -86,7 +86,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <LoadingOverlay loading={loading} />
+      <LoadingOverlay loading={loading}/>
 
       <div className="flex flex-col items-center justify-center min-h-screen px-5">
         <h1 className="text-5xl font-bold mb-6">Garasiku</h1>
